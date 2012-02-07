@@ -99,9 +99,8 @@ PatientManager* PatientManager::instance()
     return &creator()->object;
 }
 
-bool PatientManager::initialize()
+bool PatientManager::initialize(const DatabaseParameters& params)
 {
-    DatabaseParameters params = DatabaseParameters::parametersForSQLite("test.db");
     DatabaseAccess::setParameters(params);
 
     DefaultInitializationObserver observer;

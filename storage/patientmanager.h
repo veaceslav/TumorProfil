@@ -30,6 +30,8 @@
 
 #include "patient.h"
 
+class DatabaseParameters;
+
 class PatientManager : public QObject
 {
     Q_OBJECT
@@ -38,7 +40,7 @@ public:
 
     static PatientManager* instance();
 
-    bool initialize();
+    bool initialize(const DatabaseParameters& params);
 
     void readDatabase();
 

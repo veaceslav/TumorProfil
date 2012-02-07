@@ -19,13 +19,18 @@
  *
  * ============================================================ */
 
+// Qt includes
+
 #include <QtGui/QApplication>
 #include <QDebug>
-#include <QFile>
+#include <QFileInfo>
 #include <QIcon>
 #include <QVariant>
 #include <QUrl>
 
+// Local includes
+
+#include "databaseparameters.h"
 #include "mainwindow.h"
 #include "patientmanager.h"
 
@@ -41,7 +46,13 @@ int main(int argc, char *argv[])
         QIcon::setThemeName("silk");
     }
 
-    if (!PatientManager::instance()->initialize())
+    QFileInfo info("//IPSCHLEUCHER/IPOLI-Dokumente/Briefe/tumorprofil.db");
+    qDebug() << info.exists();
+
+    DatabaseParameters params =
+            DatabaseParameters::parametersForSQLite("//IPSCHLEUCHER/IPOLI-Dokumente/Briefe/tumorprofil.db");
+
+    if (!PatientManager::instance()->initialize(params))
     {
         return 1;
     }
@@ -49,6 +60,6 @@ int main(int argc, char *argv[])
 
     MainWindow w;
     w.show();
-    
+
     return a.exec();
 }
