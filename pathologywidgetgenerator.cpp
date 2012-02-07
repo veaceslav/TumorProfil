@@ -91,11 +91,11 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e)
 
         m_objects << new QLabel(tr("Sequenzanalysen"));
         m_objects << PathologyPropertyWidget::createMutation("mut/kras?exon=2", tr("KRAS Exon 2"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/egfr?exon=19,21", tr("EGFR Exon 19 && 21"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/pik3ca?exon=10,21", tr("PIK3CA Exon 10 && 21"));
+        m_objects << PathologyPropertyWidget::createMutation("mut/egfr?exon=19,21", tr("EGFR Exon 19 & 21"));
+        m_objects << PathologyPropertyWidget::createMutation("mut/pik3ca?exon=10,21", tr("PIK3CA Exon 10 & 21"));
         m_objects << PathologyPropertyWidget::createMutation("mut/braf?exon=15", tr("BRAF Exon 15"));
         m_objects << new QLabel(tr("Weitere Sequenzanalysen"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/egfr?exon=18,20", tr("EGFR Exon 18 && 20"));
+        m_objects << PathologyPropertyWidget::createMutation("mut/egfr?exon=18,20", tr("EGFR Exon 18 & 20"));
         m_objects << PathologyPropertyWidget::createMutation("mut/kras?exon=3", tr("KRAS Exon 3"));
         m_objects << PathologyPropertyWidget::createMutation("mut/braf?exon=11", tr("BRAF Exon 11"));
         break;
@@ -110,11 +110,11 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e)
         m_objects << PathologyPropertyWidget::createFish("fish/fgfr1", tr("FGFR1-Amplifikation"), tr("Ratio FGFR1/CEP8:"));
 
         m_objects << new QLabel(tr("Sequenzanalysen"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/pik3ca?exon=10,21", tr("PIK3CA Exon 10 && 21"));
+        m_objects << PathologyPropertyWidget::createMutation("mut/pik3ca?exon=10,21", tr("PIK3CA Exon 10 & 21"));
         m_objects << PathologyPropertyWidget::createMutation("mut/ddr2?exon=15-18", tr("DDR2 Exon 15-18"));
 
         m_objects << new QLabel(tr("Weitere Sequenzanalysen (Adenosquamös)"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/egfr?exon=19,21", tr("EGFR Exon 19 && 21"));
+        m_objects << PathologyPropertyWidget::createMutation("mut/egfr?exon=19,21", tr("EGFR Exon 19 & 21"));
         m_objects << PathologyPropertyWidget::createMutation("mut/kras?exon=2", tr("KRAS Exon 2"));
         m_objects << PathologyPropertyWidget::createMutation("mut/kras?exon=3", tr("KRAS Exon 3"));
         m_objects << PathologyPropertyWidget::createMutation("mut/braf?exon=15", tr("BRAF Exon 15"));
@@ -128,7 +128,7 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e)
 
         m_objects << new QLabel(tr("Sequenzanalysen"));
         m_objects << PathologyPropertyWidget::createMutation("mut/kras?exon=2", tr("KRAS Exon 2"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/pik3ca?exon=10,21", tr("PIK3CA Exon 10 && 21"));
+        m_objects << PathologyPropertyWidget::createMutation("mut/pik3ca?exon=10,21", tr("PIK3CA Exon 10 & 21"));
         m_objects << new QLabel(tr("Sequenzanalysen k-ras Exon 2 Wildtyp"));
         m_objects << PathologyPropertyWidget::createMutation("mut/kras?exon=3", tr("KRAS Exon 3"));
         m_objects << PathologyPropertyWidget::createMutation("mut/braf?exon=15", tr("BRAF Exon 15"));
