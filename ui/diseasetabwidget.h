@@ -35,11 +35,11 @@ public:
 
     explicit DiseaseTabWidget(QWidget *parent = 0);
     ~DiseaseTabWidget();
-    
+
 signals:
 
     void editingFinished();
-    
+
 public slots:
 
     void setPatient(const Patient::Ptr& p);

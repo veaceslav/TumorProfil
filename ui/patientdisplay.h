@@ -36,14 +36,12 @@ class PatientDisplay : public QWidget
 public:
     explicit PatientDisplay(QWidget *parent = 0);
     ~PatientDisplay();
-    
-signals:
-    
+
 public slots:
 
     void setPatient(const Patient::Ptr& patient);
     void clear();
-    
+
 private:
 
     class PatientDisplayPriv;

@@ -48,7 +48,7 @@ signals:
     /// Emitted when the entity changed, either through applySelectionChange,
     /// or from setEntity.
     void entityChanged(Pathology::Entity entity);
-    
+
 public slots:
 
     void setEntity(Pathology::Entity entity);
@@ -61,7 +61,7 @@ private:
 
     class EntitySelectionWidgetPriv;
     EntitySelectionWidgetPriv* const d;
-    
+
 };
 
 #endif // ENTITYSELECTIONWIDGET_H

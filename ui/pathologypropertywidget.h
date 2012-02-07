@@ -74,9 +74,6 @@ public:
     static PathologyPropertyWidget* createMutation(const QString& property, const QString& label);
     static PathologyPropertyWidget* createStableUnstable(const QString& property, const QString& label);
 
-
-signals:
-    
 public slots:
 
     void setValue(const Property& prop);

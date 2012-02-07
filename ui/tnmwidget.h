@@ -39,9 +39,9 @@ public:
     ~TNMWidget();
 
     TNM currentTNM() const;
-    
+
 signals:
-    
+
 public slots:
 
     void setTNM(const TNM& tnm);
@@ -55,7 +55,7 @@ private:
 
     class TNMWidgetPriv;
     TNMWidgetPriv* const d;
-    
+
 };
 
 #endif // TNMWIDGET_H

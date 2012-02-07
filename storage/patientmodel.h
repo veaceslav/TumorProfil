@@ -38,7 +38,7 @@ public:
 
     QModelIndex indexForPatient(const Patient::Ptr& patient);
     Patient::Ptr patientForIndex(const QModelIndex& index);
-    
+
     virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
     virtual int rowCount(const QModelIndex& parent = QModelIndex()) const;
@@ -48,17 +48,13 @@ public:
     virtual QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const;
     virtual QModelIndex parent(const QModelIndex& index) const;
 
-signals:
-    
-public slots:
-
 protected slots:
 
     void patientAdded(int index, const Patient::Ptr& patient);
     void patientDataChanged(const Patient::Ptr& patient);
     void patientAboutToBeRemoved(int index, const Patient::Ptr& patient);
     void patientRemoved(const Patient::Ptr& patient);
-    
+
 };
 
 #endif // PATIENTMODEL_H

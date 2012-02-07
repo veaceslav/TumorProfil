@@ -38,11 +38,11 @@ public:
     Patient currentPatient() const;
     /// Returns true if the current data is valid
     bool    isValid() const;
-    
+
 signals:
 
     void editingFinished(const Patient& currentValue);
-    
+
 public slots:
 
     void newPatient();
