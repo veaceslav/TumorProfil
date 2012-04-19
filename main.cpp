@@ -25,18 +25,28 @@
 #include <QDebug>
 #include <QFileInfo>
 #include <QIcon>
+#include <QMessageBox>
 #include <QVariant>
 #include <QUrl>
 
 // Local includes
 
+#include "csvconverter.h"
 #include "databaseparameters.h"
 #include "mainwindow.h"
 #include "patientmanager.h"
 
+/*
+void myMsgHandler(QtMsgType, const char * text)
+{
+    QMessageBox::information(0, QString(), text);
+}
+*/
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    //qInstallMsgHandler(myMsgHandler);
 
     if (!QIcon::hasThemeIcon("document-open")) {
         //If there is no default working icon theme then we should
@@ -46,17 +56,29 @@ int main(int argc, char *argv[])
         QIcon::setThemeName("silk");
     }
 
-    QFileInfo info("//IPSCHLEUCHER/IPOLI-Dokumente/Briefe/tumorprofil.db");
-    qDebug() << info.exists();
+    QFileInfo info("tumorprofil.db");
+    QString dbFile;
+    if (info.exists())
+    {
+        dbFile = info.filePath();
+    }
+    else
+    {
+        dbFile = "//ikt-hpstorage/wiesweg_DB/tumorprofil.db";
+    }
+    qDebug() << "Using database" << dbFile;
 
     DatabaseParameters params =
-            DatabaseParameters::parametersForSQLite("//IPSCHLEUCHER/IPOLI-Dokumente/Briefe/tumorprofil.db");
+            DatabaseParameters::parametersForSQLite(dbFile);
 
     if (!PatientManager::instance()->initialize(params))
     {
         return 1;
     }
     PatientManager::instance()->readDatabase();
+
+    //CSVConverter::execute();
+    //return 0;
 
     MainWindow w;
     w.show();
