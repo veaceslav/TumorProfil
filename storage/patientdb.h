@@ -56,6 +56,7 @@ public:
 
     int addDisease(int patientId, const Disease& d);
     void updateDisease(const Disease& dis);
+    void deletePatient(int id);
     QList<Disease> findDiseases(int patientId);
 
     int addPathology(int diseaseId, const Pathology& path);

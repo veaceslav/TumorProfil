@@ -116,6 +116,12 @@ void PatientDB::updatePatient(const Patient& p)
                                    << p.dateOfBirth.toString(Qt::ISODate) << p.gender << p.id);
 }
 
+void PatientDB::deletePatient(int id)
+{
+    // Triggers do the rest
+    d->db->execSql("DELETE FROM Patients WHERE id=?", id);
+}
+
 QList<Patient> PatientDB::findPatients(const Patient& p)
 {
     QList<QVariant> values;

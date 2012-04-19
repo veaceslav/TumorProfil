@@ -136,7 +136,20 @@ void PatientManager::readDatabase()
 
 Patient::Ptr PatientManager::addPatient(const Patient& values)
 {
-    // TODO: check for duplicate
+    if (!values.isValid())
+    {
+        qDebug() << "Refusing to add invalid patient data.";
+        return Patient::Ptr();
+    }
+
+    // check for duplicate
+    QList<Patient::Ptr> ps = findPatients(values);
+    if (!ps.isEmpty())
+    {
+        qDebug() << "Attempt to add duplicate patient";
+        return ps.first();
+    }
+
     Patient::Ptr p = createPatient(values);
     storeData(p);
     emit patientAdded(d->patients.size()-1, p);
@@ -166,6 +179,23 @@ Patient::Ptr PatientManager::createPatient(const Patient& values)
     return ptr;
 }
 
+void PatientManager::removePatient(const Patient::Ptr& patient)
+{
+    if (!patient || !patient->id)
+    {
+        return;
+    }
+    int index = d->patientIdHash.value(patient->id, -1);
+    if (index == -1)
+    {
+        return;
+    }
+
+    DatabaseAccess().db()->deletePatient(patient->id);
+    cleanUpPatient(index);
+}
+
+
 Patient::Ptr PatientManager::patientForId(int patientId) const
 {
     int index = d->patientIdHash.value(patientId, -1);
@@ -184,6 +214,67 @@ int PatientManager::indexOfPatient(const Patient::Ptr& ptr) const
     }
     return d->patientIdHash.value(ptr->id, -1);
 }
+
+static bool matches(const QString& value, const QString& match)
+{
+    if (value.isNull())
+    {
+        return true;
+    }
+    if (match.endsWith("*"))
+    {
+        QString s1 = match.left(match.size()-1);
+        QString s2 = value.left(s1.size());
+        return value.compare(s1, s2, Qt::CaseInsensitive) == 0;
+    }
+    return value.compare(value, match, Qt::CaseInsensitive) == 0;
+}
+
+static bool matches(const QDate& value, const QDate& match)
+{
+    if (match.isNull())
+    {
+        return true;
+    }
+    return value == match;
+}
+
+static bool matches(Patient::Gender value, Patient::Gender match)
+{
+    if (match == Patient::UnknownGender)
+    {
+        return true;
+    }
+    return value == match;
+}
+
+QList<Patient::Ptr> PatientManager::findPatients(const QString& surname, const QString& firstName,
+                                                 const QDate& dob, Patient::Gender gender)
+{
+    Patient p;
+    p.surname = surname;
+    p.firstName = firstName;
+    p.dateOfBirth = dob;
+    p.gender = gender;
+    return findPatients(p);
+}
+
+QList<Patient::Ptr> PatientManager::findPatients(const Patient& match)
+{
+    QList<Patient::Ptr> ps;
+    foreach (const Patient::Ptr& p, d->patients)
+    {
+        if (matches(p->surname, match.surname)
+                && matches(p->firstName, match.firstName)
+                && matches(p->dateOfBirth, match.dateOfBirth)
+                && matches(p->gender, match.gender))
+        {
+            ps << p;
+        }
+    }
+    return ps;
+}
+
 
 Patient::Ptr PatientManager::patient(int index) const
 {

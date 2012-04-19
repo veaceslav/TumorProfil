@@ -46,6 +46,7 @@ public:
 
     Patient::Ptr addPatient(const Patient& values);
     void updateData(const Patient::Ptr& patient);
+    void removePatient(const Patient::Ptr& patient);
 
     Patient::Ptr patient(int index) const;
     int patientId(int index) const;
@@ -53,6 +54,12 @@ public:
     int numberOfPatients() const;
     Patient::Ptr patientForId(int patientId) const;
     int indexOfPatient(const Patient::Ptr& ptr) const;
+
+    QList<Patient::Ptr> findPatients(const Patient& p);
+    QList<Patient::Ptr> findPatients(const QString& surname,
+                                     const QString& firstName = QString(),
+                                     const QDate& dob = QDate(),
+                                     Patient::Gender gender = Patient::UnknownGender);
 
 signals:
 
