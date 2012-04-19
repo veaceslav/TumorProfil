@@ -34,10 +34,17 @@ class PatientModel : public QAbstractItemModel
 {
     Q_OBJECT
 public:
+
+    enum Roles
+    {
+        PatientPtrRole  = Qt::UserRole,
+        VariantDataRole = Qt::UserRole + 1
+    };
+
     explicit PatientModel(QObject *parent = 0);
 
-    QModelIndex indexForPatient(const Patient::Ptr& patient);
-    Patient::Ptr patientForIndex(const QModelIndex& index);
+    QModelIndex indexForPatient(const Patient::Ptr& patient) const;
+    Patient::Ptr patientForIndex(const QModelIndex& index) const;
 
     virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
@@ -48,12 +55,18 @@ public:
     virtual QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const;
     virtual QModelIndex parent(const QModelIndex& index) const;
 
+    static Patient::Ptr retrievePatient(const QModelIndex& index);
+
 protected slots:
 
     void patientAdded(int index, const Patient::Ptr& patient);
     void patientDataChanged(const Patient::Ptr& patient);
     void patientAboutToBeRemoved(int index, const Patient::Ptr& patient);
     void patientRemoved(const Patient::Ptr& patient);
+
+protected:
+
+    QModelIndex createIndexForRow(int row, int column) const;
 
 };
 
