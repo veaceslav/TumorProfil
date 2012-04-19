@@ -37,7 +37,16 @@ SOURCES += main.cpp\
     storage/databaseoperationgroup.cpp \
     storage/databaseaccess.cpp \
     storage/patientdb.cpp \
-    storage/patientmodel.cpp
+    storage/patientmodel.cpp \
+    storage/patientpropertyfiltermodel.cpp \
+    storage/patientpropertymodel.cpp \
+    datamodel/pathologypropertyinfo.cpp \
+    ui/reportwindow.cpp \
+    ui/reporttableview.cpp \
+    util/csvfile.cpp \
+    util/csvconverter.cpp \
+    medical/modeldatagenerator.cpp \
+    medical/resultcompletenesschecker.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -68,11 +77,22 @@ HEADERS  += mainwindow.h \
     storage/databaseaccess.h \
     storage/patientdb.h \
     storage/databaseinitializationobserver.h \
-    storage/patientmodel.h
+    storage/patientmodel.h \
+    storage/patientpropertyfiltermodel.h \
+    storage/patientpropertymodel.h \
+    datamodel/pathologypropertyinfo.h \
+    ui/reportwindow.h \
+    ui/reporttableview.h \
+    util/csvfile.h \
+    util/csvconverter.h \
+    medical/modeldatagenerator.h \
+    medical/resultcompletenesschecker.h
 
 INCLUDEPATH += datamodel/ \
     ui/ \
-    storage/
+    storage/ \
+    util/ \
+    medical/
 
 OTHER_FILES += \
     gpl-header-template.txt \
