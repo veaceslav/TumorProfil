@@ -25,3 +25,18 @@ Disease::Disease()
     : id(0)
 {
 }
+
+bool Disease::hasPathology() const
+{
+    return !pathologies.isEmpty();
+}
+
+Pathology& Disease::firstPathology()
+{
+    return pathologies.first();
+}
+
+const Pathology& Disease::firstPathology() const
+{
+    return pathologies.first();
+}

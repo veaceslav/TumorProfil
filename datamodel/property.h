@@ -24,6 +24,7 @@
 
 // Qt includes
 
+#include <QList>
 #include <QString>
 
 class Property
@@ -36,6 +37,7 @@ public:
 
     /// A property is valid if the "property" key is valid
     bool isValid() const;
+    bool isNull() const { return !isValid(); }
     /// A property is empty if it is not valid, or if the value is empty
     bool isEmpty() const;
 
@@ -44,6 +46,32 @@ public:
     QString property;
     QString value;
     QString detail;
+};
+
+class PropertyList : public QList<Property>
+{
+public:
+
+    PropertyList();
+    PropertyList(const QList<Property>& list);
+
+    /**
+      Returns the first Property from this list with the
+      given property key, or an invalid property if not found.
+      */
+    Property property(const QString& prop) const;
+    /**
+      Returns alls Properties from this list with the
+      given property key. Returns the empty list if none found.
+      */
+    PropertyList properties(const QString& prop) const;
+    /**
+        Returns true if the given property is found.
+        A null string acts as a wildcard.
+      */
+    bool hasProperty(const QString& prop,
+                     const QString& value = QString(),
+                     const QString& detail = QString()) const;
 };
 
 #endif // PROPERTY_H

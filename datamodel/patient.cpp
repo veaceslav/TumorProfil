@@ -38,3 +38,39 @@ bool Patient::isValid() const
             gender != UnknownGender &&
             dateOfBirth.isValid();
 }
+
+bool Patient::hasDisease() const
+{
+    return !diseases.isEmpty();
+}
+Disease& Patient::firstDisease()
+{
+    return diseases.first();
+}
+
+const Disease& Patient::firstDisease() const
+{
+    return diseases.first();
+}
+
+bool Patient::hasPathology() const
+{
+    if (hasDisease())
+    {
+        return firstDisease().hasPathology();
+    }
+    return false;
+}
+
+const Pathology& Patient::firstPathology() const
+{
+    return firstDisease().firstPathology();
+}
+
+void Patient::setPatientData(const Patient& p)
+{
+    firstName   = p.firstName;
+    surname     = p.surname;
+    gender      = p.gender;
+    dateOfBirth = p.dateOfBirth;
+}

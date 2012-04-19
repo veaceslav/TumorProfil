@@ -26,6 +26,7 @@
 
 #include <QList>
 #include <QDate>
+#include <QMetaType>
 #include <QSharedPointer>
 
 // Local includes
@@ -52,16 +53,29 @@ public:
 
     /** Needs at least names and a date of birth */
     bool isValid() const;
+    bool hasDisease() const;
+    Disease& firstDisease();
+    const Disease& firstDisease() const;
+    bool hasPathology() const;
+    const Pathology& firstPathology() const;
 
     QString             firstName;
     QString             surname;
     QDate               dateOfBirth;
     Gender              gender; // true = male; false = female
-    QList<Property>     patientProperties;
+    PropertyList        patientProperties;
 
     QList<Disease>      diseases;
 
     int                 id;
+
+    /**
+      Sets the attributes firstName, surname, dateOfBirth and gender
+      from the given Patient. Does not touch properties, diseases or id.
+      */
+    void setPatientData(const Patient& p);
 };
+
+Q_DECLARE_METATYPE(Patient::Ptr)
 
 #endif // PATIENT_H

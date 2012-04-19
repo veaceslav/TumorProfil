@@ -39,21 +39,29 @@ public:
     {
         UnknownEntity = 0,
         PulmonaryAdeno = 1,
-        PulmonarySquamous,
-        PulmonaryLargeCell,
-        PulmonaryAdenosquamous,
-        PulmonaryBronchoalveloar,
-        ColorectalAdeno,
+        PulmonarySquamous        = 2,
+        PulmonaryLargeCell       = 3,
+        PulmonaryAdenosquamous   = 4,
+        PulmonaryBronchoalveloar = 5,
+        ColorectalAdeno          = 6,
+        Cholangiocarcinoma       = 7,
+        RenalCell                = 8,
+        Esophageal               = 9,
+        EsophagogastrealJunction = 10,
+        Gastric                  = 11,
+        PulmonaryOtherCarcinoma  = 12,
+        // Only add to the end; database constants!!
 
         FirstEntity = PulmonaryAdeno,
-        LastEntity  = ColorectalAdeno
+        LastEntity  = PulmonaryOtherCarcinoma
     };
 
     enum SampleOrigin
     {
         UnknownOrigin,
         Primary,
-        Metastasis
+        Metastasis,
+        LocalLymphNode
     };
 
     typedef QSharedPointer<Pathology> Ptr;
@@ -62,7 +70,7 @@ public:
 
     Entity          entity;
     SampleOrigin    sampleOrigin;
-    QList<Property> properties;
+    PropertyList    properties;
 
     int             id;
 };

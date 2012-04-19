@@ -49,7 +49,9 @@ public:
 
     int   id;
 
-    bool hasPathology() const { return !pathologies.isEmpty(); }
+    bool hasPathology() const;
+    Pathology& firstPathology();
+    const Pathology& firstPathology() const;
 };
 
 #endif // DISEASE_H

@@ -46,3 +46,59 @@ bool Property::operator==(const Property& other)
             value   == other.value &&
             detail  == other.detail;
 }
+
+PropertyList::PropertyList()
+{
+}
+
+PropertyList::PropertyList(const QList<Property>& list)
+    : QList<Property>(list)
+{
+}
+
+Property PropertyList::property(const QString& key) const
+{
+    foreach(const Property& prop, *this)
+    {
+        if (prop.property == key)
+        {
+            return prop;
+        }
+    }
+    return Property();
+}
+
+PropertyList PropertyList::properties(const QString& key) const
+{
+    PropertyList list;
+    foreach(const Property& prop, *this)
+    {
+        if (prop.property == key)
+        {
+            list << prop;
+        }
+    }
+    return list;
+}
+
+static inline bool matches(const QString& value, const QString& match)
+{
+    return match.isNull() || value == match;
+}
+
+bool PropertyList::hasProperty(const QString& key,
+                               const QString& value,
+                               const QString& detail) const
+{
+    foreach(const Property& prop, *this)
+    {
+        if (matches(prop.property, key)
+                && matches(prop.value, value)
+                && matches(prop.detail, detail))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
