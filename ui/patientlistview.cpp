@@ -23,11 +23,21 @@
 
 // Qt includes
 
+#include <QAbstractButton>
+#include <QAction>
+#include <QContextMenuEvent>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QMessageBox>
+#include <QVBoxLayout>
+#include <QMenu>
 #include <QSortFilterProxyModel>
 
 // Local includes
 
 #include "patient.h"
+#include "patiententerform.h"
+#include "patientmanager.h"
 #include "patientmodel.h"
 
 class PatientListView::PatientListViewPriv
@@ -49,9 +59,13 @@ PatientListView::PatientListView(QWidget *parent) :
     d->sortFilterModel = new QSortFilterProxyModel(this);
 
     d->sortFilterModel->setSourceModel(d->model);
-    setModel(d->model);
+    d->sortFilterModel->setDynamicSortFilter(true);
+    d->sortFilterModel->setSortRole(PatientModel::VariantDataRole);
+    setModel(d->sortFilterModel);
 
-    d->sortFilterModel->sort(0);
+    setColumnWidth(3, 1);
+    sortByColumn(0, Qt::AscendingOrder);
+    setSortingEnabled(true);
 
     connect(this, SIGNAL(activated(QModelIndex)),
             this, SLOT(slotActivated(QModelIndex)));
@@ -59,10 +73,109 @@ PatientListView::PatientListView(QWidget *parent) :
 
 void PatientListView::setCurrentPatient(const Patient::Ptr& p)
 {
-    setCurrentIndex(d->model->indexForPatient(p));
+    setCurrentIndex(indexForPatient(p));
 }
 
 void PatientListView::slotActivated(const QModelIndex &index)
 {
-    emit activated(d->model->patientForIndex(index));
+    emit activated(patientForIndex(index));
+}
+
+void PatientListView::contextMenuEvent(QContextMenuEvent *event)
+{
+    QModelIndex index = indexAt(event->pos());
+    if (!index.isValid())
+    {
+        return;
+    }
+    Patient::Ptr p = patientForIndex(index);
+    if (!p)
+    {
+        return;
+    }
+
+    QMenu menu;
+
+    QAction* editPatientAction = menu.addAction(tr("Patientendaten ändern"), this, SLOT(editPatient()));
+    editPatientAction->setData(QVariant::fromValue(p));
+    QAction* delPatientAction = menu.addAction(tr("Patienten entfernen"), this, SLOT(deletePatient()));
+    delPatientAction->setData(QVariant::fromValue(p));
+
+    menu.exec(event->globalPos());
+}
+
+QModelIndex PatientListView::indexForPatient(const Patient::Ptr& patient)
+{
+    return d->sortFilterModel->mapFromSource(d->model->indexForPatient(patient));
+}
+
+Patient::Ptr PatientListView::patientForIndex(const QModelIndex& index)
+{
+    return d->model->patientForIndex(d->sortFilterModel->mapToSource(index));
+}
+
+void PatientListView::editPatient()
+{
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (!action)
+    {
+        return;
+    }
+    Patient::Ptr p = action->data().value<Patient::Ptr>();
+    if (!p || !indexForPatient(p).isValid())
+    {
+        return;
+    }
+
+    PatientEnterForm* form = new PatientEnterForm;
+    QDialog* dialog = new QDialog;
+    QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    connect(buttons, SIGNAL(accepted()), dialog, SLOT(accept()));
+    connect(buttons, SIGNAL(rejected()), dialog, SLOT(reject()));
+    QVBoxLayout* layout = new QVBoxLayout;
+    layout->addWidget(form);
+    layout->addWidget(buttons);
+    dialog->setLayout(layout);
+
+    form->setValues(*p);
+    int result = dialog->exec();
+
+    if (result != QDialog::Accepted)
+    {
+        return;
+    }
+
+    p->setPatientData(form->currentPatient());
+    PatientManager::instance()->updateData(p);
+}
+
+void PatientListView::deletePatient()
+{
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (!action)
+    {
+        return;
+    }
+    Patient::Ptr p = action->data().value<Patient::Ptr>();
+    if (!p || !indexForPatient(p).isValid())
+    {
+        return;
+    }
+
+    QMessageBox box;
+    box.setIcon(QMessageBox::Warning);
+    box.setText(tr("Das Löschen eines Patienten entfernt alle Daten unwiderruflich"));
+    box.setInformativeText(tr("Möchten sie den Patienten \"%1, %2\" wirklich aus der Datenbank entfernen?")
+                           .arg(p->surname).arg(p->firstName));
+    box.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+    box.button(QMessageBox::Yes)->setText(tr("Entfernen"));
+    box.button(QMessageBox::Cancel)->setText(tr("Abbrechen"));
+    box.setDefaultButton(QMessageBox::Yes);
+    if (box.exec() != QMessageBox::Yes)
+    {
+        return;
+    }
+
+    PatientManager::instance()->removePatient(p);
+
 }

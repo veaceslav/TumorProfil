@@ -36,6 +36,9 @@ class PatientListView : public QTreeView
 public:
     explicit PatientListView(QWidget *parent = 0);
 
+    QModelIndex indexForPatient(const Patient::Ptr& patient);
+    Patient::Ptr patientForIndex(const QModelIndex& index);
+
 signals:
 
     void activated(const Patient::Ptr& p);
@@ -47,6 +50,12 @@ public slots:
 protected slots:
 
     void slotActivated(const QModelIndex &index);
+    void editPatient();
+    void deletePatient();
+
+protected:
+
+    void contextMenuEvent(QContextMenuEvent *event);
 
 private:
 
