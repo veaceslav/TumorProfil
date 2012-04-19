@@ -48,6 +48,7 @@ public:
           initialDiagnosisEdit(0),
           sampleFromPrimaryButton(0),
           sampleFromMetastasisButton(0),
+          sampleFromLNButton(0),
           sampleOriginGroup(0),
           pathologyTab(0),
           pathologyLayout(0),
@@ -60,6 +61,7 @@ public:
     QDateEdit             *initialDiagnosisEdit;
     QRadioButton          *sampleFromPrimaryButton;
     QRadioButton          *sampleFromMetastasisButton;
+    QRadioButton          *sampleFromLNButton;
     QButtonGroup          *sampleOriginGroup;
 
     QWidget               *pathologyTab;
@@ -82,12 +84,15 @@ DiseaseTabWidget::DiseaseTabWidget(QWidget *parent) :
     diseaseLayout->addRow(d->entityWidget);
     diseaseLayout->addRow(tr("Erstdiagnose:"), d->initialDiagnosisEdit);
     d->sampleFromPrimaryButton = new QRadioButton(tr("aus dem Primärtumor"));
+    d->sampleFromLNButton = new QRadioButton(tr("aus einem lokalen Lymphknoten"));
     d->sampleFromMetastasisButton = new QRadioButton(tr("aus einer Metastase"));
     diseaseLayout->addRow(tr("Histologie"), d->sampleFromPrimaryButton);
+    diseaseLayout->addRow(QString(), d->sampleFromLNButton);
     diseaseLayout->addRow(QString(), d->sampleFromMetastasisButton);
     d->diseaseTab->setLayout(diseaseLayout);
     d->sampleOriginGroup = new QButtonGroup(this);
     d->sampleOriginGroup->addButton(d->sampleFromPrimaryButton, Pathology::Primary);
+    d->sampleOriginGroup->addButton(d->sampleFromLNButton, Pathology::LocalLymphNode);
     d->sampleOriginGroup->addButton(d->sampleFromMetastasisButton, Pathology::Metastasis);
     d->pathologyTab = new QWidget;
     d->pathologyLayout = new QFormLayout;
@@ -100,6 +105,8 @@ DiseaseTabWidget::DiseaseTabWidget(QWidget *parent) :
             this, SLOT(slotEntitySelectionChanged(Pathology::Entity)));
     connect(d->entityWidget, SIGNAL(entityChanged(Pathology::Entity)),
             this, SLOT(slotEntityChanged(Pathology::Entity)));
+    connect(d->initialDiagnosisEdit, SIGNAL(dateChanged(QDate)),
+            this, SLOT(slotInitialDiagnosisDateChanged(QDate)));
 
     updatePathologyTab();
 }
@@ -258,6 +265,19 @@ void DiseaseTabWidget::updatePathologyTab()
     d->generator.switchEntity(d->entityWidget->currentEntity(), d->pathologyLayout);
     setTabEnabled(indexOf(d->pathologyTab),
                   d->entityWidget->currentEntity() != Pathology::UnknownEntity);
+}
+
+void DiseaseTabWidget::slotInitialDiagnosisDateChanged(const QDate& date)
+{
+    qDebug() << date;
+    if (date > QDate::currentDate())
+    {
+        QDate previousYear = date.addYears(-1);
+        if (previousYear < QDate::currentDate())
+        {
+            d->initialDiagnosisEdit->setDate(previousYear);
+        }
+    }
 }
 
 void DiseaseTabWidget::keyPressEvent(QKeyEvent* e)

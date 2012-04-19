@@ -42,6 +42,7 @@ public:
 signals:
 
     void editingFinished(const Patient& currentValue);
+    void nameEdited(const Patient& currentValue);
 
 public slots:
 
@@ -51,6 +52,7 @@ public slots:
 protected slots:
 
     void returnPressed();
+    void nameEdited();
 
 protected:
 

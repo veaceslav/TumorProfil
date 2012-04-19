@@ -75,10 +75,10 @@ PatientEnterForm::PatientEnterForm(QWidget *parent) :
     layout->addRow(tr("Geschlecht:"), genderLayout);
     setLayout(layout);
 
-    /*connect(d->surnameEdit, SIGNAL(returnPressed()),
-            this, SLOT(returnPressed()));
-    connect(d->firstNameEdit, SIGNAL(returnPressed()),
-            this, SLOT(returnPressed()));*/
+    connect(d->surnameEdit, SIGNAL(textEdited(QString)),
+            this, SLOT(nameEdited()));
+    connect(d->firstNameEdit, SIGNAL(textEdited(QString)),
+            this, SLOT(nameEdited()));
 }
 
 PatientEnterForm::~PatientEnterForm()
@@ -107,7 +107,8 @@ void PatientEnterForm::setValues(const Patient& patient)
     d->firstNameEdit->setText(patient.firstName);
     d->surnameEdit->setText(patient.surname);
     d->dobEdit->setDate(patient.dateOfBirth);
-    d->maleButton->setChecked(patient.gender == Patient::Male);
+    d->maleButton->setChecked(patient.gender == Patient::Male || patient.gender == Patient::UnknownGender);
+    d->femaleButton->setChecked(patient.gender == Patient::Female);
 }
 
 bool PatientEnterForm::isValid() const
@@ -139,3 +140,11 @@ void PatientEnterForm::keyPressEvent(QKeyEvent* e)
     QWidget::keyPressEvent(e);
 }
 
+void PatientEnterForm::nameEdited()
+{
+    if (d->firstNameEdit->text().isEmpty() || d->surnameEdit->text().isEmpty())
+    {
+        return;
+    }
+    emit nameEdited(currentPatient());
+}

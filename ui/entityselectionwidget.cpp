@@ -75,7 +75,13 @@ EntitySelectionWidget::EntitySelectionWidget(QWidget *parent) :
     d->addRadioButton(Pathology::PulmonaryLargeCell, tr("Pulmonales großzelliges Karzinom"));
     d->addRadioButton(Pathology::PulmonaryAdenosquamous, tr("Pulmonales adenosquamöses Karzinom"));
     d->addRadioButton(Pathology::PulmonaryBronchoalveloar, tr("Bronchoalveoläres Karzinom"));
+    d->addRadioButton(Pathology::PulmonaryOtherCarcinoma, tr("Andere Karzinome der Lunge"));
     d->addRadioButton(Pathology::ColorectalAdeno, tr("Kolorektales Karzinom"));
+    d->addRadioButton(Pathology::Cholangiocarcinoma, tr("Gallengangskarzinom"));
+    d->addRadioButton(Pathology::RenalCell, tr("Nierenzellkarzinom"));
+    d->addRadioButton(Pathology::Esophageal, tr("Ösophaguskarzinom"));
+    d->addRadioButton(Pathology::EsophagogastrealJunction, tr("Ösophagogastrales Karzinom"));
+    d->addRadioButton(Pathology::Gastric, tr("Magenkarzinom"));
 
     setLayout(d->layout);
 }
@@ -99,8 +105,10 @@ void EntitySelectionWidget::setEntity(Pathology::Entity entity)
 
     d->entity = entity;
     QAbstractButton* r = d->buttonGroup->button(entity);
+    qDebug() << entity;
     if (r)
     {
+        qDebug() << r->text() << d->buttonGroup->id(r);
         r->setChecked(true);
     }
     else if (d->buttonGroup->checkedButton())
