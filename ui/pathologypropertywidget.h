@@ -29,6 +29,7 @@
 // Local includes
 
 #include "property.h"
+#include "pathologypropertyinfo.h"
 
 class QFormLayout;
 class QLabel;
@@ -38,17 +39,10 @@ class PathologyPropertyWidget : public QObject
     Q_OBJECT
 public:
 
-    enum Mode
-    {
-        IHCClassical,
-        IHCBoolean, // "<10%, niedrige Intensität"
-        IHCBooleanPercentage,
-        Fish,
-        Mutation,
-        StableUnstable
-    };
-
-    explicit PathologyPropertyWidget(const QString& property, Mode mode, QWidget *parent = 0);
+    explicit PathologyPropertyWidget(PathologyPropertyInfo::Property property, QObject *parent = 0);
+    explicit PathologyPropertyWidget(const PathologyPropertyInfo& info, QObject *parent = 0);
+    explicit PathologyPropertyWidget(const QString& property, PathologyPropertyInfo::ValueTypeCategory mode,
+                                     QObject *parent = 0);
     ~PathologyPropertyWidget();
 
     QString propertyName() const;
@@ -67,16 +61,19 @@ public:
     /** Add this widget to a QFormLayout */
     void addToLayout(QFormLayout *layout);
 
+    /*
     static PathologyPropertyWidget* createIHC(const QString& property, const QString& label);
     static PathologyPropertyWidget* createIHCBoolean(const QString& property, const QString& label);
     static PathologyPropertyWidget* createIHCBooleanPercentage(const QString& property, const QString& label);
     static PathologyPropertyWidget* createFish(const QString& property, const QString& label, const QString& detailLabel);
     static PathologyPropertyWidget* createMutation(const QString& property, const QString& label);
     static PathologyPropertyWidget* createStableUnstable(const QString& property, const QString& label);
+    */
 
 public slots:
 
     void setValue(const Property& prop);
+    void textInserted(const QString& text);
 
 private:
 

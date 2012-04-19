@@ -35,21 +35,23 @@
 class PathologyPropertyWidget::PathologyPropertyWidgetPriv
 {
 public:
-    PathologyPropertyWidgetPriv()
-        : label(0),
+    PathologyPropertyWidgetPriv(PathologyPropertyWidget* q)
+        : mode(PathologyPropertyInfo::InvalidCategory),
+          label(0),
           layout(0),
           radioNP(0),
           radioButtons(0),
           freeInput(0),
           freeInputLabel(0),
           freeInputSuffix(0),
-          propertyName("PathologyProperty")
+          propertyName("PathologyProperty"),
+          q(q)
     {
     }
 
     QString      property;
 
-    PathologyPropertyWidget::Mode mode;
+    PathologyPropertyInfo::ValueTypeCategory mode;
     QLabel       *label;
     QHBoxLayout  *layout;
     QRadioButton *radioNP;
@@ -58,6 +60,7 @@ public:
     QLabel       *freeInputLabel;
     QLabel       *freeInputSuffix;
     const char   *const propertyName;
+    PathologyPropertyWidget* const q;
 
     void createNotPerformed()
     {
@@ -92,50 +95,35 @@ public:
             freeInputSuffix = new QLabel(suffix);
             layout->addWidget(freeInputSuffix);
         }
+        QObject::connect(freeInput, SIGNAL(textChanged(QString)),
+                         q, SLOT(textInserted(QString)));
     }
 
-    void create()
+    void create(const PathologyPropertyInfo& info)
     {
+        mode = info.valueType;
+        property = info.id;
+        radioButtons = new QButtonGroup(q);
         layout = new QHBoxLayout;
         label = new QLabel;
-        switch (mode)
+        ValueTypeCategoryInfo typeInfo(info.valueType);
+        foreach (const QVariant& value, typeInfo.possibleValues())
         {
-        case IHCClassical:
-            createNotPerformed();
-            createRadioButton(tr("0"), 0);
-            createRadioButton(tr("1+"), 1);
-            createRadioButton(tr("2+"), 2);
-            createRadioButton(tr("3+"), 3);
-            break;
-        case IHCBoolean:
-            createNotPerformed();
-            createRadioButton(tr("negativ (<10%, niedrige Intensität)"), false);
-            createRadioButton(tr("positiv"), true);
-            break;
-        case IHCBooleanPercentage:
-            createNotPerformed();
-            createRadioButton(tr("negativ"), false);
-            createLineEdit(QString(), tr("% Zellen"));
-            createRadioButton(tr("positiv"), true);
-            break;
-        case Fish:
-            createNotPerformed();
-            createRadioButton(tr("negativ"), false);
-            createRadioButton(tr("positiv"), true);
-            createLineEdit("", QString());
-            break;
-        case Mutation:
-            createNotPerformed();
-            createRadioButton(tr("negativ"), false);
-            createRadioButton(tr("positiv"), true);
-            createLineEdit(tr("Mutation:"), QString());
-            break;
-        case StableUnstable:
-            createNotPerformed();
-            createRadioButton(tr("stabil"), false);
-            createRadioButton(tr("instabil"), true);
-            break;
+            if (value.isNull() && value.type() == QVariant::Bool)
+            {
+                createNotPerformed();
+            }
+            else
+            {
+                createRadioButton(typeInfo.toString(value), value);
+            }
         }
+        if (typeInfo.hasDetail())
+        {
+            QPair<QString,QString> lineEditLabel = typeInfo.defaultDetailLabel();
+            createLineEdit(lineEditLabel.first, lineEditLabel.second);
+        }
+
         layout->addStretch();
     }
 
@@ -154,51 +142,20 @@ public:
         return 0;
     }
 
-    static QString boolToString(const QVariant& var)
-    {
-        return boolToString(var.toBool());
-    }
-
-    static QString boolToString(bool b)
-    {
-        if (b)
-        {
-            return "1";
-        }
-        else
-        {
-            return "0";
-        }
-    }
-
-    static bool stringToBool(const QString& s)
-    {
-        if (s == "1" || s == "true" || s == "pos" || s.startsWith("positiv") || s == "+")
-        {
-            return true;
-        }
-        if (s == "0" || s == "false" || s == "neg" || s.startsWith("negativ") || s == "-")
-        {
-            return false;
-        }
-        bool ok;
-        int i = s.toInt(&ok);
-        if (ok)
-        {
-            return i;
-        }
-        return false;
-    }
 };
 
-PathologyPropertyWidget::PathologyPropertyWidget(const QString& property, Mode mode, QWidget *parent) :
-    QObject(parent),
-    d(new PathologyPropertyWidgetPriv)
+PathologyPropertyWidget::PathologyPropertyWidget(PathologyPropertyInfo::Property property, QObject *parent)
+    : QObject(parent),
+      d(new PathologyPropertyWidgetPriv(this))
 {
-    d->mode = mode;
-    d->property = property;
-    d->radioButtons = new QButtonGroup(this);
-    d->create();
+    d->create(PathologyPropertyInfo::info(property));
+}
+
+PathologyPropertyWidget::PathologyPropertyWidget(const PathologyPropertyInfo& info, QObject *parent)
+    : QObject(parent),
+      d(new PathologyPropertyWidgetPriv(this))
+{
+    d->create(info);
 }
 
 PathologyPropertyWidget::~PathologyPropertyWidget()
@@ -236,11 +193,19 @@ void PathologyPropertyWidget::addToLayout(QFormLayout *layout)
 
 void PathologyPropertyWidget::setLabel(const QString& text)
 {
+    if (!d->label)
+    {
+        return;
+    }
     d->label->setText(text);
 }
 
 void PathologyPropertyWidget::setDetailLabel(const QString& label)
 {
+    if (!d->freeInputLabel)
+    {
+        return;
+    }
     d->freeInputLabel->setText(label);
 }
 
@@ -272,31 +237,19 @@ Property PathologyPropertyWidget::currentProperty()
     }
 
     QRadioButton* checkedButton = static_cast<QRadioButton*>(d->radioButtons->checkedButton());
-
-    switch (d->mode)
+    if (!checkedButton)
     {
-    case IHCClassical:
-        p.value = checkedButton->property(d->propertyName).toString();
-        break;
-    case IHCBoolean:
-        p.value = d->boolToString(checkedButton->property(d->propertyName));
-        break;
-    case IHCBooleanPercentage:
-        p.value = d->boolToString(checkedButton->property(d->propertyName));
-        p.detail = d->freeInput->text();
-        break;
-    case Fish:
-        p.value = d->boolToString(checkedButton->property(d->propertyName));
-        p.detail = d->freeInput->text();
-        break;
-    case Mutation:
-        p.value = d->boolToString(checkedButton->property(d->propertyName));
-        p.detail = d->freeInput->text();
-        break;
-    case StableUnstable:
-        p.value = d->boolToString(checkedButton->property(d->propertyName));
-        break;
+        return p;
     }
+
+    ValueTypeCategoryInfo typeInfo(d->mode);
+
+    p.value = typeInfo.toPropertyValue(checkedButton->property(d->propertyName));
+    if (typeInfo.hasDetail())
+    {
+        p.detail = d->freeInput->text();
+    }
+
     return p;
 }
 
@@ -309,39 +262,18 @@ void PathologyPropertyWidget::setValue(const Property& prop)
     }
 
     QVariant value;
-    QRadioButton* toBeChecked = 0;
-    switch (d->mode)
-    {
-    case IHCClassical:
-        toBeChecked = d->findRadioButton(prop.value.toInt());
-        break;
-    case IHCBoolean:
-        toBeChecked = d->findRadioButton(d->stringToBool(prop.value));
-        break;
-    case IHCBooleanPercentage:
-        toBeChecked = d->findRadioButton(d->stringToBool(prop.value));
-        break;
-    case Fish:
-        toBeChecked = d->findRadioButton(d->stringToBool(prop.value));
-        break;
-    case Mutation:
-        toBeChecked = d->findRadioButton(d->stringToBool(prop.value));
-        break;
-    case StableUnstable:
-        toBeChecked = d->findRadioButton(d->stringToBool(prop.value));
-        break;
-    }
-
-    if (d->freeInput)
-    {
-        d->freeInput->setText(prop.detail);
-    }
+    ValueTypeCategoryInfo typeInfo(d->mode);
+    QRadioButton* toBeChecked = d->findRadioButton(typeInfo.toValue(prop.value));
     if (toBeChecked)
     {
         toBeChecked->setChecked(true);
     }
+    if (typeInfo.hasDetail() && d->freeInput)
+    {
+        d->freeInput->setText(prop.detail);
+    }
 }
-
+/*
 PathologyPropertyWidget* PathologyPropertyWidget::createIHC(const QString& property, const QString& label)
 {
     PathologyPropertyWidget* w = new PathologyPropertyWidget(property, PathologyPropertyWidget::IHCClassical);
@@ -393,6 +325,18 @@ PathologyPropertyWidget* PathologyPropertyWidget::createStableUnstable(const QSt
     w->setLabel(label);
     return w;
 }
-
+*/
+void PathologyPropertyWidget::textInserted(const QString&)
+{
+    // E.g., when entering a mutation, set the radio button to Positive
+    if (!d->radioButtons->checkedButton() || d->radioButtons->checkedButton() == d->radioNP)
+    {
+        QAbstractButton* button = d->findRadioButton(true);
+        if (button)
+        {
+            button->setChecked(true);
+        }
+    }
+}
 
 

@@ -30,6 +30,7 @@
 // Local includes
 
 #include "pathology.h"
+#include "pathologypropertyinfo.h"
 
 class QFormLayout;
 
@@ -74,6 +75,10 @@ public:
     QList<QObject*>   m_objects;
     QList<PathologyPropertyWidget*> m_widgets;
     QHash<QString, PathologyPropertyWidget*> m_hash;
+
+private:
+
+    PathologyPropertyWidget* create(PathologyPropertyInfo::Property property);
 };
 
 #endif // PATHOLOGYWIDGETGENERATOR_H

@@ -70,6 +70,15 @@ bool PathologyWidgetGenerator::switchEntity(Pathology::Entity entity, QFormLayou
     return false;
 }
 
+PathologyPropertyWidget* PathologyWidgetGenerator::create(PathologyPropertyInfo::Property property)
+{
+    PathologyPropertyInfo info = PathologyPropertyInfo::info(property);
+    PathologyPropertyWidget* w = new PathologyPropertyWidget(info);
+    w->setLabel(info.label);
+    w->setDetailLabel(info.detailLabel);
+    return w;
+}
+
 QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e)
 {   
     m_entity = e;
@@ -78,70 +87,90 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e)
     case Pathology::PulmonaryAdeno:
     case Pathology::PulmonaryBronchoalveloar:
     case Pathology::PulmonaryLargeCell:
+    case Pathology::PulmonaryAdenosquamous:
+    case Pathology::PulmonaryOtherCarcinoma:
         m_objects << new QLabel(tr("Immunhistochemie"));
-        m_objects << PathologyPropertyWidget::createIHCBoolean("ihc/pten", tr("PTEN"));
-        m_objects << PathologyPropertyWidget::createIHC("ihc/p-akt?p=s473", tr("<qt>p-AKT<sup>S473</sup></qt>"));
-        m_objects << PathologyPropertyWidget::createIHC("ihc/p-erk", tr("p-ERK"));
-        m_objects << PathologyPropertyWidget::createIHC("ihc/alk", tr("ALK"));
-        m_objects << PathologyPropertyWidget::createIHC("ihc/her2", tr("HER2"));
+        m_objects << create(PathologyPropertyInfo::IHC_PTEN);
+        m_objects << create(PathologyPropertyInfo::IHC_pAKT);
+        m_objects << create(PathologyPropertyInfo::IHC_pERK);
+        m_objects << create(PathologyPropertyInfo::IHC_ALK);
+        m_objects << create(PathologyPropertyInfo::IHC_HER2);
 
         m_objects << new QLabel(tr("FISH"));
-        m_objects << PathologyPropertyWidget::createFish("fish/alk", tr("ALK-Translokation"), tr("Prozentsatz:"));
-        m_objects << PathologyPropertyWidget::createFish("fish/her2", tr("HER2-Amplifikation"), tr("Ratio HER2/CEP7:"));
+        m_objects << create(PathologyPropertyInfo::Fish_ALK);
+        m_objects << create(PathologyPropertyInfo::Fish_HER2);
 
         m_objects << new QLabel(tr("Sequenzanalysen"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/kras?exon=2", tr("KRAS Exon 2"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/egfr?exon=19,21", tr("EGFR Exon 19 & 21"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/pik3ca?exon=10,21", tr("PIK3CA Exon 10 & 21"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/braf?exon=15", tr("BRAF Exon 15"));
+        m_objects << create(PathologyPropertyInfo::Mut_KRAS_2);
+        m_objects << create(PathologyPropertyInfo::Mut_EGFR_19_21);
+        m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
+        m_objects << create(PathologyPropertyInfo::Mut_BRAF_15);
         m_objects << new QLabel(tr("Weitere Sequenzanalysen"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/egfr?exon=18,20", tr("EGFR Exon 18 & 20"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/kras?exon=3", tr("KRAS Exon 3"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/braf?exon=11", tr("BRAF Exon 11"));
+        m_objects << create(PathologyPropertyInfo::Mut_EGFR_18_20);
+        m_objects << create(PathologyPropertyInfo::Mut_KRAS_3);
+        m_objects << create(PathologyPropertyInfo::Mut_BRAF_11);
         break;
     case Pathology::PulmonarySquamous:
-    case Pathology::PulmonaryAdenosquamous:
         m_objects << new QLabel(tr("Immunhistochemie"));
-        m_objects << PathologyPropertyWidget::createIHCBoolean("ihc/pten", tr("PTEN"));
-        m_objects << PathologyPropertyWidget::createIHC("ihc/p-akt?p=s473", tr("<qt>p-AKT<sup>S473</sup></qt>"));
-        m_objects << PathologyPropertyWidget::createIHC("ihc/p-erk", tr("p-ERK"));
+        m_objects << create(PathologyPropertyInfo::IHC_PTEN);
+        m_objects << create(PathologyPropertyInfo::IHC_pAKT);
+        m_objects << create(PathologyPropertyInfo::IHC_pERK);
 
         m_objects << new QLabel(tr("FISH"));
-        m_objects << PathologyPropertyWidget::createFish("fish/fgfr1", tr("FGFR1-Amplifikation"), tr("Ratio FGFR1/CEP8:"));
+        m_objects << create(PathologyPropertyInfo::Fish_FGFR1);
 
         m_objects << new QLabel(tr("Sequenzanalysen"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/pik3ca?exon=10,21", tr("PIK3CA Exon 10 & 21"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/ddr2?exon=15-18", tr("DDR2 Exon 15-18"));
+        m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
+        m_objects << create(PathologyPropertyInfo::Mut_DDR2);
 
         m_objects << new QLabel(tr("Weitere Sequenzanalysen (Adenosquamös)"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/egfr?exon=19,21", tr("EGFR Exon 19 & 21"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/kras?exon=2", tr("KRAS Exon 2"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/kras?exon=3", tr("KRAS Exon 3"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/braf?exon=15", tr("BRAF Exon 15"));
+        m_objects << create(PathologyPropertyInfo::Mut_EGFR_19_21);
+        m_objects << create(PathologyPropertyInfo::Mut_KRAS_2);
+        m_objects << create(PathologyPropertyInfo::Mut_KRAS_3);
+        m_objects << create(PathologyPropertyInfo::Mut_BRAF_15);
         break;
     case Pathology::ColorectalAdeno:
         m_objects << new QLabel(tr("Immunhistochemie"));
-        m_objects << PathologyPropertyWidget::createIHC("ihc/p-akt?p=s473", tr("<qt>p-AKT<sup>S473</sup></qt>"));
-        m_objects << PathologyPropertyWidget::createIHCBooleanPercentage("ihc/p-p70S6k", tr("p-p70S6K"));
-        m_objects << PathologyPropertyWidget::createIHCBooleanPercentage("ihc/p-erk", tr("p-ERK"));
-        m_objects << PathologyPropertyWidget::createIHCBoolean("ihc/pten", tr("PTEN"));
+        m_objects << create(PathologyPropertyInfo::IHC_pAKT);
+        m_objects << create(PathologyPropertyInfo::IHC_pP70S6K);
+        m_objects << create(PathologyPropertyInfo::IHC_pERK);
+        m_objects << create(PathologyPropertyInfo::IHC_PTEN);
 
         m_objects << new QLabel(tr("Sequenzanalysen"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/kras?exon=2", tr("KRAS Exon 2"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/pik3ca?exon=10,21", tr("PIK3CA Exon 10 & 21"));
+        m_objects << create(PathologyPropertyInfo::Mut_KRAS_2);
+        m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
         m_objects << new QLabel(tr("Sequenzanalysen k-ras Exon 2 Wildtyp"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/kras?exon=3", tr("KRAS Exon 3"));
-        m_objects << PathologyPropertyWidget::createMutation("mut/braf?exon=15", tr("BRAF Exon 15"));
+        m_objects << create(PathologyPropertyInfo::Mut_KRAS_3);
+        m_objects << create(PathologyPropertyInfo::Mut_BRAF_15);
 
         m_objects << new QLabel(tr("Sonderuntersuchungen (V.a. HNPCC)"));
-        m_objects << PathologyPropertyWidget::createIHC("ihc/mlh1", tr("MLH1"));
-        m_objects << PathologyPropertyWidget::createIHC("ihc/msh2", tr("MSH2"));
-        m_objects << PathologyPropertyWidget::createIHC("ihc/msh6", tr("MSH6"));
-        m_objects << PathologyPropertyWidget::createStableUnstable("msi/d5s346", tr("MSI PCR: D5S346"));
-        m_objects << PathologyPropertyWidget::createStableUnstable("msi/bat26", tr("MSI PCR: BAT26"));
-        m_objects << PathologyPropertyWidget::createStableUnstable("msi/bat25", tr("MSI PCR: BAT25"));
-        m_objects << PathologyPropertyWidget::createStableUnstable("msi/d17s250", tr("MSI PCR: D17S250"));
-        m_objects << PathologyPropertyWidget::createStableUnstable("msi/d2s123", tr("MSI PCR: D2S123"));
+        m_objects << create(PathologyPropertyInfo::IHC_MLH1);
+        m_objects << create(PathologyPropertyInfo::IHC_MSH2);
+        m_objects << create(PathologyPropertyInfo::IHC_MSH6);
+        m_objects << create(PathologyPropertyInfo::PCR_D5S346);
+        m_objects << create(PathologyPropertyInfo::PCR_BAT26);
+        m_objects << create(PathologyPropertyInfo::PCR_BAT25);
+        m_objects << create(PathologyPropertyInfo::PCR_D17S250);
+        m_objects << create(PathologyPropertyInfo::PCR_D2S123);
+        break;
+    case Pathology::RenalCell:
+        m_objects << new QLabel(tr("Sequenzanalysen"));
+        m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
+        break;
+    case Pathology::Cholangiocarcinoma:
+        m_objects << new QLabel(tr("Sequenzanalysen"));
+        m_objects << create(PathologyPropertyInfo::Mut_KRAS_2);
+        break;
+    case Pathology::Esophageal:
+    case Pathology::EsophagogastrealJunction:
+    case Pathology::Gastric:
+        m_objects << new QLabel(tr("Immunhistochemie"));
+        m_objects << create(PathologyPropertyInfo::IHC_pAKT);
+        m_objects << create(PathologyPropertyInfo::IHC_pP70S6K);
+        m_objects << create(PathologyPropertyInfo::IHC_pERK);
+        m_objects << create(PathologyPropertyInfo::IHC_PTEN);
+        m_objects << new QLabel(tr("Sequenzanalysen"));
+        m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
         break;
     case Pathology::UnknownEntity:
         break;
