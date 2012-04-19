@@ -23,11 +23,13 @@
 
 // Qt includes
 
+#include <QAbstractItemModel>
 #include <QAction>
 #include <QDebug>
 #include <QMessageBox>
 #include <QSplitter>
 #include <QStackedLayout>
+#include <QStatusBar>
 #include <QToolBar>
 
 // Local includes
@@ -38,6 +40,8 @@
 #include "patientlistview.h"
 #include "patientmanager.h"
 #include "pathologywidgetgenerator.h"
+#include "reporttableview.h"
+#include "reportwindow.h"
 #include "tnmwidget.h"
 
 class MainWindow::MainWindowPriv
@@ -56,6 +60,7 @@ public:
     QStackedLayout   *workLayout;
 
     QToolBar         *toolBar;
+    QStatusBar       *statusBar;
 
     Patient::Ptr      currentPatient;
 };
@@ -66,6 +71,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setupUI();
     setupToolbar();
+    setupStatusBar();
 }
 
 MainWindow::~MainWindow()
@@ -85,6 +91,26 @@ void MainWindow::setupToolbar()
     d->toolBar->addAction(QIcon::fromTheme("cancel"),
                           tr("Änderungen verwerfen"),
                           this, SLOT(discardChanges()));
+
+    d->toolBar->addSeparator();
+
+    d->toolBar->addAction(QIcon::fromTheme("report"),
+                          tr("Analyse"),
+                          this, SLOT(showReport()));
+}
+
+void MainWindow::setupStatusBar()
+{
+    statusBar();
+
+    connect(d->listView->model(), SIGNAL(rowsInserted(QModelIndex,int,int)),
+            this, SLOT(patientNumberChanged()));
+    connect(d->listView->model(), SIGNAL(rowsRemoved(QModelIndex,int,int)),
+            this, SLOT(patientNumberChanged()));
+    connect(d->listView->model(), SIGNAL(modelReset()),
+            this, SLOT(patientNumberChanged()));
+
+    patientNumberChanged();
 }
 
 void MainWindow::setupUI()
@@ -118,13 +144,16 @@ void MainWindow::setupUI()
     connect(d->patientEnterForm, SIGNAL(editingFinished(Patient)),
             this, SLOT(newPatientEntered(Patient)));
 
+    connect(d->patientEnterForm, SIGNAL(nameEdited(Patient)),
+            this, SLOT(patientNameEdited(Patient)));
+
     connect(d->listView, SIGNAL(activated(Patient::Ptr)),
             this, SLOT(setPatient(Patient::Ptr)));
 
     connect(d->tabWidget, SIGNAL(editingFinished()),
             this, SLOT(enterNewPatient()));
 
-    resize(800, 600);
+    resize(1000, 800);
     d->splitter->setSizes(QList<int>() << 250 << 550);
 }
 
@@ -190,4 +219,33 @@ void MainWindow::closeEvent(QCloseEvent *e)
 {
     save();
     QMainWindow::closeEvent(e);
+}
+
+void MainWindow::showReport()
+{
+    ReportWindow* report = new ReportWindow;
+    report->setAttribute(Qt::WA_DeleteOnClose);
+    report->setAttribute(Qt::WA_QuitOnClose, false);
+
+    connect(report->view(), SIGNAL(activated(Patient::Ptr)),
+            this, SLOT(setPatient(Patient::Ptr)));
+    connect(report->view(), SIGNAL(activated(Patient::Ptr)),
+            this, SLOT(raise()));
+
+    report->showMaximized();
+}
+
+void MainWindow::patientNameEdited(const Patient &p)
+{
+    // TODO: improve auto-completion
+    QList<Patient::Ptr> candidates = PatientManager::instance()->findPatients(p.surname, p.firstName);
+    if (!candidates.isEmpty())
+    {
+        d->patientEnterForm->setValues(*candidates.first());
+    }
+}
+
+void MainWindow::patientNumberChanged()
+{
+    statusBar()->showMessage(tr("%1 Patienten").arg(d->listView->model()->rowCount()));
 }

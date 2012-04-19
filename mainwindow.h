@@ -44,13 +44,20 @@ public slots:
 
     void save();
     void discardChanges();
+    void showReport();
 
 protected:
 
     void setupToolbar();
+    void setupStatusBar();
     void setupUI();
 
     void closeEvent(QCloseEvent *);
+
+protected slots:
+
+    void patientNameEdited(const Patient& p);
+    void patientNumberChanged();
 
 private:
 
