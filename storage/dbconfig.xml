@@ -43,7 +43,8 @@
                  (id INTEGER PRIMARY KEY,
                   diseaseid INTEGER,
                   entity INTEGER,
-                  sampleOrigin INTEGER);
+                  sampleOrigin INTEGER
+                  context TEXT);
                 </statement>
                 <statement mode="plain">
                  CREATE TABLE PathologyProperties
