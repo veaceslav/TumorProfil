@@ -47,8 +47,9 @@ public:
       Rebuilds the widgets only if the entity differs.
       Returns true if widgets were recreated.
       */
-    bool switchEntity(Pathology::Entity entity);
-    bool switchEntity(Pathology::Entity entity, QFormLayout* layout);
+    bool switchEntity(Pathology::Entity entity, PathologyContextInfo::Context context);
+    bool switchEntity(Pathology::Entity entity, PathologyContextInfo::Context context,
+                      QFormLayout* layout);
 
     /** Returns a mixed list of label widgets and PathologyPropertyWigdets
         according to the entity of this generator.
@@ -57,7 +58,7 @@ public:
         The list can later be found in objects. Only the PathologyPropertyWidgets
         can be found in widgets.
       */
-    QList<QObject*> createWidgets(Pathology::Entity entity);
+    QList<QObject*> createWidgets(Pathology::Entity entity, PathologyContextInfo::Context context);
 
     /**
       Adds the current list of widgets to a form layout
@@ -72,6 +73,7 @@ public:
     PathologyPropertyWidget* propertyWidget(const QString& property) const;
 
     Pathology::Entity m_entity;
+    PathologyContextInfo::Context m_context;
     QList<QObject*>   m_objects;
     QList<PathologyPropertyWidget*> m_widgets;
     QHash<QString, PathologyPropertyWidget*> m_hash;

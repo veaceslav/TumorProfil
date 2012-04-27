@@ -28,6 +28,8 @@
 
 #include "patient.h"
 
+class PathologyTab;
+
 class DiseaseTabWidget : public QTabWidget
 {
     Q_OBJECT
@@ -50,11 +52,12 @@ protected slots:
     void slotEntitySelectionChanged(Pathology::Entity);
     void slotEntityChanged(Pathology::Entity);
     void slotInitialDiagnosisDateChanged(const QDate&);
+    void addPathologyTab(int context);
 
 protected:
 
-    void updatePathologyTab();
-    void updatePathologyProperties(const Pathology& path);
+    void updatePathologyTabs();
+    void loadPathologyData();
     void changeEntity(Pathology::Entity);
     virtual void keyPressEvent(QKeyEvent* e);
 
