@@ -57,7 +57,6 @@ public:
     Disease& firstDisease();
     const Disease& firstDisease() const;
     bool hasPathology() const;
-    const Pathology& firstPathology() const;
 
     QString             firstName;
     QString             surname;

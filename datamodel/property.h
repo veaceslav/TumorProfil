@@ -61,7 +61,7 @@ public:
       */
     Property property(const QString& prop) const;
     /**
-      Returns alls Properties from this list with the
+      Returns all Properties from this list with the
       given property key. Returns the empty list if none found.
       */
     PropertyList properties(const QString& prop) const;

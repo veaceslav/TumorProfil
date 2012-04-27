@@ -47,6 +47,8 @@ public:
         Fish_ALK,
         Fish_HER2,
         Fish_FGFR1,
+        Fish_PTEN,
+        Fish_PIK3CA,
         Mut_KRAS_2,
         Mut_KRAS_3,
         Mut_EGFR_19_21,
@@ -115,6 +117,38 @@ public:
     bool hasDetail() const;
     // Prefix and suffix
     QPair<QString, QString> defaultDetailLabel() const;
+};
+
+class PathologyContextInfo
+{
+public:
+public:
+
+    enum Context
+    {
+        InvalidContext,
+        Tumorprofil,
+        BestRx,
+        ColonRetrospektiv,
+        ScreeningBGJ398,
+        ScreeningBEZ235,
+
+
+        FirstContext = Tumorprofil,
+        LastContext  = ScreeningBEZ235
+    };
+
+    PathologyContextInfo();
+    PathologyContextInfo(Context context,
+                          const QString& id, const QString& label);
+    PathologyContextInfo(Context context);
+
+    Context           context;
+    QString           id;
+    QString           label;
+
+    static PathologyContextInfo info(Context context);
+    static PathologyContextInfo info(const QString& id);
 };
 
 #endif // PATHOLOGYPROPERTYINFO_H

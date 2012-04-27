@@ -96,9 +96,9 @@ bool PropertyList::hasProperty(const QString& key,
                 && matches(prop.value, value)
                 && matches(prop.detail, detail))
         {
-            return false;
+            return true;
         }
     }
-    return true;
+    return false;
 }
 

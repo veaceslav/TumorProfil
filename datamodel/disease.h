@@ -49,9 +49,50 @@ public:
 
     int   id;
 
+    // Looks through pathologies and returns first found entity
+    Pathology::Entity entity() const;
+
     bool hasPathology() const;
     Pathology& firstPathology();
     const Pathology& firstPathology() const;
+
+    bool hasProfilePathology() const;
+    Pathology& firstProfilePathology();
+    const Pathology& firstProfilePathology() const;
+
+    // context as defined by PathologyContextInfo
+    bool hasPathology(int context) const;
+    Pathology& firstPathology(int context);
+    const Pathology& firstPathology(int context) const;
+
+    bool hasPathology(const QString& id) const;
+    Pathology& firstPathology(const QString& id);
+    const Pathology& firstPathology(const QString& id) const;
+
+    // Looks through properties of all pathology properties
+    /**
+      Returns the first Property from the pathologies with the
+      given property key, or an invalid property if not found.
+      */
+    Property pathologyProperty(const QString& prop) const;
+    /**
+      Returns all Properties from the pathologies with the
+      given property key.
+      */
+    PropertyList pathologyProperties(const QString& prop) const;
+    /**
+        Returns true if the given property is found.
+        A null string acts as a wildcard.
+      */
+    bool hasPathologyProperty(const QString& prop,
+                              const QString& value = QString(),
+                              const QString& detail = QString()) const;
+
+    /**
+      Returns all properties from all pathologies
+    */
+    PropertyList allPathologyProperties() const;
+
 };
 
 #endif // DISEASE_H

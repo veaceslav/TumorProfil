@@ -20,10 +20,23 @@
  * ============================================================ */
 
 #include "disease.h"
+#include "pathologypropertyinfo.h"
 
 Disease::Disease()
     : id(0)
 {
+}
+
+Pathology::Entity Disease::entity() const
+{
+    foreach (const Pathology& path, pathologies)
+    {
+        if (path.entity != Pathology::UnknownEntity)
+        {
+            return path.entity;
+        }
+    }
+    return Pathology::UnknownEntity;
 }
 
 bool Disease::hasPathology() const
@@ -39,4 +52,122 @@ Pathology& Disease::firstPathology()
 const Pathology& Disease::firstPathology() const
 {
     return pathologies.first();
+}
+
+bool Disease::hasProfilePathology() const
+{
+    return hasPathology(PathologyContextInfo::Tumorprofil);
+}
+
+Pathology& Disease::firstProfilePathology()
+{
+    return firstPathology(PathologyContextInfo::Tumorprofil);
+}
+
+const Pathology& Disease::firstProfilePathology() const
+{
+    return firstPathology(PathologyContextInfo::Tumorprofil);
+}
+
+bool Disease::hasPathology(int context) const
+{
+    return hasPathology(PathologyContextInfo(PathologyContextInfo::Context(context)).id);
+}
+
+Pathology& Disease::firstPathology(int context)
+{
+    return firstPathology(PathologyContextInfo(PathologyContextInfo::Context(context)).id);
+}
+
+const Pathology& Disease::firstPathology(int context) const
+{
+    return firstPathology(PathologyContextInfo(PathologyContextInfo::Context(context)).id);
+}
+
+bool Disease::hasPathology(const QString& id) const
+{
+    foreach (const Pathology& path, pathologies)
+    {
+        if (path.context == id)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+Pathology& Disease::firstPathology(const QString& id)
+{
+    QList<Pathology>::iterator it;
+    for (it=pathologies.begin(); it != pathologies.end(); ++it)
+    {
+        if (it->context == id)
+        {
+            return *it;
+        }
+    }
+    return *it; // crashes
+}
+
+const Pathology& Disease::firstPathology(const QString& id) const
+{
+    QList<Pathology>::const_iterator it;
+    for (it=pathologies.begin(); it != pathologies.end(); ++it)
+    {
+        if (it->context == id)
+        {
+            return *it;
+        }
+    }
+    return *it; // crashes
+}
+
+Property Disease::pathologyProperty(const QString& prop) const
+{
+    foreach (const Pathology& path, pathologies)
+    {
+        Property p = path.properties.property(prop);
+        if (p.isValid())
+        {
+            return p;
+        }
+    }
+    return Property();
+}
+
+PropertyList Disease::pathologyProperties(const QString& prop) const
+{
+    PropertyList props;
+    foreach (const Pathology& path, pathologies)
+    {
+        props += path.properties.properties(prop);
+    }
+    return props;
+}
+
+bool Disease::hasPathologyProperty(const QString& prop, const QString& value, const QString& detail) const
+{
+    foreach (const Pathology& path, pathologies)
+    {
+        if (path.properties.hasProperty(prop, value, detail))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+PropertyList Disease::allPathologyProperties() const
+{
+    if (pathologies.size() == 1)
+    {
+        return pathologies.first().properties;
+    }
+
+    PropertyList props;
+    foreach (const Pathology& path, pathologies)
+    {
+        props += path.properties;
+    }
+    return props;
 }

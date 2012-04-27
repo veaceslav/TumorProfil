@@ -35,6 +35,7 @@ class Pathology
 {
 public:
 
+    // DATABASE CONSTANTS
     enum Entity
     {
         UnknownEntity = 0,
@@ -50,12 +51,17 @@ public:
         EsophagogastrealJunction = 10,
         Gastric                  = 11,
         PulmonaryOtherCarcinoma  = 12,
+        Breast                   = 13,
+        TransitionalCell         = 14,
+        Thyroid                  = 15,
+        Melanoma                 = 16,
         // Only add to the end; database constants!!
 
         FirstEntity = PulmonaryAdeno,
-        LastEntity  = PulmonaryOtherCarcinoma
+        LastEntity  = Melanoma
     };
 
+    // DATABASE CONSTANTS
     enum SampleOrigin
     {
         UnknownOrigin,
@@ -70,6 +76,7 @@ public:
 
     Entity          entity;
     SampleOrigin    sampleOrigin;
+    QString         context;
     PropertyList    properties;
 
     int             id;

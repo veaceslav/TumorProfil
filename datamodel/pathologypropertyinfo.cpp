@@ -108,6 +108,10 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
         return PathologyPropertyInfo(property, Mutation, "mut/braf?exon=11", QObject::QObject::tr("BRAF Exon 11"));
     case Fish_FGFR1:
         return PathologyPropertyInfo(property, Fish, "fish/fgfr1", QObject::QObject::tr("FGFR1-Amplifikation"), QObject::QObject::tr("Ratio FGFR1/CEP8:"));
+    case Fish_PTEN:
+        return PathologyPropertyInfo(property, Fish, "fish/pten", QObject::QObject::tr("PTEN-Amplifikation"));
+    case Fish_PIK3CA:
+        return PathologyPropertyInfo(property, Fish, "fish/pik3ca", QObject::QObject::tr("PIK3ca-Amplifikation"));
     case Mut_DDR2:
         return PathologyPropertyInfo(property, Mutation, "mut/ddr2?exon=15-18", QObject::QObject::tr("DDR2 Exon 15-18"));
     case IHC_pP70S6K:
@@ -409,4 +413,53 @@ QPair<QString, QString> ValueTypeCategoryInfo::defaultDetailLabel() const
         break;
     }
     return QPair<QString, QString>();
+}
+
+PathologyContextInfo::PathologyContextInfo()
+    : context(InvalidContext)
+{
+}
+
+PathologyContextInfo::PathologyContextInfo(Context context,
+                      const QString& id, const QString& label)
+    : context(context), id(id), label(label)
+{
+}
+
+PathologyContextInfo::PathologyContextInfo(Context context)
+{
+    *this = info(context);
+}
+
+PathologyContextInfo PathologyContextInfo::info(Context context)
+{
+    switch (context)
+    {
+    case InvalidContext:
+        break;
+    case Tumorprofil:
+        return PathologyContextInfo(context, "wtz/tumorprofil", "Tumorprofil");
+    case BestRx:
+        return PathologyContextInfo(context, "novartis/bestrx", "BestRx");
+    case ColonRetrospektiv:
+        return PathologyContextInfo(context, "wtz/kasper/colonretrospektiv", "Colon retrospektiv");
+    case ScreeningBGJ398:
+        return PathologyContextInfo(context, "novartis/CBGJ398X2101", "BGJ398");
+    case ScreeningBEZ235:
+        return PathologyContextInfo(context, "novartis/CBEZ235A2101", "CBEZ235");
+    }
+    return PathologyContextInfo();
+}
+
+PathologyContextInfo PathologyContextInfo::info(const QString& id)
+{
+    for (int i = FirstContext; i<= LastContext; i++)
+    {
+        PathologyContextInfo obj = info((Context)i);
+        if (obj.id == id)
+        {
+            return obj;
+        }
+    }
+    return PathologyContextInfo();
 }

@@ -62,10 +62,10 @@ bool Patient::hasPathology() const
     return false;
 }
 
-const Pathology& Patient::firstPathology() const
+/*const Pathology& Patient::firstPathology() const
 {
     return firstDisease().firstPathology();
-}
+}*/
 
 void Patient::setPatientData(const Patient& p)
 {
