@@ -61,12 +61,13 @@ int main(int argc, char *argv[])
     if (info.exists())
     {
         dbFile = info.filePath();
+        qDebug() << "Using local database" << dbFile;
     }
     else
     {
         dbFile = "//ikt-hpstorage/wiesweg_DB/tumorprofil.db";
+        qDebug() << "Using main database" << dbFile;
     }
-    qDebug() << "Using database" << dbFile;
 
     DatabaseParameters params =
             DatabaseParameters::parametersForSQLite(dbFile);
