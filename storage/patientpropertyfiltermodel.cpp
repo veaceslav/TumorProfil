@@ -59,14 +59,25 @@ void PatientPropertyFilterModel::setFilterSettings(const PatientPropertyFilterSe
 void PatientPropertyFilterModel::filterByEntity(Pathology::Entity entity)
 {
     PatientPropertyFilterSettings settings;
+    settings.entities.clear();
+    settings.pathologyProperties.clear();
     settings.entities << entity;
     setFilterSettings(settings);
 }
 
 void PatientPropertyFilterModel::filterByPathologyProperty(const QString& property, const QVariant& value)
 {
-    PatientPropertyFilterSettings settings;
+    PatientPropertyFilterSettings settings = d->settings;
+    settings.entities.clear();
+    settings.pathologyProperties.clear();
     settings.pathologyProperties[property] = value;
+    setFilterSettings(settings);
+}
+
+void PatientPropertyFilterModel::filterByPathologyContext(const QString& property, bool value)
+{
+    PatientPropertyFilterSettings settings;
+    settings.pathologyContexts[property] = value;
     setFilterSettings(settings);
 }
 
@@ -143,5 +154,34 @@ bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIn
             }
         }
     }
+
+    if (!d->settings.pathologyContexts.isEmpty())
+    {
+        bool hasMatch = false;
+        QMap<QString,bool>::const_iterator it;
+        for (it = d->settings.pathologyContexts.begin();
+             it != d->settings.pathologyContexts.end(); ++it)
+        {
+            foreach (const Pathology& path, p->firstDisease().pathologies)
+            {
+                if (path.context == it.key())
+                {
+                    // Searching for "NOT"?
+                    if (it.value() == false)
+                    {
+                        return false;
+                    }
+                    hasMatch = true;
+                    break;
+                }
+            }
+        }
+
+        if (!hasMatch)
+        {
+            return false;
+        }
+    }
+
     return true;
 }

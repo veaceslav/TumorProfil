@@ -95,7 +95,6 @@ public:
         {
             infos << PathologyPropertyInfo::info(property);
         }
-        qDebug() << "size of infos" << infos.size();
     }
 };
 
@@ -178,7 +177,12 @@ public:
         case OverviewEntityColumn:
             return entityNameDatum();
         case OverviewResultsColum:
-            return p->firstPathology().properties.size();
+            int sum = 0;
+            foreach (const Pathology& path, p->firstDisease().pathologies)
+            {
+                sum += path.properties.size();
+            }
+            return sum;
         }
 
         return QString();
@@ -186,7 +190,6 @@ public:
 
     QVariant overviewHeader()
     {
-        qDebug() << "overview";
         switch (field)
         {
         case OverviewEntityColumn:
@@ -225,7 +228,6 @@ public:
 
     QVariant profileHeader()
     {
-        qDebug() << "profile header" << field;
         if (field < infos.size())
         {
             return fieldHeader();
@@ -270,7 +272,6 @@ public:
 
     QVariant mutationOverviewHeader()
     {
-        qDebug() << "mut overview";
         if (field < EntityNameColumnCount)
         {
             return overviewHeader();

@@ -81,9 +81,9 @@ QVariant PatientModel::data(const QModelIndex& index, int role) const
                 {
                     if (role == VariantDataRole)
                     {
-                        return disease.firstPathology().entity;
+                        return disease.entity();
                     }
-                    switch (disease.firstPathology().entity)
+                    switch (disease.entity())
                     {
                     case Pathology::PulmonaryAdeno:
                     case Pathology::PulmonaryBronchoalveloar:
@@ -108,6 +108,14 @@ QVariant PatientModel::data(const QModelIndex& index, int role) const
                         return "AEG";
                     case Pathology::Gastric:
                         return "Magen";
+                    case Pathology::Breast:
+                        return "Mamma";
+                    case Pathology::TransitionalCell:
+                        return "Urothel";
+                    case Pathology::Thyroid:
+                        return QObject::tr("Schilddr.");
+                    case Pathology::Melanoma:
+                        return QObject::tr("Melanom");
                     case Pathology::UnknownEntity:
                         return "?";
                     }

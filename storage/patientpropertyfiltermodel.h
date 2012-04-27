@@ -42,6 +42,8 @@ public:
       or a string: Filters if the value is identical.
       */
     QMap<QString, QVariant>   pathologyProperties;
+
+    QMap<QString, bool> pathologyContexts;
 };
 
 class PatientPropertyFilterModel : public QSortFilterProxyModel
@@ -56,6 +58,7 @@ public:
 
     void filterByEntity(Pathology::Entity entity);
     void filterByPathologyProperty(const QString& property, const QVariant& value);
+    void filterByPathologyContext(const QString& property, bool value = true);
 
 protected:
 
