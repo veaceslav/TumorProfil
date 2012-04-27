@@ -81,6 +81,16 @@ ReportTableView::ReportType ReportTableView::reportType() const
     return d->reportType;
 }
 
+PatientPropertyModel *ReportTableView::model() const
+{
+    return d->model;
+}
+
+PatientPropertyFilterModel *ReportTableView::filterModel() const
+{
+    return d->filterModel;
+}
+
 void ReportTableView::setReportType(int type)
 {
     if (d->reportType == type)

@@ -34,6 +34,8 @@
 
 // Local includes
 
+#include "pathologypropertyinfo.h"
+#include "patientpropertyfiltermodel.h"
 #include "reporttableview.h"
 
 class ReportWindow::ReportWindowPriv
@@ -79,11 +81,20 @@ ReportTableView* ReportWindow::view() const
 class ProfileMenu : public QMenu
 {
 public:
-    void addAction(const QString& text, int userData, QObject* receiver)
+    void addAction(const QString& text, int userData, QObject* receiver, const char* slot = SLOT(entryActivated()),
+                   bool isCheckable = false)
     {
         QAction* action = QMenu::addAction(text);
         action->setData(userData);
-        connect(action, SIGNAL(triggered()), receiver, SLOT(entryActivated()));
+        if (isCheckable)
+        {
+            action->setCheckable(true);
+            connect(action, SIGNAL(toggled(bool)), receiver, slot);
+        }
+        else
+        {
+            connect(action, SIGNAL(triggered()), receiver, slot);
+        }
     }
 };
 
@@ -112,6 +123,15 @@ void ReportWindow::setupToolbar()
     byMutationMenu->addAction(tr("PIK3CA-Mutation"), ReportTableView::PIK3Mutation, this);
     byMutationMenu->addAction(tr("PTEN-Verlust"), ReportTableView::PTENLoss, this);
     byMutationButton->setMenu(byMutationMenu);
+
+    QAction* byContextAction = d->toolBar->addAction(QIcon::fromTheme("folder"), tr("Filter nach Kontext"));
+    QToolButton* byContextButton = static_cast<QToolButton*>(d->toolBar->widgetForAction(byContextAction));
+    byContextButton->setPopupMode(QToolButton::InstantPopup);
+    ProfileMenu* byContextMenu = new ProfileMenu;
+    byContextMenu->addAction(tr("WTZ-Tumorprofil"),  PathologyContextInfo::Tumorprofil, this, SLOT(filterByContext()), true);
+    byContextMenu->addAction(tr("BEZ235-Screening"), PathologyContextInfo::ScreeningBEZ235, this, SLOT(filterByContext()), true);
+    byContextMenu->addAction(tr("BGJ389-Screening"), PathologyContextInfo::ScreeningBGJ398, this, SLOT(filterByContext()), true);
+    byContextButton->setMenu(byContextMenu);
 
     /*d->reportComboBox = new QComboBox;
     d->toolBar->addWidget(d->reportComboBox);
@@ -145,5 +165,23 @@ void ReportWindow::entryActivated()
     d->view->setReportType(action->data().toInt());
 }
 
-
+void ReportWindow::filterByContext()
+{
+    QAction *action = qobject_cast<QAction*>(sender());
+    if (!action)
+    {
+        return;
+    }
+    PathologyContextInfo info((PathologyContextInfo::Context)action->data().toInt());
+    PatientPropertyFilterSettings settings = d->view->filterModel()->filterSettings();
+    if (action->isChecked())
+    {
+        settings.pathologyContexts[info.id] = true;
+    }
+    else
+    {
+        settings.pathologyContexts.remove(info.id);
+    }
+    d->view->filterModel()->setFilterSettings(settings);
+}
 

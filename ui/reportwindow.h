@@ -44,6 +44,7 @@ public:
 protected slots:
 
     void entryActivated();
+    void filterByContext();
 
 private:
 
