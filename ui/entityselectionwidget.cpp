@@ -25,6 +25,7 @@
 
 #include <QButtonGroup>
 #include <QDebug>
+#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QRadioButton>
@@ -43,7 +44,7 @@ public:
     QVBoxLayout *layout;
     QButtonGroup *buttonGroup;
 
-    void addRadioButton(Pathology::Entity entity, const QString& label)
+    void addRadioButton(Pathology::Entity entity, const QString& label, QVBoxLayout* layout)
     {
         QRadioButton* r = new QRadioButton(label);
         layout->addWidget(r);
@@ -55,7 +56,7 @@ EntitySelectionWidget::EntitySelectionWidget(QWidget *parent) :
     QGroupBox(parent),
     d(new EntitySelectionWidgetPriv)
 {
-    d->layout = new QVBoxLayout;
+    QGridLayout* mainLayout = new QGridLayout;
     d->buttonGroup = new QButtonGroup(this);
     d->buttonGroup->setExclusive(true);
     connect(d->buttonGroup, SIGNAL(buttonClicked(int)),
@@ -68,22 +69,50 @@ EntitySelectionWidget::EntitySelectionWidget(QWidget *parent) :
     labelLayout->addWidget(icon);
     labelLayout->addWidget(explanation);
     labelLayout->addStretch();
-    d->layout->addLayout(labelLayout);
 
-    d->addRadioButton(Pathology::PulmonaryAdeno, tr("Pulmonales Adenokarzinom"));
-    d->addRadioButton(Pathology::PulmonarySquamous, tr("Pulmonales Plattenepithelkarzinom"));
-    d->addRadioButton(Pathology::PulmonaryLargeCell, tr("Pulmonales großzelliges Karzinom"));
-    d->addRadioButton(Pathology::PulmonaryAdenosquamous, tr("Pulmonales adenosquamöses Karzinom"));
-    d->addRadioButton(Pathology::PulmonaryBronchoalveloar, tr("Bronchoalveoläres Karzinom"));
-    d->addRadioButton(Pathology::PulmonaryOtherCarcinoma, tr("Andere Karzinome der Lunge"));
-    d->addRadioButton(Pathology::ColorectalAdeno, tr("Kolorektales Karzinom"));
-    d->addRadioButton(Pathology::Cholangiocarcinoma, tr("Gallengangskarzinom"));
-    d->addRadioButton(Pathology::RenalCell, tr("Nierenzellkarzinom"));
-    d->addRadioButton(Pathology::Esophageal, tr("Ösophaguskarzinom"));
-    d->addRadioButton(Pathology::EsophagogastrealJunction, tr("Ösophagogastrales Karzinom"));
-    d->addRadioButton(Pathology::Gastric, tr("Magenkarzinom"));
+    QGroupBox* pulmoGroup = new QGroupBox(QObject::tr("Lunge"));
+    QGroupBox* giGroup = new QGroupBox(QObject::tr("Gastrointestinal"));
+    QGroupBox* otherGroup = new QGroupBox(QObject::tr("Andere"));
 
-    setLayout(d->layout);
+    QVBoxLayout* pulmoLayout = new QVBoxLayout;
+    QVBoxLayout* giLayout = new QVBoxLayout;
+    QVBoxLayout* otherLayout = new QVBoxLayout;
+
+    d->addRadioButton(Pathology::PulmonaryAdeno, tr("Pulmonales Adenokarzinom"), pulmoLayout);
+    d->addRadioButton(Pathology::PulmonarySquamous, tr("Pulmonales Plattenepithelkarzinom"), pulmoLayout);
+    pulmoLayout->addSpacing(10);
+    d->addRadioButton(Pathology::PulmonaryLargeCell, tr("Pulmonales großzelliges Karzinom"), pulmoLayout);
+    d->addRadioButton(Pathology::PulmonaryAdenosquamous, tr("Pulmonales adenosquamöses Karzinom"), pulmoLayout);
+    d->addRadioButton(Pathology::PulmonaryBronchoalveloar, tr("Bronchoalveoläres Karzinom"), pulmoLayout);
+    d->addRadioButton(Pathology::PulmonaryOtherCarcinoma, tr("Andere Karzinome der Lunge"), pulmoLayout);
+    pulmoLayout->addStretch(1);
+
+    d->addRadioButton(Pathology::ColorectalAdeno, tr("Kolorektales Karzinom"), giLayout);
+    giLayout->addSpacing(10);
+    d->addRadioButton(Pathology::Esophageal, tr("Ösophaguskarzinom"), giLayout);
+    d->addRadioButton(Pathology::EsophagogastrealJunction, tr("Ösophagogastrales Karzinom"), giLayout);
+    d->addRadioButton(Pathology::Gastric, tr("Magenkarzinom"), giLayout);
+    d->addRadioButton(Pathology::Cholangiocarcinoma, tr("Gallengangskarzinom"), giLayout);
+    giLayout->addStretch(1);
+
+    d->addRadioButton(Pathology::Breast, tr("Mammakarzinom"), otherLayout);
+    d->addRadioButton(Pathology::RenalCell, tr("Nierenzellkarzinom"), otherLayout);
+    d->addRadioButton(Pathology::TransitionalCell, tr("Urothelkarzinom"), otherLayout);
+    d->addRadioButton(Pathology::Thyroid, tr("Schilddrüsenkarzinom"), otherLayout);
+    d->addRadioButton(Pathology::Melanoma, tr("Malignes Melanom"), otherLayout);
+    otherLayout->addStretch(1);
+
+    pulmoGroup->setLayout(pulmoLayout);
+    giGroup->setLayout(giLayout);
+    otherGroup->setLayout(otherLayout);
+
+    mainLayout->addLayout(labelLayout, 0, 0, 1, 2);
+    mainLayout->addWidget(pulmoGroup, 1, 0);
+    mainLayout->addWidget(giGroup, 1, 2);
+    mainLayout->addWidget(otherGroup, 2, 0, 1, 2);
+    mainLayout->setColumnStretch(3, 1);
+
+    setLayout(mainLayout);
 }
 
 EntitySelectionWidget::~EntitySelectionWidget()
@@ -105,10 +134,8 @@ void EntitySelectionWidget::setEntity(Pathology::Entity entity)
 
     d->entity = entity;
     QAbstractButton* r = d->buttonGroup->button(entity);
-    qDebug() << entity;
     if (r)
     {
-        qDebug() << r->text() << d->buttonGroup->id(r);
         r->setChecked(true);
     }
     else if (d->buttonGroup->checkedButton())
