@@ -27,6 +27,7 @@
 
 #include "modeldatagenerator.h"
 #include "patientmodel.h"
+#include "resultcompletenesschecker.h"
 
 ModelDataGenerator::ModelDataGenerator(const QList<PathologyPropertyInfo>&  infos,
                                        const Patient::Ptr& p, int role, int field)
@@ -42,9 +43,9 @@ QVariant ModelDataGenerator::entityNameDatum()
 {
     if (role == PatientModel::VariantDataRole)
     {
-        return p->firstPathology().entity;
+        return p->firstDisease().entity();
     }
-    switch (p->firstPathology().entity)
+    switch (p->firstDisease().entity())
     {
     case Pathology::PulmonaryAdeno:
         return QObject::tr("Lunge Adeno");
@@ -70,6 +71,14 @@ QVariant ModelDataGenerator::entityNameDatum()
         return QObject::tr("Ösophagogastral");
     case Pathology::Gastric:
         return QObject::tr("Magen");
+    case Pathology::Breast:
+        return QObject::tr("Mamma");
+    case Pathology::TransitionalCell:
+        return QObject::tr("Urothel");
+    case Pathology::Thyroid:
+        return QObject::tr("Schilddrüse");
+    case Pathology::Melanoma:
+        return QObject::tr("Melanom");
     case Pathology::UnknownEntity:
     default:
         return QString();
@@ -79,7 +88,7 @@ QVariant ModelDataGenerator::entityNameDatum()
 QVariant ModelDataGenerator::fieldDatum()
 {
     const PathologyPropertyInfo& info = infos.at(field);
-    Property prop = p->firstPathology().properties.property(info.id);
+    Property prop = p->firstDisease().pathologyProperty(info.id);
     if (prop.isNull())
     {
         return QString();
@@ -100,14 +109,13 @@ QVariant ModelDataGenerator::fieldDatum()
 
 QVariant ModelDataGenerator::fieldHeader()
 {
-    qDebug() << infos.size() << field;
     return infos.at(field).plainTextLabel();
 }
 
 QVariant ModelDataGenerator::otherMutationsDatum()
 {
     QString data;
-    foreach (const Property& prop, p->firstPathology().properties)
+    foreach (const Property& prop, p->firstDisease().allPathologyProperties())
     {
         bool isInList = false;
         foreach (const PathologyPropertyInfo& info, infos)
@@ -143,13 +151,73 @@ QVariant ModelDataGenerator::otherMutationsHeader()
 
 QVariant ModelDataGenerator::completenessDatum(CompletenessField value)
 {
-    int all = 0;
-    int available = 0;
-
     if (!hasPathology)
     {
         return QObject::tr("Keine Befunde");
     }
+
+    ResultCompletenessChecker checker(p);
+    ResultCompletenessChecker::CompletenessResult result;
+    QList<PathologyPropertyInfo> missingProperties;
+
+    switch (value)
+    {
+    case IHCCompleteness:
+        result = checker.isIHCComplete(&missingProperties);
+        break;
+    case MutationCompleteness:
+        result = checker.isMutComplete(&missingProperties);
+        break;
+    default:
+        return QVariant();
+    }
+
+    if (role == Qt::DisplayRole)
+    {
+        switch (result)
+        {
+        case ResultCompletenessChecker::Complete:
+            return QObject::tr("ja");
+        case ResultCompletenessChecker::Incomplete:
+            break;
+        case ResultCompletenessChecker::Absent:
+            return QObject::tr("fehlt");
+        case ResultCompletenessChecker::Undefined:
+        case ResultCompletenessChecker::OnlyOptional:
+            return QObject::tr("N/A");
+        }
+
+        // Incomplete: which fields are missing?
+        QString missing;
+        foreach (const PathologyPropertyInfo& info, missingProperties)
+        {
+            if (!missing.isEmpty())
+                missing += ", ";
+            missing += info.plainTextLabel();
+        }
+        missing += (missingProperties.size() > 1) ? QObject::tr(" fehlen") : QObject::tr(" fehlt");
+        return missing;
+    }
+    else // VariantRole
+    {
+        switch (result)
+        {
+        case ResultCompletenessChecker::Complete:
+            return true;
+        case ResultCompletenessChecker::Incomplete:
+            return false;
+        case ResultCompletenessChecker::Absent:
+            return false;
+        case ResultCompletenessChecker::Undefined:
+        case ResultCompletenessChecker::OnlyOptional:
+            return true;
+        }
+    }
+    return QVariant();
+
+    /*
+    int all = 0;
+    int available = 0;
 
     foreach (const PathologyPropertyInfo& info, infos)
     {
@@ -175,6 +243,7 @@ QVariant ModelDataGenerator::completenessDatum(CompletenessField value)
     return (role == Qt::DisplayRole) ?
             QVariant(QString("%1/%2").arg(available).arg(all)) :
             QVariant((qreal(available) / qreal(qMax(1,all))));
+    */
 }
 
 QVariant ModelDataGenerator::completenessHeader(CompletenessField value)
