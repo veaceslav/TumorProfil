@@ -33,6 +33,7 @@ public:
     CSVConverter();
 
     void convertColon(const QString& filename);
+    void convertBGJ389(const QString& filename);
 };
 
 #endif // CSVCONVERTER_H
