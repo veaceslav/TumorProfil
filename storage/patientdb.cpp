@@ -226,23 +226,25 @@ QList<Disease> PatientDB::findDiseases(int patientId)
 int PatientDB::addPathology(int diseaseId, const Pathology& path)
 {
     QVariant id;
-    d->db->execSql("INSERT INTO Pathologies (diseaseId, entity, sampleOrigin, context) "
-                   "VALUES (?, ?, ?, ?)",
-                   diseaseId, path.entity, path.sampleOrigin, path.context, 0, &id);
+    d->db->execSql("INSERT INTO Pathologies (diseaseId, entity, sampleOrigin, context, date) "
+                   "VALUES (?, ?, ?, ?, ?)",
+                   QVariantList() << diseaseId << path.entity << path.sampleOrigin << path.context
+                   << path.date.toString(Qt::ISODate), 0, &id);
     return id.toInt();
 }
 
 void PatientDB::updatePathology(const Pathology& path)
 {
-    d->db->execSql("UPDATE Pathologies SET entity=?, sampleOrigin=?, context=? WHERE id=?;",
-                   path.entity, path.sampleOrigin, path.context, path.id);
+    d->db->execSql("UPDATE Pathologies SET entity=?, sampleOrigin=?, context=?, date=? WHERE id=?;",
+                   QVariantList() << path.entity << path.sampleOrigin
+                   << path.context << path.date.toString(Qt::ISODate) << path.id );
 }
 
 QList<Pathology> PatientDB::findPathologies(int diseaseId)
 {
     QList<QVariant> values;
 
-    d->db->execSql("SELECT id, entity, sampleOrigin, context FROM Pathologies WHERE diseaseId = ?;",
+    d->db->execSql("SELECT id, entity, sampleOrigin, context, date FROM Pathologies WHERE diseaseId = ?;",
                    diseaseId, &values);
 
     QList<Pathology> pathologies;
@@ -257,6 +259,8 @@ QList<Pathology> PatientDB::findPathologies(int diseaseId)
         p.sampleOrigin = (Pathology::SampleOrigin)it->toInt();
         ++it;
         p.context      = it->toString();
+        ++it;
+        p.date         = QDate::fromString(it->toString(), Qt::ISODate);
         ++it;
 
         pathologies << p;

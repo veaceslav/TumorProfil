@@ -44,7 +44,8 @@
                   diseaseid INTEGER,
                   entity INTEGER,
                   sampleOrigin INTEGER
-                  context TEXT);
+                  context TEXT
+                  date DATETIME);
                 </statement>
                 <statement mode="plain">
                  CREATE TABLE PathologyProperties
