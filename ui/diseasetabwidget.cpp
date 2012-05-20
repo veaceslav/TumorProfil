@@ -38,6 +38,7 @@
 
 #include "entityselectionwidget.h"
 #include "patient.h"
+#include "pathologymetadatawidget.h"
 #include "pathologypropertyinfo.h"
 #include "pathologypropertywidget.h"
 #include "pathologywidgetgenerator.h"
@@ -46,7 +47,8 @@ class PathologyTab : public QWidget
 {
 public:
     PathologyTab()
-        : enabled(false)
+        : enabled(false),
+          metadataWidget(0)
     {
         layout = new QFormLayout;
         setLayout(layout);
@@ -64,9 +66,12 @@ public:
     virtual PathologyContextInfo::Context context() const = 0;
     virtual QString tabLabel() const = 0;
 
+    void createMetadataWidget();
+
     QFormLayout*             layout;
     PathologyWidgetGenerator generator;
     bool                     enabled;
+    PathologyMetadataWidget* metadataWidget;
 
 protected:
 
@@ -79,6 +84,10 @@ protected:
 class TumorprofilTab : public PathologyTab
 {
 public:
+    TumorprofilTab()
+    {
+        createMetadataWidget();
+    }
     virtual PathologyContextInfo::Context context() const { return PathologyContextInfo::Tumorprofil; }
     virtual QString tabLabel() const { return QObject::tr("Tumorprofil"); }
 };
@@ -121,10 +130,6 @@ public:
         : diseaseTab(0),
           entityWidget(0),
           initialDiagnosisEdit(0),
-          sampleFromPrimaryButton(0),
-          sampleFromMetastasisButton(0),
-          sampleFromLNButton(0),
-          sampleOriginGroup(0),
           otherPathologyGroup(0),
           otherButtonsLayout(0),
           hasValidPathology(false)
@@ -134,10 +139,6 @@ public:
     QWidget               *diseaseTab;
     EntitySelectionWidget *entityWidget;
     QDateEdit             *initialDiagnosisEdit;
-    QRadioButton          *sampleFromPrimaryButton;
-    QRadioButton          *sampleFromMetastasisButton;
-    QRadioButton          *sampleFromLNButton;
-    QButtonGroup          *sampleOriginGroup;
     QButtonGroup          *otherPathologyGroup;
     QHBoxLayout           *otherButtonsLayout;
 
@@ -182,18 +183,6 @@ DiseaseTabWidget::DiseaseTabWidget(QWidget *parent) :
     d->initialDiagnosisEdit = new QDateEdit;
     diseaseLayout->addRow(tr("Erstdiagnose:"), d->initialDiagnosisEdit);
 
-    // Sample origin buttons
-    d->sampleFromPrimaryButton = new QRadioButton(tr("aus dem Primärtumor"));
-    d->sampleFromLNButton = new QRadioButton(tr("aus einem lokalen Lymphknoten"));
-    d->sampleFromMetastasisButton = new QRadioButton(tr("aus einer Metastase"));
-    diseaseLayout->addRow(tr("Histologie"), d->sampleFromPrimaryButton);
-    diseaseLayout->addRow(QString(), d->sampleFromLNButton);
-    diseaseLayout->addRow(QString(), d->sampleFromMetastasisButton);
-    d->sampleOriginGroup = new QButtonGroup(this);
-    d->sampleOriginGroup->addButton(d->sampleFromPrimaryButton, Pathology::Primary);
-    d->sampleOriginGroup->addButton(d->sampleFromLNButton, Pathology::LocalLymphNode);
-    d->sampleOriginGroup->addButton(d->sampleFromMetastasisButton, Pathology::Metastasis);
-
     // Other pathologies buttons
     d->otherButtonsLayout = new QHBoxLayout;
     d->otherPathologyGroup = new QButtonGroup(this);
@@ -228,12 +217,6 @@ void DiseaseTabWidget::setPatient(const Patient::Ptr& p)
 {
     d->initialDiagnosisEdit->setDate(QDate::currentDate());
     d->entityWidget->setEntity(Pathology::UnknownEntity);
-    if (d->sampleOriginGroup->checkedButton())
-    {
-        d->sampleOriginGroup->setExclusive(false);
-        d->sampleOriginGroup->checkedButton()->setChecked(false);
-        d->sampleOriginGroup->setExclusive(true);
-    }
     d->hasValidPathology = false;
 
     // Clear other tabs + buttons
@@ -243,6 +226,10 @@ void DiseaseTabWidget::setPatient(const Patient::Ptr& p)
         if (tab != tumorprofilTab)
         {
             delete tab;
+        }
+        else if (tab->metadataWidget)
+        {
+            tab->metadataWidget->reset();
         }
     }
     d->tabs.clear();
@@ -266,12 +253,6 @@ void DiseaseTabWidget::setPatient(const Patient::Ptr& p)
     {
         return;
     }
-
-    if (d->sampleOriginGroup->checkedButton())
-    {
-        d->sampleOriginGroup->checkedButton()->setChecked(false);
-    }
-    // button is checked below from the Tumorprofil path
 
     d->entityWidget->setEntity(disease.entity());
     // updatePathologyTab was now called by signal, widgets are built
@@ -300,21 +281,6 @@ void DiseaseTabWidget::loadPathologyData()
         }
     }
 
-    // NOTE: Setting SampleOrigin per-pathology is not supported by the UI
-    Pathology::SampleOrigin sampleOrigin = Pathology::UnknownOrigin;
-    if (disease.hasProfilePathology())
-    {
-        sampleOrigin = disease.firstProfilePathology().sampleOrigin;
-    }
-    else if (disease.hasPathology())
-    {
-        sampleOrigin = disease.firstPathology().sampleOrigin;
-    }
-
-    if (d->sampleOriginGroup->button(sampleOrigin))
-    {
-        d->sampleOriginGroup->button(sampleOrigin)->setChecked(true);
-    }
 }
 
 void DiseaseTabWidget::save(const Patient::Ptr& p)
@@ -345,8 +311,6 @@ void DiseaseTabWidget::save(const Patient::Ptr& p)
     for (int i=0; i<disease.pathologies.size(); ++i)
     {
         disease.pathologies[i].entity = d->entityWidget->currentEntity();
-        disease.pathologies[i].sampleOrigin = d->sampleOriginGroup->checkedButton()
-            ? (Pathology::SampleOrigin)d->sampleOriginGroup->checkedId() : Pathology::UnknownOrigin;
     }
 }
 
@@ -463,6 +427,11 @@ bool PathologyTab::loadProperties(const Disease& disease, PathologyContextInfo::
 
     const Pathology& path = disease.firstPathology(context);
 
+    if (metadataWidget)
+    {
+        metadataWidget->readValues(path);
+    }
+
     bool hasValidPathology = false;
     foreach (const Property& prop, path.properties)
     {
@@ -512,6 +481,10 @@ bool PathologyTab::saveProperties(Disease& disease, PathologyContextInfo::Contex
     Pathology& path = disease.firstPathology(context);
     // Attention: does not preserve unhandled properties
     path.properties = profileProperties;
+    if (metadataWidget)
+    {
+        metadataWidget->saveValues(path);
+    }
     return true;
 }
 
@@ -523,4 +496,14 @@ bool PathologyTab::load(const Patient::Ptr& p, const Disease& disease)
 void PathologyTab::save(const Patient::Ptr& p, Disease& disease, Pathology::Entity entity)
 {
     saveProperties(disease, context());
+}
+
+void PathologyTab::createMetadataWidget()
+{
+    QGroupBox* box = new QGroupBox;
+    QHBoxLayout* boxlayout = new QHBoxLayout;
+    metadataWidget = new PathologyMetadataWidget;
+    boxlayout->addWidget(metadataWidget);
+    box->setLayout(boxlayout);
+    layout->insertRow(0, box);
 }
