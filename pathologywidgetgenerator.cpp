@@ -196,7 +196,7 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
         m_objects << new QLabel(tr("Sequenzanalysen"));
         m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
         m_objects << new QLabel(tr("FISH"));
-        m_objects << create(PathologyPropertyInfo::Fish_PTEN);
+        m_objects << create(PathologyPropertyInfo::Fish_PIK3CA);
         m_objects << new QLabel(tr("Immunhistochemie"));
         m_objects << create(PathologyPropertyInfo::IHC_PTEN);
     default:
