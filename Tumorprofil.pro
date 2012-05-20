@@ -53,7 +53,8 @@ SOURCES += main.cpp\
     storage/dataaggregationmodel.cpp \
     ui/analysistableview.cpp \
     ui/aggregatetableview.cpp \
-    storage/dataaggregationfiltermodel.cpp
+    storage/dataaggregationfiltermodel.cpp \
+    medical/confidenceinterval.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -100,7 +101,8 @@ HEADERS  += mainwindow.h \
     storage/dataaggregationmodel.h \
     ui/analysistableview.h \
     ui/aggregatetableview.h \
-    storage/dataaggregationfiltermodel.h
+    storage/dataaggregationfiltermodel.h \
+    medical/confidenceinterval.h
 
 INCLUDEPATH += datamodel/ \
     ui/ \

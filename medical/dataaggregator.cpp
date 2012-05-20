@@ -23,6 +23,8 @@
 
 #include <QDebug>
 
+#include "confidenceinterval.h"
+
 AggregatedDatumInfo::AggregatedDatumInfo()
     : field(InvalidField), valueType(InvalidValue)
 {
@@ -130,8 +132,8 @@ QList<AggregatedDatumInfo> AggregatedDatumInfo::possibleValueTypes(Field field)
     case IHC_3:
         infos << AggregatedDatumInfo(field, AbsoluteValue);
         infos << AggregatedDatumInfo(field, PercentageValue);
-        /*infos << AggregatedDatumInfo(field, ConfidenceUpper);
-        infos << AggregatedDatumInfo(field, ConfidenceLower);*/
+        infos << AggregatedDatumInfo(field, ConfidenceUpper);
+        infos << AggregatedDatumInfo(field, ConfidenceLower);
     }
     return infos;
 }
@@ -227,9 +229,9 @@ QVariant DataAggregator::aggregate(const AggregatedDatumInfo& datumInfo,
         {
         case AggregatedDatumInfo::AbsoluteValue:
         case AggregatedDatumInfo::PercentageValue:
+        case AggregatedDatumInfo::ConfidenceUpper:
+        case AggregatedDatumInfo::ConfidenceLower:
             if (match) aggregate++;
-        /*case AggregatedDatumInfo::ConfidenceUpper:
-        case AggregatedDatumInfo::ConfidenceLower:*/
         case AggregatedDatumInfo::InvalidValue:
             break;
         }
@@ -240,8 +242,15 @@ QVariant DataAggregator::aggregate(const AggregatedDatumInfo& datumInfo,
         return aggregate;
     case AggregatedDatumInfo::PercentageValue:
         return double(aggregate)/double(total);
-    /*case AggregatedDatumInfo::ConfidenceUpper:
-    case AggregatedDatumInfo::ConfidenceLower:*/
+    case AggregatedDatumInfo::ConfidenceUpper:
+    case AggregatedDatumInfo::ConfidenceLower:
+    {
+        ConfidenceInterval ci;
+        ci.setEvents(aggregate);
+        ci.setObservations(total);
+        QPair<double,double> ciValues = ci.binomial();
+        return (datumInfo.valueType == AggregatedDatumInfo::ConfidenceLower) ? ciValues.first : ciValues.second;
+    }
     case AggregatedDatumInfo::InvalidValue:
         break;
     }
