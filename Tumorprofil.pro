@@ -46,7 +46,14 @@ SOURCES += main.cpp\
     util/csvfile.cpp \
     util/csvconverter.cpp \
     medical/modeldatagenerator.cpp \
-    medical/resultcompletenesschecker.cpp
+    medical/resultcompletenesschecker.cpp \
+    ui/pathologymetadatawidget.cpp \
+    medical/actionableresultchecker.cpp \
+    medical/dataaggregator.cpp \
+    storage/dataaggregationmodel.cpp \
+    ui/analysistableview.cpp \
+    ui/aggregatetableview.cpp \
+    storage/dataaggregationfiltermodel.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -86,7 +93,14 @@ HEADERS  += mainwindow.h \
     util/csvfile.h \
     util/csvconverter.h \
     medical/modeldatagenerator.h \
-    medical/resultcompletenesschecker.h
+    medical/resultcompletenesschecker.h \
+    ui/pathologymetadatawidget.h \
+    medical/actionableresultchecker.h \
+    medical/dataaggregator.h \
+    storage/dataaggregationmodel.h \
+    ui/analysistableview.h \
+    ui/aggregatetableview.h \
+    storage/dataaggregationfiltermodel.h
 
 INCLUDEPATH += datamodel/ \
     ui/ \
