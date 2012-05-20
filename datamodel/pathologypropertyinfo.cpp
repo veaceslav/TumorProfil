@@ -29,6 +29,7 @@
 #include "pathologypropertyinfo.h"
 
 PathologyPropertyInfo::PathologyPropertyInfo()
+    : property(InvalidProperty), valueType(InvalidCategory)
 {
 }
 
@@ -108,8 +109,6 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
         return PathologyPropertyInfo(property, Mutation, "mut/braf?exon=11", QObject::QObject::tr("BRAF Exon 11"));
     case Fish_FGFR1:
         return PathologyPropertyInfo(property, Fish, "fish/fgfr1", QObject::QObject::tr("FGFR1-Amplifikation"), QObject::QObject::tr("Ratio FGFR1/CEP8:"));
-    case Fish_PTEN:
-        return PathologyPropertyInfo(property, Fish, "fish/pten", QObject::QObject::tr("PTEN-Amplifikation"));
     case Fish_PIK3CA:
         return PathologyPropertyInfo(property, Fish, "fish/pik3ca", QObject::QObject::tr("PIK3ca-Amplifikation"));
     case Mut_DDR2:
@@ -190,6 +189,11 @@ QList<QVariant> ValueTypeCategoryInfo::possibleValues() const
         break;
     }
     return values;
+}
+
+bool ValueTypeCategoryInfo::isScored() const
+{
+    return category == PathologyPropertyInfo::IHCClassical;
 }
 
 QString ValueTypeCategoryInfo::toString(const QVariant& value) const

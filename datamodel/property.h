@@ -25,6 +25,7 @@
 // Qt includes
 
 #include <QList>
+#include <QMetaType>
 #include <QString>
 
 class Property
@@ -73,5 +74,7 @@ public:
                      const QString& value = QString(),
                      const QString& detail = QString()) const;
 };
+
+Q_DECLARE_METATYPE(Property)
 
 #endif // PROPERTY_H

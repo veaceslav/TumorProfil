@@ -24,6 +24,7 @@
 
 // Qt includes
 
+#include <QMetaType>
 #include <QPair>
 #include <QString>
 #include <QVariant>
@@ -47,7 +48,6 @@ public:
         Fish_ALK,
         Fish_HER2,
         Fish_FGFR1,
-        Fish_PTEN,
         Fish_PIK3CA,
         Mut_KRAS_2,
         Mut_KRAS_3,
@@ -83,6 +83,7 @@ public:
                           const QString& id, const QString& label,
                           const QString& detailLabel = QString());
     PathologyPropertyInfo(Property property);
+    bool isValid() const { return !id.isNull(); }
 
     Property          property;
     ValueTypeCategory valueType;
@@ -107,6 +108,7 @@ public:
     const PathologyPropertyInfo::ValueTypeCategory category;
 
     QList<QVariant> possibleValues() const;
+    bool isScored() const;
 
     QString toString(const QVariant& value) const;
     QString toShortString(const QVariant& value) const;
@@ -142,6 +144,7 @@ public:
     PathologyContextInfo(Context context,
                           const QString& id, const QString& label);
     PathologyContextInfo(Context context);
+    bool isValid() const { return !id.isNull(); }
 
     Context           context;
     QString           id;
@@ -150,5 +153,8 @@ public:
     static PathologyContextInfo info(Context context);
     static PathologyContextInfo info(const QString& id);
 };
+
+Q_DECLARE_METATYPE(PathologyPropertyInfo)
+Q_DECLARE_METATYPE(PathologyContextInfo)
 
 #endif // PATHOLOGYPROPERTYINFO_H

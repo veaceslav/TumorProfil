@@ -24,6 +24,7 @@
 
 // Qt includes
 
+#include <QDate>
 #include <QList>
 #include <QSharedPointer>
 
@@ -77,6 +78,7 @@ public:
     Entity          entity;
     SampleOrigin    sampleOrigin;
     QString         context;
+    QDate           date;
     PropertyList    properties;
 
     int             id;
