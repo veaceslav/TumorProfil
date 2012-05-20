@@ -57,6 +57,7 @@ public:
     void setFilterSettings(const PatientPropertyFilterSettings& settings);
 
     void filterByEntity(Pathology::Entity entity);
+    void filterByEntity(const QList<Pathology::Entity> entities);
     void filterByPathologyProperty(const QString& property, const QVariant& value);
     void filterByPathologyContext(const QString& property, bool value = true);
 

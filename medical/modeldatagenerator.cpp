@@ -25,64 +25,190 @@
 
 // Local includes
 
+#include "actionableresultchecker.h"
 #include "modeldatagenerator.h"
 #include "patientmodel.h"
+#include "patientpropertymodel.h"
 #include "resultcompletenesschecker.h"
 
 ModelDataGenerator::ModelDataGenerator(const QList<PathologyPropertyInfo>&  infos,
-                                       const Patient::Ptr& p, int role, int field)
+                                       const Patient::Ptr& p, int role, int field,
+                                       PathologyContextInfo::Context primaryContext)
     : p(p),
       hasPathology(p ? p->hasPathology() : false),
       field(field),
       role(role),
-      infos(infos)
+      infos(infos),
+      primaryContext(primaryContext)
 {
 }
 
 QVariant ModelDataGenerator::entityNameDatum()
 {
-    if (role == PatientModel::VariantDataRole)
+    switch (role)
     {
+    case PatientModel::VariantDataRole:
         return p->firstDisease().entity();
+    case Qt::DisplayRole:
+        switch (p->firstDisease().entity())
+        {
+        case Pathology::PulmonaryAdeno:
+            return QObject::tr("Lunge Adeno");
+        case Pathology::PulmonaryBronchoalveloar:
+            return QObject::tr("Lunge Bronchioloaveolär");
+        case Pathology::PulmonaryLargeCell:
+            return QObject::tr("Lunge Großzeller");
+        case Pathology::PulmonarySquamous:
+            return QObject::tr("Lunge Platte");
+        case Pathology::PulmonaryAdenosquamous:
+            return QObject::tr("Lunge Adenosquamös");
+        case Pathology::PulmonaryOtherCarcinoma:
+            return QObject::tr("Lunge anderes");
+        case Pathology::ColorectalAdeno:
+            return QObject::tr("Kolorektal");
+        case Pathology::Cholangiocarcinoma:
+            return QObject::tr("Gallengang");
+        case Pathology::RenalCell:
+            return QObject::tr("Nierenzell");
+        case Pathology::Esophageal:
+            return QObject::tr("Ösophagus");
+        case Pathology::EsophagogastrealJunction:
+            return QObject::tr("Ösophagogastral");
+        case Pathology::Gastric:
+            return QObject::tr("Magen");
+        case Pathology::Breast:
+            return QObject::tr("Mamma");
+        case Pathology::TransitionalCell:
+            return QObject::tr("Urothel");
+        case Pathology::Thyroid:
+            return QObject::tr("Schilddrüse");
+        case Pathology::Melanoma:
+            return QObject::tr("Melanom");
+        case Pathology::UnknownEntity:
+        default:
+            return QString();
+        }
     }
-    switch (p->firstDisease().entity())
+    return QVariant();
+}
+
+namespace
+{
+}
+
+QVariant ModelDataGenerator::returnDate(const QDate& date)
+{
+    if (role == Qt::DisplayRole)
     {
-    case Pathology::PulmonaryAdeno:
-        return QObject::tr("Lunge Adeno");
-    case Pathology::PulmonaryBronchoalveloar:
-        return QObject::tr("Lunge Bronchioloaveolär");
-    case Pathology::PulmonaryLargeCell:
-        return QObject::tr("Lunge Großzeller");
-    case Pathology::PulmonarySquamous:
-        return QObject::tr("Lunge Platte");
-    case Pathology::PulmonaryAdenosquamous:
-        return QObject::tr("Lunge Adenosquamös");
-    case Pathology::PulmonaryOtherCarcinoma:
-        return QObject::tr("Lunge anderes");
-    case Pathology::ColorectalAdeno:
-        return QObject::tr("Kolorektal");
-    case Pathology::Cholangiocarcinoma:
-        return QObject::tr("Gallengang");
-    case Pathology::RenalCell:
-        return QObject::tr("Nierenzell");
-    case Pathology::Esophageal:
-        return QObject::tr("Ösophagus");
-    case Pathology::EsophagogastrealJunction:
-        return QObject::tr("Ösophagogastral");
-    case Pathology::Gastric:
-        return QObject::tr("Magen");
-    case Pathology::Breast:
-        return QObject::tr("Mamma");
-    case Pathology::TransitionalCell:
-        return QObject::tr("Urothel");
-    case Pathology::Thyroid:
-        return QObject::tr("Schilddrüse");
-    case Pathology::Melanoma:
-        return QObject::tr("Melanom");
-    case Pathology::UnknownEntity:
-    default:
-        return QString();
+        if (date.isNull())
+        {
+            return QString();
+        }
+        return date.toString(QObject::tr("dd.MM.yyyy"));
     }
+    else
+    {
+        return date;
+    }
+}
+
+QVariant ModelDataGenerator::additionalInfoDatum()
+{
+    switch (role)
+    {
+    case Qt::DisplayRole:
+        switch (field)
+        {
+        case GenderColumn:
+            if (role == Qt::DisplayRole)
+            {
+                switch (p->gender)
+                {
+                case Patient::Male:
+                    return "m";
+                case Patient::Female:
+                    return "w";
+                case Patient::UnknownGender:
+                    return "?";
+                }
+            }
+            else
+            {
+                return p->gender;
+            }
+            break;
+        case AgeColumn:
+            return p->dateOfBirth.daysTo(QDate::currentDate())/ 365;
+        case InitialDiagnosisColumn:
+            return returnDate(p->firstDisease().initialDiagnosis);
+        case ResultDateColumn:
+        {
+            if (p->firstDisease().hasPathology(primaryContext))
+            {
+                return returnDate(p->firstDisease().firstPathology(primaryContext).date);
+            }
+            break;
+        }
+        case ResultLocationColumn:
+        {
+            if (p->firstDisease().hasPathology(primaryContext))
+            {
+                switch (p->firstDisease().firstPathology(primaryContext).sampleOrigin)
+                {
+                case Pathology::Primary:
+                    return QObject::tr("Primärtumor");
+                case Pathology::LocalLymphNode:
+                    return QObject::tr("Lymphknoten");
+                case Pathology::Metastasis:
+                    return QObject::tr("Metastase");
+                case Pathology::UnknownOrigin:
+                    return QString();
+                }
+            }
+            break;
+        }
+        case DiseaseAgeAtResultColumn:
+            if (p->firstDisease().hasPathology(primaryContext))
+            {
+                QDate resultDate = p->firstDisease().firstPathology(primaryContext).date;
+                if (!resultDate.isValid())
+                    return QVariant();
+                int days = p->firstDisease().initialDiagnosis.daysTo(resultDate);
+                if (days < 50)
+                    return 0;
+                return days / 30;
+            }
+            break;
+        }
+        break;
+    }
+    return QVariant();
+}
+
+QVariant ModelDataGenerator::additionalInfoHeader()
+{
+    switch (role)
+    {
+    case Qt::DisplayRole:
+        switch (field)
+        {
+        case GenderColumn:
+            return QObject::tr("M/W");
+        case AgeColumn:
+            return QObject::tr("Alter");
+        case InitialDiagnosisColumn:
+            return QObject::tr("ED");
+        case ResultDateColumn:
+            return QObject::tr("Befund vom");
+        case ResultLocationColumn:
+            return QObject::tr("Befund aus");
+        case DiseaseAgeAtResultColumn:
+            return QObject::tr("nach (Monaten)");
+        }
+    default:
+        break;
+    }
+    return QVariant();
 }
 
 QVariant ModelDataGenerator::fieldDatum()
@@ -91,69 +217,100 @@ QVariant ModelDataGenerator::fieldDatum()
     Property prop = p->firstDisease().pathologyProperty(info.id);
     if (prop.isNull())
     {
-        return QString();
+        return QVariant();
     }
     ValueTypeCategoryInfo typeInfo(info.valueType);
     QVariant value = typeInfo.toValue(prop.value);
-    if (role == PatientModel::VariantDataRole)
+
+    switch (role)
     {
+    case PatientModel::VariantDataRole:
         return value;
+    case PatientPropertyModel::PathologyPropertyRole:
+        return QVariant::fromValue(prop);
+    case Qt::DisplayRole:
+        if (info.valueType == PathologyPropertyInfo::Mutation &&
+                value.toBool() && !prop.detail.isEmpty())
+        {
+            return prop.detail;
+        }
+        return typeInfo.toShortString(value);
     }
-    if (info.valueType == PathologyPropertyInfo::Mutation &&
-            value.toBool() && !prop.detail.isEmpty())
-    {
-        return prop.detail;
-    }
-    return typeInfo.toShortString(value);
+    return QVariant();
 }
 
 QVariant ModelDataGenerator::fieldHeader()
 {
-    return infos.at(field).plainTextLabel();
+    switch (role)
+    {
+    case Qt::DisplayRole:
+        return infos.at(field).plainTextLabel();
+    case PatientPropertyModel::PathologyPropertyInfoRole:
+        return QVariant::fromValue(infos.at(field));
+    default:
+        return QVariant();
+    }
 }
 
 QVariant ModelDataGenerator::otherMutationsDatum()
 {
-    QString data;
-    foreach (const Property& prop, p->firstDisease().allPathologyProperties())
+    switch (role)
     {
-        bool isInList = false;
-        foreach (const PathologyPropertyInfo& info, infos)
+    case Qt::DisplayRole:
+        QString data;
+        foreach (const Property& prop, p->firstDisease().allPathologyProperties())
         {
-            if (info.id == prop.property)
+            bool isInList = false;
+            foreach (const PathologyPropertyInfo& info, infos)
             {
-                isInList = true;
-                break;
+                if (info.id == prop.property)
+                {
+                    isInList = true;
+                    break;
+                }
+            }
+            if (isInList)
+            {
+                continue;
+            }
+            qDebug() << "Not in list:" << prop.property << prop.value;
+            PathologyPropertyInfo info = PathologyPropertyInfo::info(prop.property);
+            ValueTypeCategoryInfo typeInfo(info.valueType);
+            QVariant value = typeInfo.toValue(prop.value);
+            if (value.toBool())
+            {
+                if (!data.isEmpty())
+                    data += "; ";
+                data += info.plainTextLabel() + ": " + typeInfo.toShortString(value);
             }
         }
-        if (isInList)
-        {
-            continue;
-        }
-        qDebug() << "Not in list:" << prop.property << prop.value;
-        PathologyPropertyInfo info = PathologyPropertyInfo::info(prop.property);
-        ValueTypeCategoryInfo typeInfo(info.valueType);
-        QVariant value = typeInfo.toValue(prop.value);
-        if (value.toBool())
-        {
-            if (!data.isEmpty())
-                data += "; ";
-            data += info.plainTextLabel() + ": " + typeInfo.toShortString(value);
-        }
+        return data;
     }
-    return data;
+    return QVariant();
 }
 
 QVariant ModelDataGenerator::otherMutationsHeader()
 {
-    return QObject::tr("Weitere Befunde");
+    switch (role)
+    {
+    case Qt::DisplayRole:
+        return QObject::tr("Weitere Befunde");
+    default:
+        return QVariant();
+    }
 }
 
 QVariant ModelDataGenerator::completenessDatum(CompletenessField value)
 {
+
     if (!hasPathology)
     {
-        return QObject::tr("Keine Befunde");
+        switch (role)
+        {
+        case Qt::DisplayRole:
+            return QObject::tr("Keine Befunde");
+        }
+        return QVariant();
     }
 
     ResultCompletenessChecker checker(p);
@@ -172,7 +329,9 @@ QVariant ModelDataGenerator::completenessDatum(CompletenessField value)
         return QVariant();
     }
 
-    if (role == Qt::DisplayRole)
+    switch (role)
+    {
+    case Qt::DisplayRole:
     {
         switch (result)
         {
@@ -198,7 +357,7 @@ QVariant ModelDataGenerator::completenessDatum(CompletenessField value)
         missing += (missingProperties.size() > 1) ? QObject::tr(" fehlen") : QObject::tr(" fehlt");
         return missing;
     }
-    else // VariantRole
+    case PatientModel::VariantDataRole:
     {
         switch (result)
         {
@@ -212,6 +371,7 @@ QVariant ModelDataGenerator::completenessDatum(CompletenessField value)
         case ResultCompletenessChecker::OnlyOptional:
             return true;
         }
+    }
     }
     return QVariant();
 
@@ -248,12 +408,86 @@ QVariant ModelDataGenerator::completenessDatum(CompletenessField value)
 
 QVariant ModelDataGenerator::completenessHeader(CompletenessField value)
 {
-    switch (field)
+    switch (role)
     {
-    case IHCCompleteness:
-        return QObject::tr("IHC vorliegend");
-    case MutationCompleteness:
-        return QObject::tr("Mut. vorliegend");
+    case Qt::DisplayRole:
+        switch (field)
+        {
+        case IHCCompleteness:
+            return QObject::tr("IHC vorliegend");
+        case MutationCompleteness:
+            return QObject::tr("Mut. vorliegend");
+        }
+    default:
+        return QVariant();
     }
+}
+
+QVariant ModelDataGenerator::actionableResultsDatum(ActionableResultsField value)
+{
+    ActionableResultChecker checker(p);
+    QList<PathologyPropertyInfo> actionableResults = checker.actionableResults();
+    if (actionableResults.isEmpty())
+    {
+        switch (role)
+        {
+        case Qt::DisplayRole:
+            return QObject::tr("-");
+        case PatientModel::VariantDataRole:
+            return 0;
+        }
+        return QVariant();
+    }
+
+    switch (value)
+    {
+    case ActionableResultFieldNames:
+    {
+        switch (role)
+        {
+        case Qt::DisplayRole:
+        {
+            QString data;
+            foreach (const PathologyPropertyInfo& field, actionableResults)
+            {
+                if (!data.isEmpty())
+                    data += ", ";
+                data += field.plainTextLabel();
+            }
+            return data;
+        }
+        case PatientModel::VariantDataRole:
+        {
+            QVariantList list;
+            foreach (const PathologyPropertyInfo& field, actionableResults)
+            {
+                list << QVariant::fromValue(field);
+            }
+            return list;
+        }
+        }
+    }
+    case ActionableResultNumber:
+    {
+        switch (role)
+        {
+        case Qt::DisplayRole:
+        case PatientModel::VariantDataRole:
+            return actionableResults.size();
+        }
+    }
+    }
+
     return QVariant();
+}
+
+QVariant ModelDataGenerator::actionableResultsHeader(ActionableResultsField value)
+{
+    switch (role)
+    {
+    case Qt::DisplayRole:
+        return QObject::tr("Therapierelevant");
+    default:
+        return QVariant();
+    }
 }

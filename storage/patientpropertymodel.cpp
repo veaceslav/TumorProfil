@@ -76,6 +76,21 @@ public:
                   << PathologyPropertyInfo::Mut_BRAF_15
                   << PathologyPropertyInfo::Mut_KRAS_3;
             break;
+        case PatientPropertyModel::AllTumorprofilProfile:
+            props << PathologyPropertyInfo::IHC_PTEN
+                  << PathologyPropertyInfo::IHC_pAKT
+                  << PathologyPropertyInfo::IHC_pERK
+                  << PathologyPropertyInfo::IHC_ALK
+                  << PathologyPropertyInfo::IHC_HER2
+                  << PathologyPropertyInfo::IHC_pP70S6K
+                  << PathologyPropertyInfo::Mut_KRAS_2
+                  << PathologyPropertyInfo::Mut_EGFR_19_21
+                  << PathologyPropertyInfo::Mut_PIK3CA_10_21
+                  << PathologyPropertyInfo::Mut_BRAF_15
+                  << PathologyPropertyInfo::Mut_DDR2
+                  << PathologyPropertyInfo::Mut_KRAS_3
+                  << PathologyPropertyInfo::Fish_FGFR1;
+            break;
         case PatientPropertyModel::EGFRProfile:
             props << PathologyPropertyInfo::Mut_EGFR_19_21
                   << PathologyPropertyInfo::Mut_KRAS_2
@@ -118,6 +133,7 @@ void PatientPropertyModel::setProfile(Profile profile)
     beginResetModel();
     d->profile = profile;
     d->setInfos();
+    qDebug() << "set infos for" << profile << d->infos.size();
     endResetModel();
 }
 
@@ -147,7 +163,10 @@ enum Columns
     // for completeness columns
     IHCCompletenessColumn      = 0,
     MutationCompletenessColumn = 1,
-    CompletenessColumnCount    = 2
+    CompletenessColumnCount    = 2,
+
+    // for actionable results
+    ActionableResultsColumnCount = 2
 };
 }
 
@@ -159,11 +178,13 @@ public:
                   const QList<PathologyPropertyInfo>&  infos,
                   const Patient::Ptr& p, int column, int role)
         : ModelDataGenerator(infos, p, role, column - PatientModelColumns),
-          profile(profile)
+          profile(profile),
+          withAdditionalInfo(true)
     {
     }
 
     PatientPropertyModel::Profile profile;
+    bool withAdditionalInfo;
 
     QVariant overviewData()
     {
@@ -172,32 +193,43 @@ public:
             return QVariant();
         }
 
-        switch (field)
+        switch (role)
         {
-        case OverviewEntityColumn:
-            return entityNameDatum();
-        case OverviewResultsColum:
-            int sum = 0;
-            foreach (const Pathology& path, p->firstDisease().pathologies)
+        case Qt::DisplayRole:
+            switch (field)
             {
-                sum += path.properties.size();
+            case OverviewEntityColumn:
+                return entityNameDatum();
+            case OverviewResultsColum:
+                int sum = 0;
+                foreach (const Pathology& path, p->firstDisease().pathologies)
+                {
+                    sum += path.properties.size();
+                }
+                return sum;
             }
-            return sum;
-        }
 
-        return QString();
+            return QString();
+        }
+        return QVariant();
     }
 
     QVariant overviewHeader()
     {
-        switch (field)
+        switch (role)
         {
-        case OverviewEntityColumn:
-            return QObject::tr("Entität");
-        case OverviewResultsColum:
-            return QObject::tr("Anzahl Befunde");
+        case Qt::DisplayRole:
+            switch (field)
+            {
+            case OverviewEntityColumn:
+                return QObject::tr("Entität");
+            case OverviewResultsColum:
+                return QObject::tr("Anzahl Befunde");
+            }
+            return QString();
+        default:
+            return QVariant();
         }
-        return QString();
     }
 
     int overviewColumnCount()
@@ -207,6 +239,11 @@ public:
 
     QVariant profileData()
     {
+        if (withAdditionalInfo && field < PatientAdditionalInfoColumnCount)
+        {
+            return additionalInfoDatum();
+        }
+        field -= PatientAdditionalInfoColumnCount;
         if (field < infos.size())
         {
             return fieldDatum();
@@ -223,11 +260,23 @@ public:
             CompletenessField comp = (field==IHCCompletenessColumn) ? IHCCompleteness : MutationCompleteness;
             return completenessDatum(comp);
         }
+        field -= CompletenessColumnCount;
+
+        if (field < ActionableResultsColumnCount)
+        {
+            return actionableResultsDatum((ActionableResultsField)field);
+        }
+        field -= ActionableResultsColumnCount;
         return QVariant();
     }
 
     QVariant profileHeader()
     {
+        if (withAdditionalInfo && field < PatientAdditionalInfoColumnCount)
+        {
+            return additionalInfoHeader();
+        }
+        field -= PatientAdditionalInfoColumnCount;
         if (field < infos.size())
         {
             return fieldHeader();
@@ -243,12 +292,20 @@ public:
             CompletenessField comp = field==IHCCompletenessColumn ? IHCCompleteness : MutationCompleteness;
             return completenessHeader(comp);
         }
+        field -= CompletenessColumnCount;
+        if (field < ActionableResultsColumnCount)
+        {
+            return actionableResultsHeader((ActionableResultsField)field);
+        }
+        field -= ActionableResultsColumnCount;
         return QVariant();
     }
 
     int profileColumnCount()
     {
-        return infos.size() + OtherMutationsColumnCount + CompletenessColumnCount;
+        return (withAdditionalInfo ? PatientAdditionalInfoColumnCount : 0) +
+                infos.size() + OtherMutationsColumnCount +
+                CompletenessColumnCount + ActionableResultsColumnCount;
     }
 
     QVariant mutationOverviewData()
@@ -302,11 +359,6 @@ QVariant PatientPropertyModel::data(const QModelIndex& index, int role) const
         return PatientModel::data(index, role);
     }
 
-    if (role != Qt::DisplayRole && role != VariantDataRole)
-    {
-        return QVariant();
-    }
-
     Patient::Ptr p = patientForIndex(index);
     if (!p)
     {
@@ -330,7 +382,7 @@ QVariant PatientPropertyModel::data(const QModelIndex& index, int role) const
 
 QVariant PatientPropertyModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (role != Qt::DisplayRole || orientation != Qt::Horizontal)
+    if (orientation == Qt::Vertical)
     {
         return QVariant();
     }

@@ -32,17 +32,31 @@ class ModelDataGenerator
 public:
 
     ModelDataGenerator(const QList<PathologyPropertyInfo>&  infos,
-                       const Patient::Ptr& p, int role, int field);
+                       const Patient::Ptr& p, int role, int field,
+                       PathologyContextInfo::Context primaryContext = PathologyContextInfo::Tumorprofil);
 
     Patient::Ptr p;
     bool         hasPathology;
     int          field;
     int          role;
     QList<PathologyPropertyInfo>  infos;
+    PathologyContextInfo::Context primaryContext;
 
 protected:
 
     QVariant entityNameDatum();
+    enum AdditionalInfoColumns
+    {
+        GenderColumn,
+        AgeColumn,
+        InitialDiagnosisColumn,
+        ResultDateColumn,
+        ResultLocationColumn,
+        DiseaseAgeAtResultColumn,
+        PatientAdditionalInfoColumnCount
+    };
+    QVariant additionalInfoDatum();
+    QVariant additionalInfoHeader();
     QVariant fieldDatum();
     QVariant fieldHeader();
     QVariant otherMutationsDatum();
@@ -55,6 +69,17 @@ protected:
     };
     QVariant completenessDatum(CompletenessField value);
     QVariant completenessHeader(CompletenessField value);
+
+    enum ActionableResultsField
+    {
+        ActionableResultFieldNames,
+        ActionableResultNumber
+    };
+
+    QVariant actionableResultsDatum(ActionableResultsField value);
+    QVariant actionableResultsHeader(ActionableResultsField value);
+
+    QVariant returnDate(const QDate& date);
 
 };
 

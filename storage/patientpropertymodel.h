@@ -37,9 +37,18 @@ public:
         PulmonaryAdenoProfile,
         PulmonarySqamousProfile,
         CRCProfile,
+        AllTumorprofilProfile,
         EGFRProfile,
         PIK3Profile,
         PTENLossProfile
+    };
+
+    enum Roles
+    {
+        // for headerData: returns the PathologyPropertyInfo if the section represents a property
+        PathologyPropertyInfoRole = Qt::UserRole + 100,
+        // for data: returns the Property from Pathology's properties
+        PathologyPropertyRole     = Qt::UserRole + 101
     };
 
     void setProfile(Profile profile);

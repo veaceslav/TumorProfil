@@ -58,10 +58,14 @@ void PatientPropertyFilterModel::setFilterSettings(const PatientPropertyFilterSe
 
 void PatientPropertyFilterModel::filterByEntity(Pathology::Entity entity)
 {
-    PatientPropertyFilterSettings settings;
-    settings.entities.clear();
+    filterByEntity(QList<Pathology::Entity>() << entity);
+}
+
+void PatientPropertyFilterModel::filterByEntity(QList<Pathology::Entity> entities)
+{
+    PatientPropertyFilterSettings settings = d->settings;
+    settings.entities = entities;
     settings.pathologyProperties.clear();
-    settings.entities << entity;
     setFilterSettings(settings);
 }
 
