@@ -26,15 +26,19 @@
 #include <QAction>
 #include <QComboBox>
 #include <QDebug>
+#include <QHeaderView>
 #include <QIcon>
 #include <QMenu>
+#include <QSplitter>
 #include <QTableView>
 #include <QToolBar>
 #include <QToolButton>
 
 // Local includes
 
+#include "aggregatetableview.h"
 #include "pathologypropertyinfo.h"
+#include "patientpropertymodel.h"
 #include "patientpropertyfiltermodel.h"
 #include "reporttableview.h"
 
@@ -42,16 +46,23 @@ class ReportWindow::ReportWindowPriv
 {
 public:
     ReportWindowPriv()
-       :  view(0),
-          toolBar(0),
-          reportComboBox(0)
+       : view(0),
+         aggregateView(0),
+         viewSplitter(0),
+         toolBar(0),
+         reportComboBox(0)
     {
     }
 
     ReportTableView      *view;
+    AggregateTableView   *aggregateView;
+
+    QSplitter  *viewSplitter;
 
     QToolBar   *toolBar;
     QComboBox  *reportComboBox;
+
+    QList<QAction*> contextFilterActions;
 };
 
 ReportWindow::ReportWindow(QWidget *parent) :
@@ -61,7 +72,7 @@ ReportWindow::ReportWindow(QWidget *parent) :
     setupView();
     setupToolbar();
 
-    setCentralWidget(d->view);
+    setCentralWidget(d->viewSplitter);
     setWindowTitle(tr("Analyse"));
     setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 
@@ -81,8 +92,8 @@ ReportTableView* ReportWindow::view() const
 class ProfileMenu : public QMenu
 {
 public:
-    void addAction(const QString& text, int userData, QObject* receiver, const char* slot = SLOT(entryActivated()),
-                   bool isCheckable = false)
+    QAction* addAction(const QString& text, int userData, QObject* receiver,
+                       const char* slot = SLOT(entryActivated()), bool isCheckable = false)
     {
         QAction* action = QMenu::addAction(text);
         action->setData(userData);
@@ -95,6 +106,7 @@ public:
         {
             connect(action, SIGNAL(triggered()), receiver, slot);
         }
+        return action;
     }
 };
 
@@ -113,6 +125,7 @@ void ReportWindow::setupToolbar()
     profilesMenu->addAction(tr("Adenokarzinom Lunge"), ReportTableView::PulmonaryAdenoIHCMut, this);
     profilesMenu->addAction(tr("Plattenepithelkarzinom Lunge"), ReportTableView::PulmonarySquamousIHCMut, this);
     profilesMenu->addAction(tr("Kolorektales Karzinom"), ReportTableView::CRCIHCMut, this);
+    profilesMenu->addAction(tr("Alle drei Tumorprofil-Entitäten"), ReportTableView::TumorprofilIHCMut, this);
     profilesButton->setMenu(profilesMenu);
 
     QAction* byMutationAction = d->toolBar->addAction(QIcon::fromTheme("palette"), tr("Nach Befund"));
@@ -124,32 +137,46 @@ void ReportWindow::setupToolbar()
     byMutationMenu->addAction(tr("PTEN-Verlust"), ReportTableView::PTENLoss, this);
     byMutationButton->setMenu(byMutationMenu);
 
+    d->toolBar->addSeparator();
+
     QAction* byContextAction = d->toolBar->addAction(QIcon::fromTheme("folder"), tr("Filter nach Kontext"));
     QToolButton* byContextButton = static_cast<QToolButton*>(d->toolBar->widgetForAction(byContextAction));
     byContextButton->setPopupMode(QToolButton::InstantPopup);
     ProfileMenu* byContextMenu = new ProfileMenu;
-    byContextMenu->addAction(tr("WTZ-Tumorprofil"),  PathologyContextInfo::Tumorprofil, this, SLOT(filterByContext()), true);
-    byContextMenu->addAction(tr("BEZ235-Screening"), PathologyContextInfo::ScreeningBEZ235, this, SLOT(filterByContext()), true);
-    byContextMenu->addAction(tr("BGJ389-Screening"), PathologyContextInfo::ScreeningBGJ398, this, SLOT(filterByContext()), true);
+    d->contextFilterActions <<
+        byContextMenu->addAction(tr("WTZ-Tumorprofil"),  PathologyContextInfo::Tumorprofil,
+                                 this, SLOT(filterByContext()), true);
+    d->contextFilterActions <<
+        byContextMenu->addAction(tr("BEZ235-Screening"), PathologyContextInfo::ScreeningBEZ235,
+                                 this, SLOT(filterByContext()), true);
+    d->contextFilterActions <<
+        byContextMenu->addAction(tr("BGJ389-Screening"), PathologyContextInfo::ScreeningBGJ398,
+                                 this, SLOT(filterByContext()), true);
+    d->contextFilterActions <<
+        byContextMenu->addAction(tr("(kein Filter)"), PathologyContextInfo::InvalidContext,
+                                 this, SLOT(filterByContext()), false);
     byContextButton->setMenu(byContextMenu);
 
-    /*d->reportComboBox = new QComboBox;
-    d->toolBar->addWidget(d->reportComboBox);
+    d->toolBar->addSeparator();
 
-    d->reportComboBox->setInsertPolicy(QComboBox::NoInsert);
-    d->reportComboBox->setEditable(false);
-    d->reportComboBox->addItem("Übersicht", (int)ReportTableView::OverviewReport);
-    d->reportComboBox->addItem(tr("Adeno Lunge"), (int)ReportTableView::PulmonaryAdenoIHCMut);
-    d->reportComboBox->addItem(tr("Plattenepithel Lunge"), (int)ReportTableView::PulmonarySquamousIHCMut);
-    d->reportComboBox->addItem(tr("Kolorektal"), (int)ReportTableView::CRCIHCMut);
-
-    connect(d->reportComboBox, SIGNAL(activated(int)),
-            this, SLOT(entryActivated(int)));*/
+    QAction* aggregateAction = d->toolBar->addAction(QIcon::fromTheme("calculator"), tr("Zeige Auswertung"));
+    aggregateAction->setCheckable(true);
+    connect(aggregateAction, SIGNAL(toggled(bool)), this, SLOT(setAggregateVisible(bool)));
 }
 
 void ReportWindow::setupView()
 {
+    d->viewSplitter = new QSplitter(Qt::Vertical, this);
     d->view = new ReportTableView;
+    d->aggregateView = new AggregateTableView;
+    d->aggregateView->setSourceModel(d->view->model());
+    d->viewSplitter->addWidget(d->view);
+    d->viewSplitter->addWidget(d->aggregateView);
+
+    d->aggregateView->hide();
+
+    connect(d->aggregateView, SIGNAL(activatedReferenceIndexes(QList<QModelIndex>)),
+            this, SLOT(activatedFromAggregate(QList<QModelIndex>)));
 
     /*connect(this, SIGNAL(activated(QModelIndex)),
             this, SLOT(slotActivated(QModelIndex)));*/
@@ -172,16 +199,45 @@ void ReportWindow::filterByContext()
     {
         return;
     }
-    PathologyContextInfo info((PathologyContextInfo::Context)action->data().toInt());
     PatientPropertyFilterSettings settings = d->view->filterModel()->filterSettings();
-    if (action->isChecked())
+    PathologyContextInfo::Context context = (PathologyContextInfo::Context)action->data().toInt();
+    if (context == PathologyContextInfo::InvalidContext)
     {
-        settings.pathologyContexts[info.id] = true;
+        settings.pathologyContexts.clear();
+        foreach (QAction* a, d->contextFilterActions)
+        {
+            a->setChecked(false);
+        }
     }
     else
     {
-        settings.pathologyContexts.remove(info.id);
+        PathologyContextInfo info(context);
+        if (action->isChecked())
+        {
+            settings.pathologyContexts[info.id] = true;
+        }
+        else
+        {
+            settings.pathologyContexts.remove(info.id);
+        }
     }
     d->view->filterModel()->setFilterSettings(settings);
 }
 
+void ReportWindow::setAggregateVisible(bool visible)
+{
+    d->aggregateView->setVisible(visible);
+}
+
+void ReportWindow::activatedFromAggregate(const QList<QModelIndex>& sourceReferenceIndexes)
+{
+    // we have a list of view->model()'s reference indexes which sum up to the contents of
+    // an index which has been activated in the aggregate view.
+    // We want to select full rows.
+    QItemSelection selection;
+    foreach (const QModelIndex& index, sourceReferenceIndexes)
+    {
+        selection.select(index, index);
+    }
+    d->view->selectionModel()->select(selection, QItemSelectionModel::Rows | QItemSelectionModel::ClearAndSelect);
+}

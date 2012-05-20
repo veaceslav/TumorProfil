@@ -22,14 +22,13 @@
 #ifndef REPORTTABLEVIEW_H
 #define REPORTTABLEVIEW_H
 
-#include <QTableView>
-
+#include "analysistableview.h"
 #include "patient.h"
 
 class PatientPropertyModel;
 class PatientPropertyFilterModel;
 
-class ReportTableView : public QTableView
+class ReportTableView : public AnalysisTableView
 {
     Q_OBJECT
 
@@ -42,6 +41,7 @@ public:
         PulmonaryAdenoIHCMut,
         PulmonarySquamousIHCMut,
         CRCIHCMut,
+        TumorprofilIHCMut,
         PIK3Mutation,
         EGFRMutation,
         PTENLoss
@@ -51,7 +51,7 @@ public:
     ~ReportTableView();
     
     ReportType reportType() const;
-    PatientPropertyModel          *model() const;
+    PatientPropertyModel          *patientModel() const;
     PatientPropertyFilterModel    *filterModel() const;
 
 signals:
@@ -61,11 +61,6 @@ signals:
 public slots:
 
     void setReportType(int type);
-    void copy();
-
-protected:
-
-    void keyPressEvent(QKeyEvent *event);
 
 protected slots:
 

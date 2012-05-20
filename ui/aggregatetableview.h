@@ -2,7 +2,7 @@
  *
  * This file is a part of Tumorprofil
  *
- * Date        : 22.02.2012
+ * Date        : 20.05.2012
  *
  * Copyright (C) 2012 by Marcel Wiesweg <marcel dot wiesweg at uk-essen dot de>
  *
@@ -19,42 +19,40 @@
  *
  * ============================================================ */
 
-#ifndef REPORTWINDOW_H
-#define REPORTWINDOW_H
+#ifndef AGGREGATETABLEVIEW_H
+#define AGGREGATETABLEVIEW_H
 
-#include <QMainWindow>
+#include "analysistableview.h"
 
-// Local includes
+class DataAggregationModel;
 
-#include "patient.h"
-
-class QModelIndex;
-class ReportTableView;
-
-class ReportWindow : public QMainWindow
+class AggregateTableView : public AnalysisTableView
 {
     Q_OBJECT
 public:
 
-    explicit ReportWindow(QWidget *parent = 0);
-    ~ReportWindow();
+    explicit AggregateTableView(QWidget *parent = 0);
+    ~AggregateTableView();
+    
+    void setSourceModel(QAbstractItemModel* source);
 
-    ReportTableView* view() const;
+    DataAggregationModel* dataAggregationModel() const;
+
+signals:
+
+    void activatedReferenceIndexes(const QList<QModelIndex>&);
+    
+public slots:
 
 protected slots:
 
-    void entryActivated();
-    void filterByContext();
-    void setAggregateVisible(bool);
-    void activatedFromAggregate(const QList<QModelIndex>& sourceReferenceIndexes);
+    void slotActivated(const QModelIndex&);
 
 private:
 
-    void setupToolbar();
-    void setupView();
-
-    class ReportWindowPriv;
-    ReportWindowPriv* const d;
+    class AggregateTableViewPriv;
+    AggregateTableViewPriv* const d;
+    
 };
 
-#endif // REPORTWINDOW_H
+#endif // AGGREGATETABLEVIEW_H

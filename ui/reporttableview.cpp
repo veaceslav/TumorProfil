@@ -23,12 +23,8 @@
 
 // Qt includes
 
-#include <QApplication>
-#include <QClipboard>
 #include <QDebug>
 #include <QHeaderView>
-#include <QKeyEvent>
-#include <QKeySequence>
 
 // Local includes
 
@@ -53,7 +49,7 @@ public:
 };
 
 ReportTableView::ReportTableView(QWidget *parent) :
-    QTableView(parent),
+    AnalysisTableView(parent),
     d(new ReportTableViewPriv)
 {
     verticalHeader()->hide();
@@ -81,7 +77,7 @@ ReportTableView::ReportType ReportTableView::reportType() const
     return d->reportType;
 }
 
-PatientPropertyModel *ReportTableView::model() const
+PatientPropertyModel *ReportTableView::patientModel() const
 {
     return d->model;
 }
@@ -118,6 +114,15 @@ void ReportTableView::setReportType(int type)
         d->model->setProfile(PatientPropertyModel::CRCProfile);
         d->filterModel->filterByEntity(Pathology::ColorectalAdeno);
         break;
+    case TumorprofilIHCMut:
+    {
+        d->model->setProfile(PatientPropertyModel::AllTumorprofilProfile);
+        d->filterModel->filterByEntity(QList<Pathology::Entity>()
+                                       << Pathology::PulmonaryAdeno
+                                       << Pathology::PulmonarySquamous
+                                       << Pathology::ColorectalAdeno);
+        break;
+    }
     case EGFRMutation:
         d->model->setProfile(PatientPropertyModel::EGFRProfile);
         d->filterModel->filterByPathologyProperty(
@@ -138,50 +143,6 @@ void ReportTableView::setReportType(int type)
     }
 
     resizeColumnsToContents();
-}
-
-void ReportTableView::keyPressEvent(QKeyEvent *event)
-{
-    if(event->matches(QKeySequence::Copy) )
-    {
-      copy();
-    }
-    else
-    {
-      QTableView::keyPressEvent(event);
-    }
-}
-
-void ReportTableView::copy()
-{
-    if (!selectionModel()->hasSelection())
-    {
-        return;
-    }
-
-    QModelIndexList list = selectionModel()->selectedIndexes();
-    qSort(list);
-
-    QString copy;
-
-    QModelIndexList::const_iterator it, next;
-    for (it = list.begin(); it != list.end(); ++it)
-    {
-        copy += it->data().toString();
-        next = it+1;
-
-        if (next == list.end() || it->row() != next->row())
-        {
-            copy += '\n';
-        }
-        else
-        {
-            copy += '\t';
-        }
-    }
-
-    QClipboard *clipboard = QApplication::clipboard();
-    clipboard->setText(copy);
 }
 
 void ReportTableView::indexActivated(const QModelIndex& index)
