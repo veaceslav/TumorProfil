@@ -41,6 +41,7 @@ public:
         PulmonaryAdenoIHCMut,
         PulmonarySquamousIHCMut,
         CRCIHCMut,
+        BreastCaIHCMut,
         TumorprofilIHCMut,
         PIK3Mutation,
         EGFRMutation,

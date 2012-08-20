@@ -62,7 +62,6 @@ public:
             props << PathologyPropertyInfo::IHC_PTEN
                   << PathologyPropertyInfo::IHC_pAKT
                   << PathologyPropertyInfo::IHC_pERK
-                  << PathologyPropertyInfo::Fish_FGFR1
                   << PathologyPropertyInfo::Mut_PIK3CA_10_21
                   << PathologyPropertyInfo::Mut_DDR2;
             break;
@@ -75,6 +74,18 @@ public:
                   << PathologyPropertyInfo::Mut_PIK3CA_10_21
                   << PathologyPropertyInfo::Mut_BRAF_15
                   << PathologyPropertyInfo::Mut_KRAS_3;
+            break;
+        case PatientPropertyModel::BreastCaProfile:
+            props << PathologyPropertyInfo::IHC_PTEN
+                  << PathologyPropertyInfo::IHC_pAKT
+                  << PathologyPropertyInfo::IHC_pP70S6K
+                  << PathologyPropertyInfo::IHC_pERK
+                  << PathologyPropertyInfo::Mut_PIK3CA_10_21
+                  << PathologyPropertyInfo::Fish_FGFR1
+                  << PathologyPropertyInfo::IHC_ER
+                  << PathologyPropertyInfo::IHC_PR
+                  << PathologyPropertyInfo::IHC_HER2
+                  << PathologyPropertyInfo::Fish_HER2;
             break;
         case PatientPropertyModel::AllTumorprofilProfile:
             props << PathologyPropertyInfo::IHC_PTEN

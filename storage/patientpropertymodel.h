@@ -37,6 +37,7 @@ public:
         PulmonaryAdenoProfile,
         PulmonarySqamousProfile,
         CRCProfile,
+        BreastCaProfile,
         AllTumorprofilProfile,
         EGFRProfile,
         PIK3Profile,

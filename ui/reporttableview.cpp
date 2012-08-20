@@ -104,7 +104,9 @@ void ReportTableView::setReportType(int type)
         break;
     case PulmonaryAdenoIHCMut:
         d->model->setProfile(PatientPropertyModel::PulmonaryAdenoProfile);
-        d->filterModel->filterByEntity(Pathology::PulmonaryAdeno);
+        d->filterModel->filterByEntity(QList<Pathology::Entity>()
+                                       << Pathology::PulmonaryAdeno
+                                       << Pathology::PulmonaryBronchoalveloar);
         break;
     case PulmonarySquamousIHCMut:
         d->model->setProfile(PatientPropertyModel::PulmonarySqamousProfile);
@@ -114,13 +116,19 @@ void ReportTableView::setReportType(int type)
         d->model->setProfile(PatientPropertyModel::CRCProfile);
         d->filterModel->filterByEntity(Pathology::ColorectalAdeno);
         break;
+    case BreastCaIHCMut:
+        d->model->setProfile(PatientPropertyModel::BreastCaProfile);
+        d->filterModel->filterByEntity(Pathology::Breast);
+        break;
     case TumorprofilIHCMut:
     {
         d->model->setProfile(PatientPropertyModel::AllTumorprofilProfile);
         d->filterModel->filterByEntity(QList<Pathology::Entity>()
                                        << Pathology::PulmonaryAdeno
+                                       << Pathology::PulmonaryBronchoalveloar
                                        << Pathology::PulmonarySquamous
-                                       << Pathology::ColorectalAdeno);
+                                       << Pathology::ColorectalAdeno
+                                       << Pathology::Breast);
         break;
     }
     case EGFRMutation:

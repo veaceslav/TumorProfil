@@ -125,7 +125,8 @@ void ReportWindow::setupToolbar()
     profilesMenu->addAction(tr("Adenokarzinom Lunge"), ReportTableView::PulmonaryAdenoIHCMut, this);
     profilesMenu->addAction(tr("Plattenepithelkarzinom Lunge"), ReportTableView::PulmonarySquamousIHCMut, this);
     profilesMenu->addAction(tr("Kolorektales Karzinom"), ReportTableView::CRCIHCMut, this);
-    profilesMenu->addAction(tr("Alle drei Tumorprofil-Entitäten"), ReportTableView::TumorprofilIHCMut, this);
+    profilesMenu->addAction(tr("Mammakarzinom"), ReportTableView::BreastCaIHCMut, this);
+    profilesMenu->addAction(tr("Alle vier Tumorprofil-Entitäten"), ReportTableView::TumorprofilIHCMut, this);
     profilesButton->setMenu(profilesMenu);
 
     QAction* byMutationAction = d->toolBar->addAction(QIcon::fromTheme("palette"), tr("Nach Befund"));
