@@ -180,6 +180,10 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
             m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
             break;
         case Pathology::Breast:
+            m_objects << new QLabel(tr("Immunhistochemie"));
+            m_objects << create(PathologyPropertyInfo::IHC_PTEN);
+            m_objects << new QLabel(tr("Sequenzanalysen"));
+            m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
         case Pathology::TransitionalCell:
         case Pathology::Thyroid:
         case Pathology::Melanoma:
@@ -199,6 +203,20 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
         m_objects << create(PathologyPropertyInfo::Fish_PIK3CA);
         m_objects << new QLabel(tr("Immunhistochemie"));
         m_objects << create(PathologyPropertyInfo::IHC_PTEN);
+        break;
+    case PathologyContextInfo::BestRx:
+        m_objects << new QLabel(tr("PI3K/Akt-Signalweg"));
+        m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
+        m_objects << create(PathologyPropertyInfo::Fish_PIK3CA);
+        m_objects << create(PathologyPropertyInfo::IHC_PTEN);
+        m_objects << new QLabel(tr("FGFR1"));
+        m_objects << create(PathologyPropertyInfo::Fish_FGFR1);
+        m_objects << new QLabel(tr("Hormonstatus"));
+        m_objects << create(PathologyPropertyInfo::IHC_ER);
+        m_objects << create(PathologyPropertyInfo::IHC_PR);
+        m_objects << create(PathologyPropertyInfo::IHC_HER2);
+        m_objects << create(PathologyPropertyInfo::Fish_HER2);
+        break;
     default:
         break;
 

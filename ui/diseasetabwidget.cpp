@@ -104,6 +104,12 @@ class BEZ235Tab : public PathologyTab
     virtual QString tabLabel() const { return QObject::tr("BEZ235"); }
 };
 
+class BestRxTab : public PathologyTab
+{
+    virtual PathologyContextInfo::Context context() const { return PathologyContextInfo::BestRx; }
+    virtual QString tabLabel() const { return QObject::tr("BestRx"); }
+};
+
 namespace PathologyTabFactory
 {
 static PathologyTab* create(PathologyContextInfo::Context context)
@@ -116,6 +122,8 @@ static PathologyTab* create(PathologyContextInfo::Context context)
         return new BGJ398Tab;
     case PathologyContextInfo::ScreeningBEZ235:
         return new BEZ235Tab;
+    case PathologyContextInfo::BestRx:
+        return new BestRxTab;
     default:
         break;
     }
