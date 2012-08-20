@@ -54,7 +54,8 @@ SOURCES += main.cpp\
     ui/analysistableview.cpp \
     ui/aggregatetableview.cpp \
     storage/dataaggregationfiltermodel.cpp \
-    medical/confidenceinterval.cpp
+    medical/confidenceinterval.cpp \
+    medical/ihcscore.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -102,13 +103,15 @@ HEADERS  += mainwindow.h \
     ui/analysistableview.h \
     ui/aggregatetableview.h \
     storage/dataaggregationfiltermodel.h \
-    medical/confidenceinterval.h
+    medical/confidenceinterval.h \
+    medical/ihcscore.h
 
 INCLUDEPATH += datamodel/ \
     ui/ \
     storage/ \
     util/ \
-    medical/
+    medical/ \
+    C:\Users\wiesweg\Software\boost_1_50_0/
 
 OTHER_FILES += \
     gpl-header-template.txt \
