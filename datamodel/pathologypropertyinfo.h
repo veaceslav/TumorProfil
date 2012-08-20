@@ -29,6 +29,9 @@
 #include <QString>
 #include <QVariant>
 
+class IHCScore;
+class Property;
+
 class PathologyPropertyInfo
 {
 public:
@@ -45,6 +48,8 @@ public:
         IHC_MSH2,
         IHC_MSH6,
         IHC_pP70S6K,
+        IHC_ER,
+        IHC_PR,
         Fish_ALK,
         Fish_HER2,
         Fish_FGFR1,
@@ -71,8 +76,10 @@ public:
     {
         InvalidCategory,
         IHCClassical,
+        IHCClassicalPoints,
         IHCBoolean, // "<10%, niedrige Intensität"
         IHCBooleanPercentage,
+        IHCTwoDim,
         Fish,
         Mutation,
         StableUnstable
@@ -109,12 +116,16 @@ public:
 
     QList<QVariant> possibleValues() const;
     bool isScored() const;
+    bool isTwoDimScored() const;
 
     QString toString(const QVariant& value) const;
-    QString toShortString(const QVariant& value) const;
+    QString toDisplayString(const Property& prop) const;
 
     QString toPropertyValue(const QVariant& value) const;
     QVariant toValue(const QString& propertyValue) const;
+
+    // If category is IHCTwoDim
+    IHCScore toIHCScore(const Property& prop) const;
 
     bool hasDetail() const;
     // Prefix and suffix

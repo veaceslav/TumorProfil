@@ -21,6 +21,8 @@
 
 #include "resultcompletenesschecker.h"
 
+#include "ihcscore.h"
+
 ResultCompletenessChecker::ResultCompletenessChecker(const Patient::Ptr& p)
     : p(p)
 {
@@ -52,28 +54,67 @@ ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isIHCCo
                        << PathologyPropertyInfo::IHC_pERK
                        << PathologyPropertyInfo::IHC_PTEN;
         break;
+    case Pathology::Breast:
+        requiredFields << PathologyPropertyInfo::IHC_pAKT
+                       << PathologyPropertyInfo::IHC_pP70S6K
+                       << PathologyPropertyInfo::IHC_pERK
+                       << PathologyPropertyInfo::IHC_PTEN;
+        break;
     default:
         return Undefined;
     }
 
     bool complete = true;
-    QList<PathologyPropertyInfo> missing;
+    QList<PathologyPropertyInfo> missing, partial, returnList;
     foreach (const PathologyPropertyInfo& field, requiredFields)
     {
-        if (!disease.hasPathologyProperty(field.id))
+        ValueTypeCategoryInfo categoryInfo(field);
+
+        bool hasField = disease.hasPathologyProperty(field.id);
+        if (!hasField)
         {
             complete = false;
             missing << field;
         }
+        else if (categoryInfo.isTwoDimScored())
+        {
+            Property prop = disease.pathologyProperty(field.id);
+            IHCScore score = categoryInfo.toIHCScore(prop);
+            if (!score.isValid())
+            {
+                complete = false;
+                partial << field;
+            }
+        }
     }
+
+    returnList = missing;
+    if (!partial.isEmpty())
+    {
+        // we can only return one list, so join
+        if (missing.isEmpty())
+        {
+            returnList = missing + partial;
+            partial.clear();
+        }
+        else
+        {
+            returnList = partial;
+        }
+    }
+
     if (missingProperties)
     {
-        *missingProperties = missing;
+        *missingProperties = returnList;
     }
 
     if (complete)
     {
         return Complete;
+    }
+    else if (missing.isEmpty() && partial.isEmpty())
+    {
+        return PartialResult;
     }
     else if (requiredFields.size() == missing.size())
     {
@@ -160,6 +201,12 @@ ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isMutCo
             checkCompleteness(disease, PathologyPropertyInfo::Mut_BRAF_15, complete, missingProperties);
             checkCompleteness(disease, PathologyPropertyInfo::Mut_KRAS_3, complete, missingProperties);
         }
+        return complete ? Complete : Incomplete;
+    }
+    case Pathology::Breast:
+    {
+        bool complete = true;
+        checkCompleteness(disease, PathologyPropertyInfo::Mut_PIK3CA_10_21, complete, missingProperties);
         return complete ? Complete : Incomplete;
     }
     default:

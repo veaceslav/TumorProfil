@@ -234,7 +234,7 @@ QVariant ModelDataGenerator::fieldDatum()
         {
             return prop.detail;
         }
-        return typeInfo.toShortString(value);
+        return typeInfo.toDisplayString(prop);
     }
     return QVariant();
 }
@@ -281,7 +281,7 @@ QVariant ModelDataGenerator::otherMutationsDatum()
             {
                 if (!data.isEmpty())
                     data += "; ";
-                data += info.plainTextLabel() + ": " + typeInfo.toShortString(value);
+                data += info.plainTextLabel() + ": " + typeInfo.toDisplayString(prop);
             }
         }
         return data;
@@ -338,6 +338,7 @@ QVariant ModelDataGenerator::completenessDatum(CompletenessField value)
         case ResultCompletenessChecker::Complete:
             return QObject::tr("ja");
         case ResultCompletenessChecker::Incomplete:
+        case ResultCompletenessChecker::PartialResult:
             break;
         case ResultCompletenessChecker::Absent:
             return QObject::tr("fehlt");
@@ -354,7 +355,14 @@ QVariant ModelDataGenerator::completenessDatum(CompletenessField value)
                 missing += ", ";
             missing += info.plainTextLabel();
         }
-        missing += (missingProperties.size() > 1) ? QObject::tr(" fehlen") : QObject::tr(" fehlt");
+        if (result == ResultCompletenessChecker::Incomplete)
+        {
+            missing += (missingProperties.size() > 1) ? QObject::tr(" fehlen") : QObject::tr(" fehlt");
+        }
+        else
+        {
+            missing.prepend("Nachzuscoren: ");
+        }
         return missing;
     }
     case PatientModel::VariantDataRole:
@@ -364,6 +372,7 @@ QVariant ModelDataGenerator::completenessDatum(CompletenessField value)
         case ResultCompletenessChecker::Complete:
             return true;
         case ResultCompletenessChecker::Incomplete:
+        case ResultCompletenessChecker::PartialResult:
             return false;
         case ResultCompletenessChecker::Absent:
             return false;

@@ -26,7 +26,10 @@
 
 // Local includes
 
+#include "ihcscore.h"
 #include "pathologypropertyinfo.h"
+#include "property.h"
+
 
 PathologyPropertyInfo::PathologyPropertyInfo()
     : property(InvalidProperty), valueType(InvalidCategory)
@@ -71,8 +74,10 @@ QString PathologyPropertyInfo::plainTextLabel() const
 bool PathologyPropertyInfo::isIHC() const
 {
     return valueType == IHCClassical ||
+           valueType == IHCClassicalPoints ||
            valueType == IHCBoolean ||
-           valueType == IHCBooleanPercentage;
+           valueType == IHCBooleanPercentage ||
+           valueType == IHCTwoDim;
 }
 
 PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
@@ -80,15 +85,19 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
     switch (property)
     {
     case IHC_PTEN:
-        return PathologyPropertyInfo(property, IHCBoolean, "ihc/pten", QObject::QObject::tr("PTEN"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/pten", QObject::QObject::tr("PTEN"));
     case IHC_pAKT:
-        return PathologyPropertyInfo(property, IHCClassical, "ihc/p-akt?p=s473", QObject::QObject::tr("<qt>p-AKT<sup>S473</sup></qt>"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-akt?p=s473", QObject::QObject::tr("<qt>p-AKT<sup>S473</sup></qt>"));
     case IHC_pERK:
-        return PathologyPropertyInfo(property, IHCClassical, "ihc/p-erk", QObject::QObject::tr("p-ERK"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-erk", QObject::QObject::tr("p-ERK"));
     case IHC_ALK:
-        return PathologyPropertyInfo(property, IHCClassical, "ihc/alk", QObject::QObject::tr("ALK"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/alk", QObject::QObject::tr("ALK"));
     case IHC_HER2:
-        return PathologyPropertyInfo(property, IHCClassical, "ihc/her2", QObject::QObject::tr("HER2"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/her2", QObject::QObject::tr("HER2"));
+    case IHC_ER:
+        return PathologyPropertyInfo(property, IHCClassical, "ihc/er", QObject::QObject::tr("ER"));
+    case IHC_PR:
+        return PathologyPropertyInfo(property, IHCClassical, "ihc/pr", QObject::QObject::tr("PR"));
     case Fish_ALK:
         return PathologyPropertyInfo(property, Fish, "fish/alk", QObject::QObject::tr("ALK-Translokation"), QObject::QObject::tr("Prozentsatz:"));
     case Fish_HER2:
@@ -114,7 +123,7 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
     case Mut_DDR2:
         return PathologyPropertyInfo(property, Mutation, "mut/ddr2?exon=15-18", QObject::QObject::tr("DDR2 Exon 15-18"));
     case IHC_pP70S6K:
-        return PathologyPropertyInfo(property, IHCBooleanPercentage, "ihc/p-p70S6k", QObject::QObject::tr("p-p70S6K"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-p70S6k", QObject::QObject::tr("p-p70S6K"));
     case IHC_MLH1:
         return PathologyPropertyInfo(property, IHCClassical, "ihc/mlh1", QObject::QObject::tr("MLH1"));
     case IHC_MSH2:
@@ -167,6 +176,8 @@ QList<QVariant> ValueTypeCategoryInfo::possibleValues() const
     switch (category)
     {
     case PathologyPropertyInfo::IHCClassical:
+    case PathologyPropertyInfo::IHCClassicalPoints:
+    case PathologyPropertyInfo::IHCTwoDim:
         values << QVariant(QVariant::Bool)
                << 0 << 1 << 2 << 3;
         break;
@@ -193,7 +204,14 @@ QList<QVariant> ValueTypeCategoryInfo::possibleValues() const
 
 bool ValueTypeCategoryInfo::isScored() const
 {
-    return category == PathologyPropertyInfo::IHCClassical;
+    return category == PathologyPropertyInfo::IHCClassical ||
+           category == PathologyPropertyInfo::IHCTwoDim ||
+           category == PathologyPropertyInfo::IHCClassicalPoints;
+}
+
+bool ValueTypeCategoryInfo::isTwoDimScored() const
+{
+    return category == PathologyPropertyInfo::IHCTwoDim;
 }
 
 QString ValueTypeCategoryInfo::toString(const QVariant& value) const
@@ -217,6 +235,22 @@ QString ValueTypeCategoryInfo::toString(const QVariant& value) const
             return QObject::tr("2+");
         case 3:
             return QObject::tr("3+");
+        }
+        break;
+    case PathologyPropertyInfo::IHCClassicalPoints:
+        return QString::number(value.toInt()) + (value.toInt() == 0 ? QString() : "  ");
+                // blank to have same length as IHC classical
+    case PathologyPropertyInfo::IHCTwoDim:
+        switch (value.toInt())
+        {
+        case 0:
+            return QObject::tr("keine");
+        case 1:
+            return QObject::tr("schwache");
+        case 2:
+            return QObject::tr("m‰ﬂige");
+        case 3:
+            return QObject::tr("starke F‰rbung");
         }
         break;
     case PathologyPropertyInfo::IHCBoolean:
@@ -262,8 +296,48 @@ QString ValueTypeCategoryInfo::toString(const QVariant& value) const
     return QString();
 }
 
-QString ValueTypeCategoryInfo::toShortString(const QVariant& value) const
+IHCScore ValueTypeCategoryInfo::toIHCScore(const Property& prop) const
 {
+    if (category != PathologyPropertyInfo::IHCTwoDim)
+    {
+        return IHCScore();
+    }
+    return IHCScore(toValue(prop.value), prop.detail);
+}
+
+static QString toScoreString(int score)
+{
+    switch (score)
+    {
+    case 0:
+        return QObject::tr("0");
+    case 1:
+        return QObject::tr("1+");
+    case 2:
+        return QObject::tr("2+");
+    case 3:
+        return QObject::tr("3+");
+    }
+    return QString();
+}
+
+static QString toPlusMinus(bool val)
+{
+    if (val)
+    {
+        return "+";
+    }
+    else
+    {
+        return "-";
+    }
+}
+
+// SELECT property FROM PathologyProperties WHERE pathologyid IN (SELECT id FROM Pathologies WHERE context='wtz/tumorprofil') AND property LIKE 'ihc/%';
+QString ValueTypeCategoryInfo::toDisplayString(const Property& prop) const
+{
+    QVariant value = toValue(prop.value);
+
     if (category != PathologyPropertyInfo::InvalidCategory
             && value.isNull() && value.type() == QVariant::Bool)
     {
@@ -273,31 +347,31 @@ QString ValueTypeCategoryInfo::toShortString(const QVariant& value) const
     switch (category)
     {
     case PathologyPropertyInfo::IHCClassical:
-        switch (value.toInt())
+        return toScoreString(value.toInt());
+    case PathologyPropertyInfo::IHCClassicalPoints:
+        return QString::number(value.toInt());
+    case PathologyPropertyInfo::IHCTwoDim:
+    {
+        QVariant score = IHCScore(value, prop.detail).score();
+        if (score.isNull())
         {
-        case 0:
-            return QObject::tr("0");
-        case 1:
-            return QObject::tr("1+");
-        case 2:
-            return QObject::tr("2+");
-        case 3:
-            return QObject::tr("3+");
+            return QString();
         }
-        break;
+        else if (score.type() == QVariant::Int)
+        {
+            return QString::number(score.toInt());
+        }
+        else
+        {
+            return toPlusMinus(score.toBool());
+        }
+    }
     case PathologyPropertyInfo::IHCBoolean:
     case PathologyPropertyInfo::IHCBooleanPercentage:
     case PathologyPropertyInfo::Fish:
     case PathologyPropertyInfo::Mutation:
     case PathologyPropertyInfo::StableUnstable:
-        if (value.toBool())
-        {
-            return "+";
-        }
-        else
-        {
-            return "-";
-        }
+        return toPlusMinus(value.toBool());
     case PathologyPropertyInfo::InvalidCategory:
         break;
     }
@@ -349,6 +423,8 @@ QString ValueTypeCategoryInfo::toPropertyValue(const QVariant& value) const
     switch (category)
     {
     case PathologyPropertyInfo::IHCClassical:
+    case PathologyPropertyInfo::IHCClassicalPoints:
+    case PathologyPropertyInfo::IHCTwoDim:
         return value.toString();
         break;
     case PathologyPropertyInfo::IHCBoolean:
@@ -368,6 +444,8 @@ QVariant ValueTypeCategoryInfo::toValue(const QString& propertyValue) const
     switch (category)
     {
     case PathologyPropertyInfo::IHCClassical:
+    case PathologyPropertyInfo::IHCClassicalPoints:
+    case PathologyPropertyInfo::IHCTwoDim:
         return propertyValue.toInt();
         break;
     case PathologyPropertyInfo::IHCBoolean:
@@ -389,6 +467,7 @@ bool ValueTypeCategoryInfo::hasDetail() const
     switch (category)
     {
     case PathologyPropertyInfo::IHCBooleanPercentage:
+    case PathologyPropertyInfo::IHCTwoDim:
     case PathologyPropertyInfo::Fish:
     case PathologyPropertyInfo::Mutation:
         return true;
@@ -402,12 +481,14 @@ QPair<QString, QString> ValueTypeCategoryInfo::defaultDetailLabel() const
     switch (category)
     {
     case PathologyPropertyInfo::IHCClassical:
+    case PathologyPropertyInfo::IHCClassicalPoints:
     case PathologyPropertyInfo::IHCBoolean:
     case PathologyPropertyInfo::StableUnstable:
     case PathologyPropertyInfo::InvalidCategory:
         break;
     case PathologyPropertyInfo::IHCBooleanPercentage:
-        return qMakePair(QString(), QObject::tr("% Zellen"));
+    case PathologyPropertyInfo::IHCTwoDim:
+        return qMakePair(QObject::tr("in"), QObject::tr("% Zellen"));
         break;
     case PathologyPropertyInfo::Fish:
         return qMakePair(QString(""), QString());

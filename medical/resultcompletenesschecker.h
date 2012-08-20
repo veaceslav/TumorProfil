@@ -36,7 +36,8 @@ public:
         Absent,
         Incomplete,
         Complete,
-        OnlyOptional
+        OnlyOptional,
+        PartialResult
     };
 
     CompletenessResult isIHCComplete(QList<PathologyPropertyInfo>* missingProperties);
