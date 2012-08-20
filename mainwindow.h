@@ -53,11 +53,13 @@ protected:
     void setupUI();
 
     void closeEvent(QCloseEvent *);
+    void keyPressEvent(QKeyEvent *);
 
 protected slots:
 
     void patientNameEdited(const Patient& p);
     void patientNumberChanged();
+    void selectFilteredPatient();
 
 private:
 

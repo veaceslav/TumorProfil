@@ -25,11 +25,18 @@
 
 #include <QAbstractItemModel>
 #include <QAction>
+#include <QApplication>
+#include <QCheckBox>
+#include <QClipboard>
 #include <QDebug>
+#include <QKeyEvent>
+#include <QLineEdit>
 #include <QMessageBox>
+#include <QSortFilterProxyModel>
 #include <QSplitter>
 #include <QStackedLayout>
 #include <QStatusBar>
+#include <QTextEdit>
 #include <QToolBar>
 
 // Local includes
@@ -39,10 +46,37 @@
 #include "patiententerform.h"
 #include "patientlistview.h"
 #include "patientmanager.h"
+#include "patientmodel.h"
 #include "pathologywidgetgenerator.h"
 #include "reporttableview.h"
 #include "reportwindow.h"
 #include "tnmwidget.h"
+
+class ModelFilterLineEdit : public QLineEdit
+{
+public:
+    ModelFilterLineEdit(QSortFilterProxyModel* model)
+        : filterModel(model)
+    {
+        connect(this, SIGNAL(textChanged(QString)),
+                model, SLOT(setFilterFixedString(QString)));
+        setPlaceholderText(tr("Suche Patient"));
+    }
+
+    void keyPressEvent(QKeyEvent *e)
+    {
+        if (e->key() == Qt::Key_Escape)
+        {
+            clear();
+            return;
+        }
+        QLineEdit::keyPressEvent(e);
+    }
+
+protected:
+
+    QSortFilterProxyModel* filterModel;
+};
 
 class MainWindow::MainWindowPriv
 {
@@ -58,6 +92,8 @@ public:
     PatientEnterForm *patientEnterForm;
     QVBoxLayout      *displayWorkLayout;
     QStackedLayout   *workLayout;
+    ModelFilterLineEdit *searchBar;
+    QCheckBox        *tumorprofilCheckbox;
 
     QToolBar         *toolBar;
     QStatusBar       *statusBar;
@@ -72,6 +108,23 @@ MainWindow::MainWindow(QWidget *parent)
     setupUI();
     setupToolbar();
     setupStatusBar();
+    setFocusPolicy(Qt::ClickFocus);
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *e)
+{
+    if (e->matches(QKeySequence::Paste) )
+    {
+        /*QTextEdit *e = new QTextEdit;
+        e->setHtml(QApplication::clipboard()->mimeData()->html());
+        e->show();
+        */
+        foreach (const QString& format, QApplication::clipboard()->mimeData()->formats())
+        {
+            qDebug() << format;
+            qDebug() << QApplication::clipboard()->mimeData()->data(format).left(1000);
+        }
+    }
 }
 
 MainWindow::~MainWindow()
@@ -117,7 +170,15 @@ void MainWindow::setupUI()
 {
     d->splitter = new QSplitter;
 
+    QWidget* leftSidebarWidget = new QWidget;
+    QVBoxLayout* patientListLayout = new QVBoxLayout;
     d->listView = new PatientListView;
+    d->searchBar = new ModelFilterLineEdit(d->listView->filterModel());
+    d->tumorprofilCheckbox = new QCheckBox(QObject::tr("nur Tumorprofil"));
+    patientListLayout->addWidget(d->listView);
+    patientListLayout->addWidget(d->searchBar);
+    patientListLayout->addWidget(d->tumorprofilCheckbox);
+    leftSidebarWidget->setLayout(patientListLayout);
 
     QWidget* rightWidget = new QWidget;
     d->displayWorkLayout = new QVBoxLayout;
@@ -136,7 +197,7 @@ void MainWindow::setupUI()
     d->displayWorkLayout->addStretch();
     rightWidget->setLayout(d->displayWorkLayout);
 
-    d->splitter->addWidget(d->listView);
+    d->splitter->addWidget(leftSidebarWidget);
     d->splitter->addWidget(rightWidget);
 
     setCentralWidget(d->splitter);
@@ -152,6 +213,12 @@ void MainWindow::setupUI()
 
     connect(d->tabWidget, SIGNAL(editingFinished()),
             this, SLOT(enterNewPatient()));
+
+    connect(d->searchBar, SIGNAL(returnPressed()),
+            this, SLOT(selectFilteredPatient()));
+
+    connect(d->tumorprofilCheckbox, SIGNAL(toggled(bool)),
+            d->listView, SLOT(setFilterByTumorprofil(bool)));
 
     resize(1000, 800);
     d->splitter->setSizes(QList<int>() << 250 << 550);
@@ -247,5 +314,29 @@ void MainWindow::patientNameEdited(const Patient &p)
 
 void MainWindow::patientNumberChanged()
 {
-    statusBar()->showMessage(tr("%1 Patienten").arg(d->listView->model()->rowCount()));
+    const int rows = d->listView->model()->rowCount();
+    int profilCount = 0;
+    for (int r=0; r<rows; r++)
+    {
+        if (d->listView->model()->index(r, 0).data(PatientModel::HasTumorprofilRole).toBool())
+        {
+            profilCount++;
+        }
+    }
+    statusBar()->showMessage(tr("%1 Patienten, davon %2 mit einem Tumorprofil").arg(rows).arg(profilCount));
+}
+
+void MainWindow::selectFilteredPatient()
+{
+    if (d->listView->currentIndex().isValid())
+    {
+        setPatient(d->listView->currentPatient());
+    }
+    else if (d->listView->model()->rowCount())
+    {
+        QModelIndex index = d->listView->model()->index(0,0);
+        d->listView->setCurrentIndex(index);
+        setPatient(d->listView->currentPatient());
+    }
+    d->searchBar->clear();
 }

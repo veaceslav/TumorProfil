@@ -38,7 +38,8 @@ public:
     enum Roles
     {
         PatientPtrRole  = Qt::UserRole,
-        VariantDataRole = Qt::UserRole + 1
+        VariantDataRole = Qt::UserRole + 1,
+        HasTumorprofilRole = Qt::UserRole + 2
     };
 
     explicit PatientModel(QObject *parent = 0);

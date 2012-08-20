@@ -21,18 +21,24 @@
 
 #include "patientmodel.h"
 
+// Qt includes
+
+#include <QDebug>
+
 // Local includes
 
 #include "patientmanager.h"
+#include "pathologypropertyinfo.h"
 
 namespace
 {
     enum ColumnValues
     {
-        Surname     = 0,
-        FirstName   = 1,
-        DateOfBirth = 2,
-        Entity      = 3,
+        Surname        = 0,
+        FirstName      = 1,
+        DateOfBirth    = 2,
+        HasTumorprofil = 3,
+        Entity         = 4,
         ColumnCount
     };
 }
@@ -48,6 +54,11 @@ PatientModel::PatientModel(QObject *parent) :
             this, SLOT(patientAboutToBeRemoved(int,Patient::Ptr)));
     connect(PatientManager::instance(), SIGNAL(patientDataChanged(Patient::Ptr)),
             this, SLOT(patientDataChanged(Patient::Ptr)));
+}
+
+static bool hasTumorprofil(const Patient::Ptr& p)
+{
+    return p->hasDisease() && p->firstDisease().hasPathology(PathologyContextInfo::Tumorprofil);
 }
 
 QVariant PatientModel::data(const QModelIndex& index, int role) const
@@ -72,6 +83,16 @@ QVariant PatientModel::data(const QModelIndex& index, int role) const
             return (role == Qt::DisplayRole) ?
                         QVariant(p->dateOfBirth.toString(tr("dd.MM.yyyy"))) :
                         QVariant(p->dateOfBirth);
+        case HasTumorprofil:
+            if (role == Qt::DisplayRole)
+            {
+                return hasTumorprofil(p) ? "*" : QString();
+            }
+            else
+            {
+                return hasTumorprofil(p);
+            }
+            break;
         case Entity:
         {
             if (p->hasDisease())
@@ -126,6 +147,8 @@ QVariant PatientModel::data(const QModelIndex& index, int role) const
         break;
     case PatientPtrRole:
         return QVariant::fromValue(p);
+    case HasTumorprofilRole:
+        return hasTumorprofil(p);
     }
     return QVariant();
 }
@@ -142,6 +165,9 @@ QVariant PatientModel::headerData(int section, Qt::Orientation orientation, int 
             return tr("Vorname");
         case DateOfBirth:
             return tr("Geburtsdatum");
+        case HasTumorprofil:
+        case Entity:
+            return QString();
         }
     }
     return QVariant();
