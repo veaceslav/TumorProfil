@@ -117,6 +117,7 @@ public:
             {
                 createRadioButton(typeInfo.toString(value), value);
             }
+
         }
         if (typeInfo.hasDetail())
         {
@@ -124,6 +125,11 @@ public:
             createLineEdit(lineEditLabel.first, lineEditLabel.second);
         }
 
+        if (typeInfo.category == PathologyPropertyInfo::IHCTwoDim)
+        {
+            connect(radioButtons, SIGNAL(buttonClicked(QAbstractButton*)),
+                    q, SLOT(twoDimRadioButtonSelection(QAbstractButton*)));
+        }
         layout->addStretch();
     }
 
@@ -267,6 +273,10 @@ void PathologyPropertyWidget::setValue(const Property& prop)
     if (toBeChecked)
     {
         toBeChecked->setChecked(true);
+        if (typeInfo.category == PathologyPropertyInfo::IHCTwoDim)
+        {
+            twoDimRadioButtonSelection(toBeChecked);
+        }
     }
     if (typeInfo.hasDetail() && d->freeInput)
     {
@@ -336,7 +346,23 @@ void PathologyPropertyWidget::textInserted(const QString&)
         {
             button->setChecked(true);
         }
+        else
+        {
+            button = d->findRadioButton(1);
+            if (button)
+            {
+                button->setChecked(true);
+            }
+        }
     }
 }
 
-
+void PathologyPropertyWidget::twoDimRadioButtonSelection(QAbstractButton* button)
+{
+    QVariant value = button->property(d->propertyName);
+    if (!d->freeInput)
+    {
+        return;
+    }
+    d->freeInput->setEnabled(value.isNull() || value.toInt() != 0);
+}

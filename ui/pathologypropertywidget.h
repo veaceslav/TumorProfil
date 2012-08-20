@@ -31,6 +31,7 @@
 #include "property.h"
 #include "pathologypropertyinfo.h"
 
+class QAbstractButton;
 class QFormLayout;
 class QLabel;
 
@@ -74,6 +75,7 @@ public slots:
 
     void setValue(const Property& prop);
     void textInserted(const QString& text);
+    void twoDimRadioButtonSelection(QAbstractButton*);
 
 private:
 
