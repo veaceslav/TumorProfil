@@ -26,6 +26,7 @@
 #include <QAbstractButton>
 #include <QAction>
 #include <QContextMenuEvent>
+#include <QDebug>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QMessageBox>
@@ -40,6 +41,48 @@
 #include "patientmanager.h"
 #include "patientmodel.h"
 
+class PatientListviewFilterModel : public QSortFilterProxyModel
+{
+public:
+
+    PatientListviewFilterModel(QObject* parent)
+        : QSortFilterProxyModel(parent),
+          onlyTumorProfil(false)
+    {
+    }
+
+    void setFilterByTumorprofil(bool b)
+    {
+        onlyTumorProfil = b;
+        invalidateFilter();
+    }
+
+    virtual bool lessThan ( const QModelIndex & left, const QModelIndex & right ) const
+    {
+        return QString::localeAwareCompare(left.data(sortRole()).toString(),
+                                           right.data(sortRole()).toString()) < 0;
+    }
+
+protected:
+
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
+    {
+        if (onlyTumorProfil)
+        {
+            QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
+            Patient::Ptr p = PatientModel::retrievePatient(index);
+            if ((p && p->hasDisease() && !p->firstDisease().hasProfilePathology())
+                    || !p || (p && !p->hasDisease()))
+            {
+                return false;
+            }
+        }
+        return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+    }
+
+    bool onlyTumorProfil;
+};
+
 class PatientListView::PatientListViewPriv
 {
 public:
@@ -47,8 +90,8 @@ public:
     {
     }
 
-    PatientModel          *model;
-    QSortFilterProxyModel *sortFilterModel;
+    PatientModel               *model;
+    PatientListviewFilterModel *sortFilterModel;
 };
 
 PatientListView::PatientListView(QWidget *parent) :
@@ -56,19 +99,31 @@ PatientListView::PatientListView(QWidget *parent) :
     d(new PatientListViewPriv)
 {
     d->model = new PatientModel(this);
-    d->sortFilterModel = new QSortFilterProxyModel(this);
+    d->sortFilterModel = new PatientListviewFilterModel(this);
 
     d->sortFilterModel->setSourceModel(d->model);
     d->sortFilterModel->setDynamicSortFilter(true);
     d->sortFilterModel->setSortRole(PatientModel::VariantDataRole);
+    d->sortFilterModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     setModel(d->sortFilterModel);
 
-    setColumnWidth(3, 1);
+    resizeColumnToContents(3);
+    resizeColumnToContents(4);
     sortByColumn(0, Qt::AscendingOrder);
     setSortingEnabled(true);
 
     connect(this, SIGNAL(activated(QModelIndex)),
             this, SLOT(slotActivated(QModelIndex)));
+}
+
+QSortFilterProxyModel *PatientListView::filterModel() const
+{
+    return d->sortFilterModel;
+}
+
+Patient::Ptr PatientListView::currentPatient() const
+{
+    return patientForIndex(currentIndex());
 }
 
 void PatientListView::setCurrentPatient(const Patient::Ptr& p)
@@ -79,6 +134,11 @@ void PatientListView::setCurrentPatient(const Patient::Ptr& p)
 void PatientListView::slotActivated(const QModelIndex &index)
 {
     emit activated(patientForIndex(index));
+}
+
+void PatientListView::setFilterByTumorprofil(bool onlyTumorprofil)
+{
+    d->sortFilterModel->setFilterByTumorprofil(onlyTumorprofil);
 }
 
 void PatientListView::contextMenuEvent(QContextMenuEvent *event)
@@ -104,12 +164,12 @@ void PatientListView::contextMenuEvent(QContextMenuEvent *event)
     menu.exec(event->globalPos());
 }
 
-QModelIndex PatientListView::indexForPatient(const Patient::Ptr& patient)
+QModelIndex PatientListView::indexForPatient(const Patient::Ptr& patient) const
 {
     return d->sortFilterModel->mapFromSource(d->model->indexForPatient(patient));
 }
 
-Patient::Ptr PatientListView::patientForIndex(const QModelIndex& index)
+Patient::Ptr PatientListView::patientForIndex(const QModelIndex& index) const
 {
     return d->model->patientForIndex(d->sortFilterModel->mapToSource(index));
 }

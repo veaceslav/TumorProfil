@@ -30,14 +30,19 @@
 
 #include "patient.h"
 
+class QSortFilterProxyModel;
+
 class PatientListView : public QTreeView
 {
     Q_OBJECT
 public:
     explicit PatientListView(QWidget *parent = 0);
 
-    QModelIndex indexForPatient(const Patient::Ptr& patient);
-    Patient::Ptr patientForIndex(const QModelIndex& index);
+    QModelIndex indexForPatient(const Patient::Ptr& patient) const;
+    Patient::Ptr patientForIndex(const QModelIndex& index) const;
+
+    QSortFilterProxyModel *filterModel() const;
+    Patient::Ptr currentPatient() const;
 
 signals:
 
@@ -46,6 +51,7 @@ signals:
 public slots:
 
     void setCurrentPatient(const Patient::Ptr& p);
+    void setFilterByTumorprofil(bool onlyTumorprofil);
 
 protected slots:
 
