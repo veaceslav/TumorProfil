@@ -24,6 +24,7 @@
 #include <QDebug>
 
 #include "confidenceinterval.h"
+#include "ihcscore.h"
 
 AggregatedDatumInfo::AggregatedDatumInfo()
     : field(InvalidField), valueType(InvalidValue)
@@ -106,12 +107,14 @@ QList<AggregatedDatumInfo> AggregatedDatumInfo::fieldsFromCategory(const ValueTy
     infos << possibleValueTypes(Count);
     infos << possibleValueTypes(Positive);
     infos << possibleValueTypes(Negative);
+    /*
     if (info.isScored())
     {
         infos << possibleValueTypes(IHC_1);
         infos << possibleValueTypes(IHC_2);
         infos << possibleValueTypes(IHC_3);
     }
+    */
     return infos;
 }
 
@@ -162,7 +165,14 @@ QMap<AggregatedDatumInfo, QVariant> DataAggregator::values() const
     {
         if (prop.isValid())
         {
-            values << fieldValueType.toValue(prop.value);
+            if (fieldValueType.isTwoDimScored())
+            {
+                values << QVariant::fromValue(fieldValueType.toIHCScore(prop));
+            }
+            else
+            {
+                values << fieldValueType.toValue(prop.value);
+            }
         }
     }
 
@@ -176,13 +186,20 @@ QMap<AggregatedDatumInfo, QVariant> DataAggregator::values() const
 static bool isPositive(const PathologyPropertyInfo& info,
                        const QVariant& value)
 {
-    switch (info.property)
+    if (value.canConvert<IHCScore>())
     {
-    case PathologyPropertyInfo::IHC_ALK:
-    case PathologyPropertyInfo::IHC_HER2:
-        return value.toInt() == 3;
-    default:
-        return value.toBool();
+        return value.value<IHCScore>().isPositive(info.property);
+    }
+    else
+    {
+        switch (info.property)
+        {
+        case PathologyPropertyInfo::IHC_ALK:
+        case PathologyPropertyInfo::IHC_HER2:
+            return value.toInt() == 3;
+        default:
+            return value.toBool();
+        }
     }
 }
 

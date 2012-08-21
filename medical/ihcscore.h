@@ -29,8 +29,13 @@
 
 // Qt includes
 
+#include <QMetaType>
 #include <QString>
 #include <QVariant>
+
+// Local includes
+
+#include <pathologypropertyinfo.h>
 
 class IHCScore
 {
@@ -58,11 +63,13 @@ public:
     Intensity colorIntensity;
 
     QVariant score() const;
+    bool isPositive(PathologyPropertyInfo::Property field) const;
 
 protected:
 
     void parseCells(const QString& detail);
 };
 
+Q_DECLARE_METATYPE(IHCScore)
 
 #endif // IHCSCORE_H

@@ -76,21 +76,21 @@ static int scoreFromInterval(boost::icl::discrete_interval<int> percentagePositi
     scores += std::make_pair(boost::icl::interval<int>::closed(1,10), 1);
     scores += std::make_pair(boost::icl::interval<int>::closed(11,50), 2);
     scores += std::make_pair(boost::icl::interval<int>::closed(51,100), 3);
-    std::cout << scores << std::endl;
+    //std::cout << scores << std::endl;
 
     boost::icl::interval_map<int, int> value;
     value += std::make_pair(percentagePositiveCells, 1);
-    std::cout << value << std::endl;
+    //std::cout << value << std::endl;
 
     boost::icl::interval_map<int, int> result = scores & value;
-    std::cout << result << std::endl;
+    //std::cout << result << std::endl;
     QMap<int, int> scoredIntervals;
     boost::icl::interval_map<int, int>::iterator it;
     for (it = result.begin(); it != result.end(); ++it)
     {
         scoredIntervals[it->first.upper() - it->first.lower()] = it->second;
     }
-    qDebug() << scoredIntervals;
+    //qDebug() << scoredIntervals;
     if (!scoredIntervals.isEmpty())
     {
         return (scoredIntervals.end()-1).value() - 1;
@@ -112,13 +112,27 @@ QVariant IHCScore::score() const
     return colorIntensity != NoIntensity;
 }
 
+bool IHCScore::isPositive(PathologyPropertyInfo::Property field) const
+{
+    QVariant s = score();
+    switch (field)
+    {
+    // TODO: specify "positive" depending on field
+    default:
+        if (s.type() == QVariant::Int)
+            return s.toInt() > 1;
+        else
+            return s.toBool();
+    }
+}
+
 void IHCScore::parseCells(const QString &detail)
 {
     if (detail.isEmpty())
     {
         return;
     }
-    QRegExp regexp("\\s*(\\d*)\\s*([<>=-]*)\\s*(\\d*)\\s*");
+    QRegExp regexp("\\s*(\\d*)\\s*([<>=-]*)\\s*(\\d*)\\s*%?");
     if (!regexp.exactMatch(detail))
     {
         qDebug() << "Cannot parse cell count" << detail;
