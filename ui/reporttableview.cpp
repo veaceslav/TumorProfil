@@ -132,9 +132,13 @@ void ReportTableView::setReportType(int type)
         break;
     }
     case EGFRMutation:
+    {
         d->model->setProfile(PatientPropertyModel::EGFRProfile);
-        d->filterModel->filterByPathologyProperty(
-                    PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_EGFR_19_21).id, true);
+        QMap<QString, QVariant> filter;
+        filter[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_EGFR_19_21).id] = true;
+        filter[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_EGFR_18_20).id] = true;
+        d->filterModel->filterByPathologyProperty(filter);
+    }
         break;
     case PIK3Mutation:
         d->model->setProfile(PatientPropertyModel::PIK3Profile);

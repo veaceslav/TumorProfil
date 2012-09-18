@@ -182,8 +182,19 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
         case Pathology::Breast:
             m_objects << new QLabel(tr("Immunhistochemie"));
             m_objects << create(PathologyPropertyInfo::IHC_PTEN);
+            m_objects << create(PathologyPropertyInfo::IHC_pAKT);
+            m_objects << create(PathologyPropertyInfo::IHC_pP70S6K);
+            m_objects << create(PathologyPropertyInfo::IHC_pERK);
             m_objects << new QLabel(tr("Sequenzanalysen"));
             m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
+            m_objects << new QLabel(tr("Rezeptorstatus"));
+            m_objects << create(PathologyPropertyInfo::IHC_ER);
+            m_objects << create(PathologyPropertyInfo::IHC_PR);
+            m_objects << create(PathologyPropertyInfo::IHC_HER2);
+            m_objects << new QLabel(tr("FISH (je nach Her2-Status)"));
+            m_objects << create(PathologyPropertyInfo::Fish_HER2);
+            m_objects << new QLabel(tr("FISH"));
+            m_objects << create(PathologyPropertyInfo::Fish_FGFR1);
         case Pathology::TransitionalCell:
         case Pathology::Thyroid:
         case Pathology::Melanoma:
@@ -199,8 +210,13 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
     case PathologyContextInfo::ScreeningBEZ235:
         m_objects << new QLabel(tr("Sequenzanalysen"));
         m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
-        m_objects << new QLabel(tr("FISH"));
-        m_objects << create(PathologyPropertyInfo::Fish_PIK3CA);
+        m_objects << new QLabel(tr("Immunhistochemie"));
+        m_objects << create(PathologyPropertyInfo::IHC_PTEN);
+        break;
+    case PathologyContextInfo::ScreeningBKM120:
+        m_objects << new QLabel(tr("Sequenzanalysen"));
+        m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
+        m_objects << create(PathologyPropertyInfo::Mut_PTEN);
         m_objects << new QLabel(tr("Immunhistochemie"));
         m_objects << create(PathologyPropertyInfo::IHC_PTEN);
         break;

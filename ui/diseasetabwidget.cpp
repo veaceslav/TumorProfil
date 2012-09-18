@@ -104,6 +104,12 @@ class BEZ235Tab : public PathologyTab
     virtual QString tabLabel() const { return QObject::tr("BEZ235"); }
 };
 
+class BKM120Tab : public PathologyTab
+{
+    virtual PathologyContextInfo::Context context() const { return PathologyContextInfo::ScreeningBKM120; }
+    virtual QString tabLabel() const { return QObject::tr("BKM120"); }
+};
+
 class BestRxTab : public PathologyTab
 {
     virtual PathologyContextInfo::Context context() const { return PathologyContextInfo::BestRx; }
@@ -122,6 +128,8 @@ static PathologyTab* create(PathologyContextInfo::Context context)
         return new BGJ398Tab;
     case PathologyContextInfo::ScreeningBEZ235:
         return new BEZ235Tab;
+    case PathologyContextInfo::ScreeningBKM120:
+        return new BKM120Tab;
     case PathologyContextInfo::BestRx:
         return new BestRxTab;
     default:
@@ -196,6 +204,7 @@ DiseaseTabWidget::DiseaseTabWidget(QWidget *parent) :
     d->otherPathologyGroup = new QButtonGroup(this);
     d->addOtherButton(PathologyContextInfo::ScreeningBGJ398, tr("BGJ389-Screening"));
     d->addOtherButton(PathologyContextInfo::ScreeningBEZ235, tr("BEZ235-Screening"));
+    d->addOtherButton(PathologyContextInfo::ScreeningBKM120, tr("BKM120-Screening"));
     diseaseLayout->addRow(d->otherButtonsLayout);
 
     d->diseaseTab->setLayout(diseaseLayout);

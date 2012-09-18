@@ -148,10 +148,16 @@ void ReportWindow::setupToolbar()
         byContextMenu->addAction(tr("WTZ-Tumorprofil"),  PathologyContextInfo::Tumorprofil,
                                  this, SLOT(filterByContext()), true);
     d->contextFilterActions <<
+        byContextMenu->addAction(tr("BestRx"), PathologyContextInfo::BestRx,
+                                 this, SLOT(filterByContext()), true);
+    d->contextFilterActions <<
         byContextMenu->addAction(tr("BEZ235-Screening"), PathologyContextInfo::ScreeningBEZ235,
                                  this, SLOT(filterByContext()), true);
     d->contextFilterActions <<
         byContextMenu->addAction(tr("BGJ389-Screening"), PathologyContextInfo::ScreeningBGJ398,
+                                 this, SLOT(filterByContext()), true);
+    d->contextFilterActions <<
+        byContextMenu->addAction(tr("BKM120-Screening"), PathologyContextInfo::ScreeningBKM120,
                                  this, SLOT(filterByContext()), true);
     d->contextFilterActions <<
         byContextMenu->addAction(tr("(kein Filter)"), PathologyContextInfo::InvalidContext,
