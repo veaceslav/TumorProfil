@@ -48,6 +48,13 @@ public:
 
     QTimer* recomputeTimer;
 
+    DataAggregation::FieldNature natureOfColumn(int col)
+    {
+        return  (DataAggregation::FieldNature)
+                sourceModel->headerData(col, Qt::Horizontal,
+                                       PatientPropertyModel::DataAggregationNatureRole).toInt();
+    }
+
     PathologyPropertyInfo infoForColumn(int col)
     {
         return sourceModel->headerData(col, Qt::Horizontal,
@@ -142,25 +149,47 @@ void DataAggregationModel::computeData()
     for (int col=0; col<columns; col++)
     {
         QMap<AggregatedDatumInfo,QVariant> map;
-        // Is the column displaying a Property defined by a PathologyPropertyInfo?
-        PathologyPropertyInfo info = d->infoForColumn(col);
 
-        if (info.isValid())
+        DataAggregation::FieldNature nature = d->natureOfColumn(col);
+        if (nature == DataAggregation::PathologyResult)
         {
-            // Aggregate property results
-            DataAggregator aggregator(info);
+            // Is the column displaying a Property defined by a PathologyPropertyInfo?
+            PathologyPropertyInfo info = d->infoForColumn(col);
+
+            if (info.isValid())
+            {
+                qDebug() << "Column" << col << info.id ;
+                // Aggregate property results
+                DataAggregator aggregator(info);
+                const int sourceRows = d->sourceModel->rowCount();
+                for (int row=0; row<sourceRows; row++)
+                {
+                    QModelIndex index = d->sourceModel->index(row, col);
+                    Property prop = index.data(PatientPropertyModel::PathologyPropertyRole).value<Property>();
+                    aggregator << prop;
+                }
+                map = aggregator.values();
+            }
+            else
+            {
+                qDebug() << "Error: Field says it has PathologyResult nature, but gives no field info.";
+            }
+        }
+        else
+        {
+            DataAggregator aggregator(nature);
             const int sourceRows = d->sourceModel->rowCount();
             for (int row=0; row<sourceRows; row++)
             {
                 QModelIndex index = d->sourceModel->index(row, col);
-                Property prop = index.data(PatientPropertyModel::PathologyPropertyRole).value<Property>();
-                aggregator << prop;
+                aggregator << index.data(PatientPropertyModel::VariantDataRole);
             }
             map = aggregator.values();
-            for (QMap<AggregatedDatumInfo,QVariant>::const_iterator it=map.begin(); it != map.end(); ++it)
-            {
-                rowFields << it.key();
-            }
+        }
+
+        for (QMap<AggregatedDatumInfo,QVariant>::const_iterator it=map.begin(); it != map.end(); ++it)
+        {
+            rowFields << it.key();
         }
         cols << map;
     }

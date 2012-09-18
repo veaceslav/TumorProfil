@@ -23,9 +23,26 @@
 #define DATAAGGREGATOR_H
 
 #include <QMetaType>
+#include <QVariant>
+#include <QVariantList>
 
 #include "pathologypropertyinfo.h"
 #include "property.h"
+
+namespace DataAggregation
+{
+enum FieldNature
+{
+    InvalidNature,
+    Text,
+    Boolean,
+    Numeric,
+    NumericSum,
+    Date,
+    Gender,
+    PathologyResult
+};
+}
 
 class AggregatedDatumInfo
 {
@@ -37,6 +54,8 @@ public:
         Count,
         Positive,
         Negative,
+        Mean,
+        Median,
         IHC_1,
         IHC_2,
         IHC_3
@@ -56,9 +75,12 @@ public:
 
     bool isValid() const;
 
-    /** Takes a possible value from ValueTypeCategoryInfo's possibleValues */
+    /** Takes a possible value from ValueTypeCategoryInfo's possibleValues.
+        Use this for field nature PathologyResult */
     static QList<AggregatedDatumInfo> fieldsFromCategory(const ValueTypeCategoryInfo& info);
-    static QList<AggregatedDatumInfo> possibleValueTypes(Field field);
+    /// Use for all other field natures
+    static QList<AggregatedDatumInfo> fieldsFromNature(DataAggregation::FieldNature nature);
+    static QList<AggregatedDatumInfo> possibleValueTypes(Field field, bool withStatisticalAnalysis = true);
 
     bool operator==(const AggregatedDatumInfo& other) const;
     bool operator<(const AggregatedDatumInfo& other) const;
@@ -76,8 +98,10 @@ class DataAggregator
 public:
 
     DataAggregator(const PathologyPropertyInfo& field);
+    DataAggregator(DataAggregation::FieldNature nature);
 
     DataAggregator& operator<<(const Property& prop);
+    DataAggregator& operator<<(const QVariant& value);
     QMap<AggregatedDatumInfo, QVariant> values() const;
     bool isCountedAs(const Property& prop, const AggregatedDatumInfo& info) const;
 
@@ -86,6 +110,11 @@ protected:
     QVariant aggregate(const AggregatedDatumInfo& datumInfo,
                        const QVariantList& values) const;
 
+    // for primitive data
+    DataAggregation::FieldNature nature;
+    QVariantList                 primitiveValues;
+
+    // for pathology data
     PathologyPropertyInfo field;
     PropertyList          properties;
 };

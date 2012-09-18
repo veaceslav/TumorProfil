@@ -25,6 +25,7 @@
 
 #include "confidenceinterval.h"
 #include "ihcscore.h"
+#include "patient.h"
 
 AggregatedDatumInfo::AggregatedDatumInfo()
     : field(InvalidField), valueType(InvalidValue)
@@ -71,6 +72,10 @@ static QString fieldLabel(AggregatedDatumInfo::Field field)
         return QObject::tr("Positiv");
     case AggregatedDatumInfo::Negative:
         return QObject::tr("Negativ");
+    case AggregatedDatumInfo::Mean:
+        return QObject::tr("Schnitt");
+    case AggregatedDatumInfo::Median:
+        return QObject::tr("Median");
     case AggregatedDatumInfo::IHC_1:
         return QObject::tr("1+");
     case AggregatedDatumInfo::IHC_2:
@@ -118,7 +123,48 @@ QList<AggregatedDatumInfo> AggregatedDatumInfo::fieldsFromCategory(const ValueTy
     return infos;
 }
 
-QList<AggregatedDatumInfo> AggregatedDatumInfo::possibleValueTypes(Field field)
+QList<AggregatedDatumInfo> AggregatedDatumInfo::fieldsFromNature(DataAggregation::FieldNature nature)
+{
+    QList<AggregatedDatumInfo> infos;
+    switch (nature)
+    {
+    case DataAggregation::Boolean:
+        infos << possibleValueTypes(Count);
+        infos << possibleValueTypes(Positive, false);
+        infos << possibleValueTypes(Negative, false);
+        break;
+    case DataAggregation::NumericSum:
+    case DataAggregation::Numeric:
+        infos << possibleValueTypes(Count);
+        infos << possibleValueTypes(Mean);
+        infos << possibleValueTypes(Median);
+        break;
+    case DataAggregation::Gender:
+        infos << possibleValueTypes(Positive, false);
+        infos << possibleValueTypes(Negative, false);
+        break;
+    case DataAggregation::Date:
+    case DataAggregation::Text:
+        break;
+    case DataAggregation::PathologyResult:
+        qDebug() << "Error: use fieldsFromCategory, not fieldsFromNature, for PathologyResult.";
+        break;
+    case DataAggregation::InvalidNature:
+        break;
+    }
+
+    /*
+    if (info.isScored())
+    {
+        infos << possibleValueTypes(IHC_1);
+        infos << possibleValueTypes(IHC_2);
+        infos << possibleValueTypes(IHC_3);
+    }
+    */
+    return infos;
+}
+
+QList<AggregatedDatumInfo> AggregatedDatumInfo::possibleValueTypes(Field field, bool withStatisticalAnalysis)
 {
     QList<AggregatedDatumInfo> infos;
     switch (field)
@@ -126,6 +172,8 @@ QList<AggregatedDatumInfo> AggregatedDatumInfo::possibleValueTypes(Field field)
     case InvalidField:
         break;
     case Count:
+    case Mean:
+    case Median:
         infos << AggregatedDatumInfo(field, AbsoluteValue);
         break;
     case Positive:
@@ -135,15 +183,23 @@ QList<AggregatedDatumInfo> AggregatedDatumInfo::possibleValueTypes(Field field)
     case IHC_3:
         infos << AggregatedDatumInfo(field, AbsoluteValue);
         infos << AggregatedDatumInfo(field, PercentageValue);
-        infos << AggregatedDatumInfo(field, ConfidenceUpper);
-        infos << AggregatedDatumInfo(field, ConfidenceLower);
+        if (withStatisticalAnalysis)
+        {
+            infos << AggregatedDatumInfo(field, ConfidenceUpper);
+            infos << AggregatedDatumInfo(field, ConfidenceLower);
+        }
     }
     return infos;
 }
 
 
 DataAggregator::DataAggregator(const PathologyPropertyInfo& field)
-    : field(field)
+    : nature(DataAggregation::PathologyResult), field(field)
+{
+}
+
+DataAggregator::DataAggregator(DataAggregation::FieldNature nature)
+    : nature(nature)
 {
 }
 
@@ -153,33 +209,54 @@ DataAggregator& DataAggregator::operator<<(const Property& prop)
     return *this;
 }
 
+DataAggregator& DataAggregator::operator<<(const QVariant& value)
+{
+    primitiveValues << value;
+    return *this;
+}
+
 QMap<AggregatedDatumInfo, QVariant> DataAggregator::values() const
 {
     QMap<AggregatedDatumInfo, QVariant> result;
 
-    ValueTypeCategoryInfo fieldValueType(field);
-    QList<AggregatedDatumInfo> fields = AggregatedDatumInfo::fieldsFromCategory(fieldValueType);
-    qSort(fields);
-    QVariantList values;
-    foreach (const Property& prop, properties)
+    if (nature == DataAggregation::PathologyResult)
     {
-        if (prop.isValid())
+
+        ValueTypeCategoryInfo fieldValueType(field);
+        QList<AggregatedDatumInfo> fields = AggregatedDatumInfo::fieldsFromCategory(fieldValueType);
+        qSort(fields);
+        QVariantList values;
+        foreach (const Property& prop, properties)
         {
-            if (fieldValueType.isTwoDimScored())
+            if (prop.isValid())
             {
-                values << QVariant::fromValue(fieldValueType.toIHCScore(prop));
+                if (fieldValueType.isTwoDimScored())
+                {
+                    values << QVariant::fromValue(fieldValueType.toIHCScore(prop));
+                }
+                else
+                {
+                    values << fieldValueType.toValue(prop.value);
+                }
             }
-            else
-            {
-                values << fieldValueType.toValue(prop.value);
-            }
+        }
+
+        foreach (const AggregatedDatumInfo& info, fields)
+        {
+            result[info] = aggregate(info, values);
+        }
+
+    }
+    else
+    {
+        QList<AggregatedDatumInfo> fields = AggregatedDatumInfo::fieldsFromNature(nature);
+        qSort(fields);
+        foreach (const AggregatedDatumInfo& info, fields)
+        {
+            result[info] = aggregate(info, primitiveValues);
         }
     }
 
-    foreach (const AggregatedDatumInfo& info, fields)
-    {
-        result[info] = aggregate(info, values);
-    }
     return result;
 }
 
@@ -203,6 +280,31 @@ static bool isPositive(const PathologyPropertyInfo& info,
     }
 }
 
+static bool isPositive(DataAggregation::FieldNature nature,
+                       const QVariant& value)
+{
+    switch (nature)
+    {
+    case DataAggregation::Boolean:
+        if (value.type() == QVariant::List)
+        {
+            return value.toList().size();
+        }
+        return value.toBool();
+    case DataAggregation::Numeric:
+    case DataAggregation::NumericSum:
+        return value.toInt();
+    case DataAggregation::Gender:
+        return value.toInt() == Patient::Male;
+    case DataAggregation::Date:
+    case DataAggregation::Text:
+    case DataAggregation::PathologyResult:
+    case DataAggregation::InvalidNature:
+        break;
+    }
+    return false;
+}
+
 static bool matches(AggregatedDatumInfo::Field field, const PathologyPropertyInfo& info,
                     const QVariant& value)
 {
@@ -221,26 +323,100 @@ static bool matches(AggregatedDatumInfo::Field field, const PathologyPropertyInf
     case AggregatedDatumInfo::IHC_3:
         return (value.toInt() == 3);
     case AggregatedDatumInfo::InvalidField:
+    case AggregatedDatumInfo::Mean:
+    case AggregatedDatumInfo::Median:
         break;
     }
     return false;
 }
+
+static bool matches(AggregatedDatumInfo::Field field, const DataAggregation::FieldNature nature,
+                    const QVariant& value)
+{
+    switch (field)
+    {
+    case AggregatedDatumInfo::Count:
+        return true;
+    case AggregatedDatumInfo::Positive:
+        return isPositive(nature, value);
+    case AggregatedDatumInfo::Negative:
+        return !isPositive(nature, value);
+    default:
+        break;
+    }
+    return false;
+}
+
 
 QVariant DataAggregator::aggregate(const AggregatedDatumInfo& datumInfo,
                                    const QVariantList& values) const
 {
     const int total = values.size();
 
-    // For count, we dont care for the value, only for the existence of the property
-    if (datumInfo.field == AggregatedDatumInfo::Count)
+    switch (datumInfo.field)
     {
-        return total;
+    case AggregatedDatumInfo::Count:
+    {
+        // For count, we dont care for the value, only for the existence of the property
+        if (nature == DataAggregation::NumericSum)
+        {
+            int sum = 0;
+            foreach (const QVariant& value, values)
+            {
+                sum += value.toInt();
+            }
+            return sum;
+        }
+        else
+        {
+            return total;
+        }
+    }
+    case AggregatedDatumInfo::Mean:
+    {
+        int sum = 0;
+        foreach (const QVariant& value, values)
+        {
+            sum += value.toInt();
+        }
+        return float(sum)/total;
+        //TODO: standard deviation, median
+    }
+    case AggregatedDatumInfo::Median:
+    {
+        QList<int> ints;
+        foreach (const QVariant& value, values)
+        {
+            ints << value.toInt();
+        }
+        qSort(ints);
+        if (ints.size() % 2)
+        {
+            return ints[ (ints.size()-1)/2 - 1 ];
+        }
+        else
+        {
+            int lowerMedian = ints[ ints.size()/2 ];
+            int upperMedian = ints[ ints.size()/2 - 1 ];
+            return (float(lowerMedian) + float(upperMedian)) / 2;
+        }
+    }
+    default:
+        break; // handled in the following code
     }
 
     int aggregate = 0;
     foreach (const QVariant& value, values)
     {
-        bool match = matches(datumInfo.field, field, value);
+        bool match;
+        if (nature == DataAggregation::PathologyResult)
+        {
+            match = matches(datumInfo.field, field, value);
+        }
+        else
+        {
+            match = matches(datumInfo.field, nature, value);
+        }
 
         switch (datumInfo.valueType)
         {

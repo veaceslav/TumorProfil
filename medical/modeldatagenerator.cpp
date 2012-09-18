@@ -26,6 +26,7 @@
 // Local includes
 
 #include "actionableresultchecker.h"
+#include "dataaggregator.h"
 #include "modeldatagenerator.h"
 #include "patientmodel.h"
 #include "patientpropertymodel.h"
@@ -117,6 +118,7 @@ QVariant ModelDataGenerator::additionalInfoDatum()
     switch (role)
     {
     case Qt::DisplayRole:
+    case PatientPropertyModel::VariantDataRole:
         switch (field)
         {
         case GenderColumn:
@@ -205,6 +207,19 @@ QVariant ModelDataGenerator::additionalInfoHeader()
         case DiseaseAgeAtResultColumn:
             return QObject::tr("nach (Monaten)");
         }
+    case PatientPropertyModel::DataAggregationNatureRole:
+        switch (field)
+        {
+        case GenderColumn:
+            return DataAggregation::Gender;
+        case AgeColumn:
+        case DiseaseAgeAtResultColumn:
+            return DataAggregation::Numeric;
+        case InitialDiagnosisColumn:
+        case ResultDateColumn:
+        case ResultLocationColumn:
+            return DataAggregation::Date;
+        }
     default:
         break;
     }
@@ -220,19 +235,21 @@ QVariant ModelDataGenerator::fieldDatum()
         return QVariant();
     }
     ValueTypeCategoryInfo typeInfo(info.valueType);
-    QVariant value = typeInfo.toValue(prop.value);
 
     switch (role)
     {
     case PatientModel::VariantDataRole:
-        return value;
+        return typeInfo.toVariantData(prop);
     case PatientPropertyModel::PathologyPropertyRole:
         return QVariant::fromValue(prop);
     case Qt::DisplayRole:
-        if (info.valueType == PathologyPropertyInfo::Mutation &&
-                value.toBool() && !prop.detail.isEmpty())
+        if (info.valueType == PathologyPropertyInfo::Mutation)
         {
-            return prop.detail;
+            QVariant value = typeInfo.toValue(prop.value);
+            if (value.toBool() && !prop.detail.isEmpty())
+            {
+                return prop.detail;
+            }
         }
         return typeInfo.toDisplayString(prop);
     }
@@ -247,6 +264,8 @@ QVariant ModelDataGenerator::fieldHeader()
         return infos.at(field).plainTextLabel();
     case PatientPropertyModel::PathologyPropertyInfoRole:
         return QVariant::fromValue(infos.at(field));
+    case PatientPropertyModel::DataAggregationNatureRole:
+        return DataAggregation::PathologyResult;
     default:
         return QVariant();
     }
@@ -295,6 +314,8 @@ QVariant ModelDataGenerator::otherMutationsHeader()
     {
     case Qt::DisplayRole:
         return QObject::tr("Weitere Befunde");
+    case PatientPropertyModel::DataAggregationNatureRole:
+        return DataAggregation::Text;
     default:
         return QVariant();
     }
@@ -427,6 +448,8 @@ QVariant ModelDataGenerator::completenessHeader(CompletenessField value)
         case MutationCompleteness:
             return QObject::tr("Mut. vorliegend");
         }
+    case PatientPropertyModel::DataAggregationNatureRole:
+        return DataAggregation::Boolean;
     default:
         return QVariant();
     }
@@ -496,6 +519,14 @@ QVariant ModelDataGenerator::actionableResultsHeader(ActionableResultsField valu
     {
     case Qt::DisplayRole:
         return QObject::tr("Therapierelevant");
+    case PatientPropertyModel::DataAggregationNatureRole:
+        switch (value)
+        {
+        case ActionableResultFieldNames:
+            return DataAggregation::Boolean;
+        case ActionableResultNumber:
+            return DataAggregation::NumericSum;
+        }
     default:
         return QVariant();
     }

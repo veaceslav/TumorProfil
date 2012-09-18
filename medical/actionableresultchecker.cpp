@@ -69,6 +69,7 @@ QList<PathologyPropertyInfo> ActionableResultChecker::actionableResults()
                        << PathologyPropertyInfo::Fish_ALK;
     default:
         positiveFields << PathologyPropertyInfo::Mut_PIK3CA_10_21
+                       << PathologyPropertyInfo::Mut_PTEN
                        << PathologyPropertyInfo::Fish_HER2
                        << PathologyPropertyInfo::Fish_PIK3CA;
         negativeFields << PathologyPropertyInfo::IHC_PTEN;

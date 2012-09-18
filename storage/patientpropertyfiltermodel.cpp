@@ -69,6 +69,14 @@ void PatientPropertyFilterModel::filterByEntity(QList<Pathology::Entity> entitie
     setFilterSettings(settings);
 }
 
+void PatientPropertyFilterModel::filterByPathologyProperty(const QMap<QString, QVariant>& filter)
+{
+    PatientPropertyFilterSettings settings = d->settings;
+    settings.entities.clear();
+    settings.pathologyProperties = filter;
+    setFilterSettings(settings);
+}
+
 void PatientPropertyFilterModel::filterByPathologyProperty(const QString& property, const QVariant& value)
 {
     PatientPropertyFilterSettings settings = d->settings;
@@ -124,11 +132,12 @@ bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIn
             return false;
         }
 
+        // implementing "OR"
+        bool hasMatch = false;
         QMap<QString,QVariant>::const_iterator it;
         for (it = d->settings.pathologyProperties.begin();
              it != d->settings.pathologyProperties.end(); ++it)
         {
-            bool hasMatch = false;
             foreach (const Pathology& path, p->firstDisease().pathologies)
             {
                 if (it.value().type() == QVariant::String)
@@ -151,11 +160,11 @@ bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIn
                     break;
                 }
             }
+        }
 
-            if (!hasMatch)
-            {
-                return false;
-            }
+        if (!hasMatch)
+        {
+            return false;
         }
     }
 

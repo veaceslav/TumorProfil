@@ -76,7 +76,8 @@ ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isIHCCo
             complete = false;
             missing << field;
         }
-        else if (categoryInfo.isTwoDimScored())
+        // Comment out HERE to switch requiring complete two-dim score
+        /*else if (categoryInfo.isTwoDimScored())
         {
             Property prop = disease.pathologyProperty(field.id);
             IHCScore score = categoryInfo.toIHCScore(prop);
@@ -85,7 +86,7 @@ ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isIHCCo
                 complete = false;
                 partial << field;
             }
-        }
+        }*/
     }
 
     returnList = missing;

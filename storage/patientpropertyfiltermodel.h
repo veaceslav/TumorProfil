@@ -59,6 +59,7 @@ public:
     void filterByEntity(Pathology::Entity entity);
     void filterByEntity(const QList<Pathology::Entity> entities);
     void filterByPathologyProperty(const QString& property, const QVariant& value);
+    void filterByPathologyProperty(const QMap<QString, QVariant>& filter);
     void filterByPathologyContext(const QString& property, bool value = true);
 
 protected:

@@ -49,7 +49,9 @@ public:
         // for headerData: returns the PathologyPropertyInfo if the section represents a property
         PathologyPropertyInfoRole = Qt::UserRole + 100,
         // for data: returns the Property from Pathology's properties
-        PathologyPropertyRole     = Qt::UserRole + 101
+        PathologyPropertyRole     = Qt::UserRole + 101,
+        // returns if a datum is text, numeric, etc.
+        DataAggregationNatureRole = Qt::UserRole + 102
     };
 
     void setProfile(Profile profile);

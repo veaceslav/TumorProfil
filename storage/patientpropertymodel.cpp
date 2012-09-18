@@ -25,6 +25,7 @@
 
 // Local includes
 
+#include "dataaggregator.h"
 #include "modeldatagenerator.h"
 #include "patientpropertymodel.h"
 #include "pathologypropertyinfo.h"
@@ -104,6 +105,7 @@ public:
             break;
         case PatientPropertyModel::EGFRProfile:
             props << PathologyPropertyInfo::Mut_EGFR_19_21
+                  << PathologyPropertyInfo::Mut_EGFR_18_20
                   << PathologyPropertyInfo::Mut_KRAS_2
                   << PathologyPropertyInfo::Mut_KRAS_3
                   << PathologyPropertyInfo::Mut_PIK3CA_10_21;
@@ -207,6 +209,7 @@ public:
         switch (role)
         {
         case Qt::DisplayRole:
+        case PatientPropertyModel::VariantDataRole:
             switch (field)
             {
             case OverviewEntityColumn:
@@ -219,7 +222,6 @@ public:
                 }
                 return sum;
             }
-
             return QString();
         }
         return QVariant();
@@ -238,9 +240,18 @@ public:
                 return QObject::tr("Anzahl Befunde");
             }
             return QString();
+        case PatientPropertyModel::DataAggregationNatureRole:
+            switch (field)
+            {
+            case OverviewResultsColum:
+                return DataAggregation::NumericSum;
+            default:
+                break;
+            }
         default:
-            return QVariant();
+            break;
         }
+        return QVariant();
     }
 
     int overviewColumnCount()
