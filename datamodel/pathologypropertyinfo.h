@@ -62,6 +62,7 @@ public:
         Mut_BRAF_15,
         Mut_BRAF_11,
         Mut_DDR2,
+        Mut_PTEN,
         PCR_D5S346,
         PCR_BAT26,
         PCR_BAT25,
@@ -115,19 +116,24 @@ public:
     const PathologyPropertyInfo::ValueTypeCategory category;
 
     QList<QVariant> possibleValues() const;
-    bool isScored() const;
-    bool isTwoDimScored() const;
 
+    // Methods serving display and sorting in a model
     QString toString(const QVariant& value) const;
     QString toDisplayString(const Property& prop) const;
+    QVariant toVariantData(const Property& prop) const;
 
+    // Methods serving translation between UI, internal representation and database
     QString toPropertyValue(const QVariant& value) const;
     QVariant toValue(const QString& propertyValue) const;
 
+    // Methods providing information for IHC value types
+    bool isScored() const;
+    bool isTwoDimScored() const;
     // If category is IHCTwoDim
     IHCScore toIHCScore(const Property& prop) const;
 
     bool hasDetail() const;
+
     // Prefix and suffix
     QPair<QString, QString> defaultDetailLabel() const;
 };
@@ -145,10 +151,10 @@ public:
         ColonRetrospektiv,
         ScreeningBGJ398,
         ScreeningBEZ235,
-
+        ScreeningBKM120,
 
         FirstContext = Tumorprofil,
-        LastContext  = ScreeningBEZ235
+        LastContext  = ScreeningBKM120
     };
 
     PathologyContextInfo();

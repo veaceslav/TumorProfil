@@ -122,6 +122,8 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
         return PathologyPropertyInfo(property, Fish, "fish/pik3ca", QObject::QObject::tr("PIK3ca-Amplifikation"));
     case Mut_DDR2:
         return PathologyPropertyInfo(property, Mutation, "mut/ddr2?exon=15-18", QObject::QObject::tr("DDR2 Exon 15-18"));
+    case Mut_PTEN:
+        return PathologyPropertyInfo(property, Mutation, "mut/pten", QObject::QObject::tr("PTEN"));
     case IHC_pP70S6K:
         return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-p70S6k", QObject::QObject::tr("p-p70S6K"));
     case IHC_MLH1:
@@ -305,6 +307,9 @@ IHCScore ValueTypeCategoryInfo::toIHCScore(const Property& prop) const
     return IHCScore(toValue(prop.value), prop.detail);
 }
 
+namespace
+{
+
 static QString toScoreString(int score)
 {
     switch (score)
@@ -331,6 +336,8 @@ static QString toPlusMinus(bool val)
     {
         return "-";
     }
+}
+
 }
 
 // SELECT property FROM PathologyProperties WHERE pathologyid IN (SELECT id FROM Pathologies WHERE context='wtz/tumorprofil') AND property LIKE 'ihc/%';
@@ -377,6 +384,50 @@ QString ValueTypeCategoryInfo::toDisplayString(const Property& prop) const
     }
     return QString();
 }
+
+QVariant ValueTypeCategoryInfo::toVariantData(const Property& prop) const
+{
+    QVariant value = toValue(prop.value);
+
+    if (category != PathologyPropertyInfo::InvalidCategory
+            && value.isNull() && value.type() == QVariant::Bool)
+    {
+        return QVariant();
+    }
+
+    switch (category)
+    {
+    case PathologyPropertyInfo::IHCClassical:
+    case PathologyPropertyInfo::IHCClassicalPoints:
+        return value;
+    case PathologyPropertyInfo::IHCTwoDim:
+    {
+        QVariant score = IHCScore(value, prop.detail).score();
+        if (score.isNull())
+        {
+            return QVariant();
+        }
+        else if (score.type() == QVariant::Int)
+        {
+            return score;
+        }
+        else
+        {
+            return score.toBool() ? 10 : 0;
+        }
+    }
+    case PathologyPropertyInfo::IHCBoolean:
+    case PathologyPropertyInfo::IHCBooleanPercentage:
+    case PathologyPropertyInfo::Fish:
+    case PathologyPropertyInfo::Mutation:
+    case PathologyPropertyInfo::StableUnstable:
+        return value;
+    case PathologyPropertyInfo::InvalidCategory:
+        break;
+    }
+    return QVariant();
+}
+
 
 namespace
 {
@@ -532,6 +583,8 @@ PathologyContextInfo PathologyContextInfo::info(Context context)
         return PathologyContextInfo(context, "novartis/CBGJ398X2101", "BGJ398");
     case ScreeningBEZ235:
         return PathologyContextInfo(context, "novartis/CBEZ235A2101", "CBEZ235");
+    case ScreeningBKM120:
+        return PathologyContextInfo(context, "novartis/CBKM120D2201", "CBEZ235");
     }
     return PathologyContextInfo();
 }
