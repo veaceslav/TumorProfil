@@ -111,7 +111,7 @@ INCLUDEPATH += datamodel/ \
     storage/ \
     util/ \
     medical/ \
-    C:\Users\wiesweg\Software\boost_1_50_0/
+    C:/Users/wiesweg/Software/boost_1_50_0/
 
 OTHER_FILES += \
     gpl-header-template.txt \
