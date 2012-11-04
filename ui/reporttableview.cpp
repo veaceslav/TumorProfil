@@ -145,6 +145,15 @@ void ReportTableView::setReportType(int type)
         d->filterModel->filterByPathologyProperty(
                     PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_PIK3CA_10_21).id, true);
         break;
+    case BRAFMutation:
+    {
+        d->model->setProfile(PatientPropertyModel::PIK3Profile);
+        QMap<QString, QVariant> filter;
+        filter[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_BRAF_15).id] = true;
+        filter[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_BRAF_11).id] = true;
+        d->filterModel->filterByPathologyProperty(filter);
+        break;
+    }
     case PTENLoss:
         d->model->setProfile(PatientPropertyModel::PTENLossProfile);
         d->filterModel->filterByPathologyProperty(

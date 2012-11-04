@@ -45,6 +45,7 @@ public:
         TumorprofilIHCMut,
         PIK3Mutation,
         EGFRMutation,
+        BRAFMutation,
         PTENLoss
     };
 

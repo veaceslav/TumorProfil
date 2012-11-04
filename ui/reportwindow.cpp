@@ -136,6 +136,7 @@ void ReportWindow::setupToolbar()
     byMutationMenu->addAction(tr("EGFR-Mutation"), ReportTableView::EGFRMutation, this);
     byMutationMenu->addAction(tr("PIK3CA-Mutation"), ReportTableView::PIK3Mutation, this);
     byMutationMenu->addAction(tr("PTEN-Verlust"), ReportTableView::PTENLoss, this);
+    byMutationMenu->addAction(tr("BRAF-Mutation"), ReportTableView::BRAFMutation, this);
     byMutationButton->setMenu(byMutationMenu);
 
     d->toolBar->addSeparator();
