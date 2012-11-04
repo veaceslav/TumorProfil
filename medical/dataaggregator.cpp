@@ -211,7 +211,11 @@ DataAggregator& DataAggregator::operator<<(const Property& prop)
 
 DataAggregator& DataAggregator::operator<<(const QVariant& value)
 {
-    primitiveValues << value;
+    // Null values are not counted for null
+    if (!value.isNull())
+    {
+        primitiveValues << value;
+    }
     return *this;
 }
 
@@ -230,14 +234,7 @@ QMap<AggregatedDatumInfo, QVariant> DataAggregator::values() const
         {
             if (prop.isValid())
             {
-                if (fieldValueType.isTwoDimScored())
-                {
-                    values << QVariant::fromValue(fieldValueType.toIHCScore(prop));
-                }
-                else
-                {
-                    values << fieldValueType.toValue(prop.value);
-                }
+                values << fieldValueType.toMedicalValue(prop);
             }
         }
 
@@ -260,9 +257,25 @@ QMap<AggregatedDatumInfo, QVariant> DataAggregator::values() const
     return result;
 }
 
-static bool isPositive(const PathologyPropertyInfo& info,
-                       const QVariant& value)
+bool DataAggregator::isPositive(const PathologyPropertyInfo& info,
+                                const QVariant& value)
 {
+    if (info.property == PathologyPropertyInfo::IHC_HER2)
+    {
+        if (value.canConvert<IHCScore>())
+        {
+            IHCScore score = value.value<IHCScore>();
+            if (score.isValid())
+            {
+                qDebug() << "Her2 score" << value.value<IHCScore>().score() << "is positive" << value.value<IHCScore>().isPositive(info.property);
+                return score.isPositive(info.property);
+            }
+        }
+        else
+        {
+            qDebug() << "Her2 value" << value.toInt() << "is positive" << (value.toInt() == 3);
+        }
+    }
     if (value.canConvert<IHCScore>())
     {
         return value.value<IHCScore>().isPositive(info.property);
@@ -313,9 +326,9 @@ static bool matches(AggregatedDatumInfo::Field field, const PathologyPropertyInf
     case AggregatedDatumInfo::Count:
         return true;
     case AggregatedDatumInfo::Positive:
-        return isPositive(info, value);
+        return DataAggregator::isPositive(info, value);
     case AggregatedDatumInfo::Negative:
-        return !isPositive(info, value);
+        return !DataAggregator::isPositive(info, value);
     case AggregatedDatumInfo::IHC_1:
         return (value.toInt() == 1);
     case AggregatedDatumInfo::IHC_2:

@@ -105,6 +105,8 @@ public:
     QMap<AggregatedDatumInfo, QVariant> values() const;
     bool isCountedAs(const Property& prop, const AggregatedDatumInfo& info) const;
 
+    static bool isPositive(const PathologyPropertyInfo& info,
+                           const QVariant& medicalValue);
 protected:
 
     QVariant aggregate(const AggregatedDatumInfo& datumInfo,
