@@ -2,7 +2,7 @@
  *
  * This file is a part of Tumorprofil
  *
- * Date        : 04.04.2012
+ * Date        : 03.11.2012
  *
  * Copyright (C) 2012 by Marcel Wiesweg <marcel dot wiesweg at uk-essen dot de>
  *
@@ -19,38 +19,23 @@
  *
  * ============================================================ */
 
-#ifndef CSVFILE_H
-#define CSVFILE_H
+#ifndef COMBINEDVALUE_H
+#define COMBINEDVALUE_H
 
+#include "pathologypropertyinfo.h"
+#include "patient.h"
+#include "property.h"
 
-#include <QFile>
-#include <QString>
-#include <QTextStream>
-#include <QVariant>
-
-class CSVFile
+class CombinedValue
 {
 public:
+    CombinedValue(const PathologyPropertyInfo& info);
 
-    CSVFile(const QChar& delimiter = ';');
+    Property combine(Patient::Ptr p);
 
-    bool read(const QString& filePath);
-    bool write(const QString& filePath);
-    void writeToString(QString *string);
+protected:
 
-    QList<QVariant> parseNextLine();
-    bool atEnd() const;
-
-    void writeNextLine(const QList<QVariant>& records);
-
-private:
-
-    QVariant toVariant(const QString& s, bool wasQuoted);
-
-    QChar m_delimiter;
-    QFile m_file;
-    QTextStream m_stream;
+    PathologyPropertyInfo info;
 };
 
-
-#endif // CSVFILE_H
+#endif // COMBINEDVALUE_H

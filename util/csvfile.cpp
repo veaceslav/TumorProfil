@@ -54,6 +54,11 @@ bool CSVFile::write(const QString& filePath)
     return true;
 }
 
+void CSVFile::writeToString(QString *string)
+{
+    m_stream.setString(string);
+}
+
 bool CSVFile::atEnd() const
 {
     return m_stream.atEnd();
@@ -61,6 +66,7 @@ bool CSVFile::atEnd() const
 
 void CSVFile::writeNextLine(const QList<QVariant>& records)
 {
+    qDebug() << "Writing line with" << records.size();
     if (records.isEmpty())
     {
         return;
@@ -72,19 +78,27 @@ void CSVFile::writeNextLine(const QList<QVariant>& records)
         if (!first)
             m_stream << m_delimiter;
         first = false;
+
         switch (v.type())
         {
-            case QVariant::Date:
-                m_stream << v.toDate().toString("dd.MM.yyyy");
-                break;
-            case QVariant::String:
+        case QVariant::Date:
+            m_stream << v.toDate().toString("dd.MM.yyyy");
+            break;
+        case QVariant::String:
+        default:
+        {
+            QString s = v.toString();
+            if (s.contains(m_delimiter))
+            {
                 m_stream << '"' << v.toString() << '"';
-                break;
-            default:
+            }
+            else
+            {
                 m_stream << v.toString();
-                break;
+            }
+            break;
         }
-
+        }
     }
 
     m_stream << '\n';
