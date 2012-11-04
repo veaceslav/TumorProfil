@@ -22,6 +22,8 @@
 #ifndef ACTIONABLERESULTCHECKER_H
 #define ACTIONABLERESULTCHECKER_H
 
+#include <QFlags>
+
 #include <pathologypropertyinfo.h>
 
 #include "patient.h"
@@ -29,13 +31,32 @@
 class ActionableResultChecker
 {
 public:
-    ActionableResultChecker(const Patient::Ptr& p);
+
+    enum Flag
+    {
+        NoFlags     = 0,
+        IncludeKRAS = 1 << 0
+    };
+    Q_DECLARE_FLAGS(Flags, Flag)
+
+    ActionableResultChecker(const Patient::Ptr& p, Flags flags = NoFlags);
 
     QList<PathologyPropertyInfo> actionableResults();
+    QVariant hasResults(const QList<PathologyPropertyInfo>& combination);
 
 protected:
 
+    void fillFields(const Disease& disease);
+    void checkFields(const Disease& disease,
+                     QList<PathologyPropertyInfo> &actionableFields,
+                     QList<PathologyPropertyInfo> fieldsToCheck,
+                     bool valueToCheck);
+
+
     Patient::Ptr const p;
+    Flags flags;
+    QList<PathologyPropertyInfo> positiveFields;
+    QList<PathologyPropertyInfo> negativeFields;
 };
 
 #endif // ACTIONABLERESULTCHECKER_H

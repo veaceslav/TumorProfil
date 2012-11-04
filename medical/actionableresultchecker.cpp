@@ -20,25 +20,32 @@
  * ============================================================ */
 
 #include "actionableresultchecker.h"
+#include "dataaggregator.h"
 #include "disease.h"
 #include "pathology.h"
 
-ActionableResultChecker::ActionableResultChecker(const Patient::Ptr& p)
-    : p(p)
+ActionableResultChecker::ActionableResultChecker(const Patient::Ptr& p, Flags flags)
+    : p(p), flags(flags)
 {
+    if (!p->hasDisease())
+    {
+        return;
+    }
+    fillFields(p->firstDisease());
 }
 
-static void checkFields(const Disease& disease,
-                        QList<PathologyPropertyInfo> &actionableFields,
-                        QList<PathologyPropertyInfo> fieldsToCheck,
-                        bool valueToCheck)
+void ActionableResultChecker::checkFields(const Disease& disease,
+                                          QList<PathologyPropertyInfo> &actionableFields,
+                                          QList<PathologyPropertyInfo> fieldsToCheck,
+                                          bool valueToCheck)
 {
     foreach (const PathologyPropertyInfo& field, fieldsToCheck)
     {
         foreach (const Property& prop, disease.pathologyProperties(field.id))
         {
             ValueTypeCategoryInfo valueType(field);
-            if (valueType.toValue(prop.value).toBool() == valueToCheck)
+            bool isPositive = DataAggregator::isPositive(field, valueType.toMedicalValue(prop));
+            if (isPositive == valueToCheck)
             {
                 actionableFields << field;
                 break;
@@ -47,10 +54,8 @@ static void checkFields(const Disease& disease,
     }
 }
 
-QList<PathologyPropertyInfo> ActionableResultChecker::actionableResults()
+void ActionableResultChecker::fillFields(const Disease &disease)
 {
-    const Disease& disease = p->firstDisease();
-    QList<PathologyPropertyInfo> positiveFields, negativeFields;
     switch (disease.entity())
     {
     case Pathology::PulmonarySquamous:
@@ -59,25 +64,88 @@ QList<PathologyPropertyInfo> ActionableResultChecker::actionableResults()
     case Pathology::PulmonaryAdeno:
     case Pathology::PulmonaryBronchoalveloar:
     case Pathology::PulmonaryAdenosquamous:
+        positiveFields << PathologyPropertyInfo::IHC_HER2;
     case Pathology::ColorectalAdeno:
         positiveFields << PathologyPropertyInfo::Mut_EGFR_18_20
                        << PathologyPropertyInfo::Mut_EGFR_19_21
                        << PathologyPropertyInfo::Mut_BRAF_11
                        << PathologyPropertyInfo::Mut_BRAF_15
-                       /*<< PathologyPropertyInfo::Mut_KRAS_2
-                       << PathologyPropertyInfo::Mut_KRAS_3*/
                        << PathologyPropertyInfo::Fish_ALK;
+        if (flags & IncludeKRAS)
+        {
+            positiveFields
+                    << PathologyPropertyInfo::Mut_KRAS_2
+                    << PathologyPropertyInfo::Mut_KRAS_3;
+        }
     default:
         positiveFields << PathologyPropertyInfo::Mut_PIK3CA_10_21
                        << PathologyPropertyInfo::Mut_PTEN
                        << PathologyPropertyInfo::Fish_HER2
-                       << PathologyPropertyInfo::Fish_PIK3CA;
+                       << PathologyPropertyInfo::Fish_PIK3CA
+                       << PathologyPropertyInfo::Fish_FGFR1;
         negativeFields << PathologyPropertyInfo::IHC_PTEN;
         break;
     }
+}
 
+QList<PathologyPropertyInfo> ActionableResultChecker::actionableResults()
+{
     QList<PathologyPropertyInfo> actionableFields;
+    if (!p->hasDisease())
+    {
+        return actionableFields;
+    }
+    const Disease& disease = p->firstDisease();
     checkFields(disease, actionableFields, positiveFields, true);
     checkFields(disease, actionableFields, negativeFields, false);
+    qSort(actionableFields);
     return actionableFields;
+}
+
+QVariant ActionableResultChecker::hasResults(const QList<PathologyPropertyInfo>& combination)
+{
+    if (!p->hasDisease())
+    {
+        return false;
+    }
+    if (combination.isEmpty())
+    {
+        // return true if patient has no actionable results
+        return actionableResults().isEmpty();
+    }
+
+    const Disease& disease = p->firstDisease();
+    int hasFields = 0;
+    int matches   = 0;
+    foreach (const PathologyPropertyInfo& field, combination)
+    {
+        bool valueToCheck = positiveFields.contains(field);
+        bool hasField = false;
+        bool match   = false;
+        foreach (const Property& prop, disease.pathologyProperties(field.id))
+        {
+            hasField = true;
+            ValueTypeCategoryInfo valueType(field);
+            bool isPositive = DataAggregator::isPositive(field, valueType.toMedicalValue(prop));
+            if (isPositive == valueToCheck)
+            {
+                match = true;
+                break;
+            }
+        }
+        if (hasField)
+            hasFields++;
+        if (match)
+            matches++;
+    }
+    // None of the fields in the combination were found: Return null
+    // Less strict: If we have at least one field, we count for the total
+    //if (!hasFields)
+    // More strict: Count for total only of all fields are available
+    if (hasFields < combination.size())
+    {
+        return QVariant();
+    }
+    // If at least one of the fields is found, we return a value
+    return matches == combination.size();
 }
