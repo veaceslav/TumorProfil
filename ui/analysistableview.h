@@ -35,10 +35,14 @@ public:
 public slots:
 
     void copy();
+    void toCSV();
 
 protected:
 
+    QString toCSV(const QList<bool>& columns) const;
+
     void keyPressEvent(QKeyEvent *event);
+    void contextMenuEvent(QContextMenuEvent *event);
     void installDelegateToDisplayPercentages();
 };
 
