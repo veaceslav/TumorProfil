@@ -29,6 +29,7 @@
 
 // Local includes
 
+#include "actionableresultchecker.h"
 #include "dataaggregator.h"
 #include "patientpropertymodel.h"
 
@@ -45,6 +46,7 @@ public:
     QAbstractItemModel* sourceModel;
     QList<AggregatedDatumInfo> rows;
     QList< QMap<AggregatedDatumInfo, QVariant> > columns;
+    QStringList extraColumnTitles;
 
     QTimer* recomputeTimer;
 
@@ -139,11 +141,31 @@ void DataAggregationModel::resetData()
     }
 }
 
+static bool operator<(const QList<PathologyPropertyInfo>& a,
+                      const QList<PathologyPropertyInfo>& b)
+{
+    if (a.size() == b.size())
+    {
+        const int size = a.size();
+        for (int i=0; i<size; i++)
+        {
+            if (a[i] == b[i])
+            {
+                continue;
+            }
+            return a[i] < b[i];
+        }
+    }
+    return a.size() < b.size();
+}
+
 void DataAggregationModel::computeData()
 {
     QSet<AggregatedDatumInfo> rowFields;
     QList< QMap<AggregatedDatumInfo, QVariant> > cols;
     QList<AggregatedDatumInfo> rows;
+
+    // 1) Aggregation of the source model's columns
 
     const int columns = d->sourceModel->columnCount();
     for (int col=0; col<columns; col++)
@@ -193,12 +215,94 @@ void DataAggregationModel::computeData()
         }
         cols << map;
     }
+
+    // 2) Combinations of actionable results (single-only numbers and double mutants)
+
+    QStringList extraColumnTitles;
+    QMap< QList<PathologyPropertyInfo>, DataAggregator* > actionableCombinations;
+    const int rowCount = d->sourceModel->rowCount();
+    // Find out which combinations of actionable results exist
+    for (int row=0; row<rowCount; ++row)
+    {
+        QModelIndex index = d->sourceModel->index(row, 0);
+        Patient::Ptr p = PatientModel::retrievePatient(index);
+
+        ActionableResultChecker checker(p, ActionableResultChecker::IncludeKRAS);
+        QList<PathologyPropertyInfo> combination = checker.actionableResults();
+        if (!actionableCombinations.contains(combination))
+        {
+            actionableCombinations.insert(combination, new DataAggregator(DataAggregation::Boolean));
+        }
+    }
+    // Aggregate info
+    QMap< QList<PathologyPropertyInfo>,  DataAggregator* >::const_iterator it;
+    for (int row=0; row<rowCount; ++row)
+    {
+        QModelIndex index = d->sourceModel->index(row, 0);
+        Patient::Ptr p = PatientModel::retrievePatient(index);
+
+        ActionableResultChecker checker(p, ActionableResultChecker::IncludeKRAS);
+        // Extra measure: If a patient has a combination of two results, he may fit into three combinations etc.
+        // Give the patient to the last in the list (which has the largest number of properties, see operator< above)
+        QList<DataAggregator*> positiveAggregators;
+        for (it = actionableCombinations.begin(); it != actionableCombinations.end(); ++it)
+        {
+            QVariant value = checker.hasResults(it.key());
+            DataAggregator* aggregator = it.value();
+            if (value.toBool())
+            {
+                positiveAggregators << aggregator;
+            }
+            else
+            {
+                *aggregator << value;
+            }
+        }
+        if (!positiveAggregators.isEmpty())
+        {
+            *positiveAggregators.takeLast() << true;
+            foreach (DataAggregator* aggregator, positiveAggregators)
+            {
+                // exclusive for double mutants
+                *aggregator << false;
+                // inclusive for double mutants
+                //*aggregator << true;
+            }
+        }
+    }
+    // Read information from DataAggregators, add extra columns
+    for (it = actionableCombinations.begin(); it != actionableCombinations.end(); ++it)
+    {
+        QMap<AggregatedDatumInfo,QVariant> map = it.value()->values();
+        for (QMap<AggregatedDatumInfo,QVariant>::const_iterator it2=map.begin(); it2 != map.end(); ++it2)
+        {
+            rowFields << it2.key();
+        }
+        cols << map;
+        QStringList titles;
+        foreach (const PathologyPropertyInfo& info, it.key())
+        {
+            titles << info.plainTextLabel();
+        }
+        if (titles.isEmpty())
+        {
+            titles << "Kein relevanter Befund";
+        }
+        extraColumnTitles << titles.join(", ");
+    }
+    qDeleteAll(actionableCombinations);
+
+    // Apply changes to model
+
+    // Bring rows to a sorted list
     rows = rowFields.toList();
     qSort(rows);
 
+    // Change data
     layoutAboutToBeChanged();
     d->columns = cols;
     d->rows = rows;
+    d->extraColumnTitles = extraColumnTitles;
     layoutChanged();
 }
 
@@ -253,7 +357,15 @@ QVariant DataAggregationModel::headerData(int section, Qt::Orientation orientati
 
     if (orientation == Qt::Horizontal)
     {
-        return d->sourceModel->headerData(section, orientation, role);
+        if (section < d->sourceModel->columnCount())
+        {
+            return d->sourceModel->headerData(section, orientation, role);
+        }
+        int extraColumn = section - d->sourceModel->columnCount();
+        if (extraColumn < d->extraColumnTitles.size())
+        {
+            return d->extraColumnTitles.at(extraColumn);
+        }
     }
     else
     {
@@ -282,7 +394,7 @@ int DataAggregationModel::columnCount(const QModelIndex& parent) const
     {
         return 0;
     }
-    return d->sourceModel->columnCount();
+    return d->sourceModel->columnCount() + d->extraColumnTitles.size();
 }
 
 int DataAggregationModel::rowCount(const QModelIndex& parent ) const

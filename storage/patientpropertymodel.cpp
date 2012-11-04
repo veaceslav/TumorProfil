@@ -376,7 +376,7 @@ public:
 
 QVariant PatientPropertyModel::data(const QModelIndex& index, int role) const
 {
-    if (index.column() < PatientModelColumns)
+    if (index.column() < PatientModelColumns || role == PatientPtrRole || role == HasTumorprofilRole)
     {
         return PatientModel::data(index, role);
     }

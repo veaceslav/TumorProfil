@@ -115,6 +115,10 @@ QVariant ModelDataGenerator::returnDate(const QDate& date)
 
 QVariant ModelDataGenerator::additionalInfoDatum()
 {
+    if (!p->hasDisease())
+    {
+        return QVariant();
+    }
     switch (role)
     {
     case Qt::DisplayRole:
@@ -457,6 +461,10 @@ QVariant ModelDataGenerator::completenessHeader(CompletenessField value)
 
 QVariant ModelDataGenerator::actionableResultsDatum(ActionableResultsField value)
 {
+    if (!p->hasDisease())
+    {
+        return QVariant();
+    }
     ActionableResultChecker checker(p);
     QList<PathologyPropertyInfo> actionableResults = checker.actionableResults();
     if (actionableResults.isEmpty())
