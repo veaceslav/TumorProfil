@@ -178,7 +178,7 @@ void CSVConverter::convertBestRx(const QString& filename)
         if (data[38].toString().contains("+") || data[38].toString() == "0")
         {
             int her2ihc = data[38].toString().remove("+").toInt();
-            path.properties << toProperty(PathologyPropertyInfo::IHC_HER2, her2ihc);
+            path.properties << toProperty(PathologyPropertyInfo::IHC_HER2_DAKO, her2ihc);
         }
         if (data[39].toString().contains("amplified", Qt::CaseInsensitive))
         {

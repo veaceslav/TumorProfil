@@ -33,8 +33,11 @@
 
 #include "csvconverter.h"
 #include "databaseparameters.h"
+#include "ihcscore.h"
+#include <iostream>
 #include "mainwindow.h"
 #include "patientmanager.h"
+#include "diseasehistory.h"
 
 /*
 void myMsgHandler(QtMsgType, const char * text)
@@ -47,6 +50,9 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     //qInstallMsgHandler(myMsgHandler);
+
+    QCoreApplication::setOrganizationName("Innere Klinik (Tumorforschung)");
+    QCoreApplication::setApplicationName("Tumorprofil");
 
     if (!QIcon::hasThemeIcon("document-open")) {
         //If there is no default working icon theme then we should
