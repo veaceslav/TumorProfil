@@ -50,6 +50,7 @@ protected:
         GenderColumn,
         AgeColumn,
         InitialDiagnosisColumn,
+        DiseaseAgeColumn,
         ResultDateColumn,
         ResultLocationColumn,
         DiseaseAgeAtResultColumn,
@@ -66,6 +67,7 @@ protected:
     {
         IHCCompleteness,
         MutationCompleteness,
+        FISHCompleteness
     };
     QVariant completenessDatum(CompletenessField value);
     QVariant completenessHeader(CompletenessField value);

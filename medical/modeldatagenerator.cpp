@@ -26,6 +26,7 @@
 // Local includes
 
 #include "actionableresultchecker.h"
+#include "combinedvalue.h"
 #include "dataaggregator.h"
 #include "modeldatagenerator.h"
 #include "patientmodel.h"
@@ -147,6 +148,8 @@ QVariant ModelDataGenerator::additionalInfoDatum()
             return p->dateOfBirth.daysTo(QDate::currentDate())/ 365;
         case InitialDiagnosisColumn:
             return returnDate(p->firstDisease().initialDiagnosis);
+        case DiseaseAgeColumn:
+            return p->firstDisease().initialDiagnosis.daysTo(QDate::currentDate()) / 30.0;
         case ResultDateColumn:
         {
             if (p->firstDisease().hasPathology(primaryContext))
@@ -204,6 +207,8 @@ QVariant ModelDataGenerator::additionalInfoHeader()
             return QObject::tr("Alter");
         case InitialDiagnosisColumn:
             return QObject::tr("ED");
+        case DiseaseAgeColumn:
+            return QObject::tr("Monate seit ED");
         case ResultDateColumn:
             return QObject::tr("Befund vom");
         case ResultLocationColumn:
@@ -217,6 +222,7 @@ QVariant ModelDataGenerator::additionalInfoHeader()
         case GenderColumn:
             return DataAggregation::Gender;
         case AgeColumn:
+        case DiseaseAgeColumn:
         case DiseaseAgeAtResultColumn:
             return DataAggregation::Numeric;
         case InitialDiagnosisColumn:
@@ -233,11 +239,28 @@ QVariant ModelDataGenerator::additionalInfoHeader()
 QVariant ModelDataGenerator::fieldDatum()
 {
     const PathologyPropertyInfo& info = infos.at(field);
-    Property prop = p->firstDisease().pathologyProperty(info.id);
+    Property prop;
+    QString combinedString;
+    if (info.isCombined())
+    {
+        CombinedValue combinedValue(info);
+        combinedValue.combine(p->firstDisease());
+        prop = combinedValue.result();
+        if (role == Qt::DisplayRole)
+        {
+            combinedString = combinedValue.toDisplayString();
+        }
+    }
+    else
+    {
+        prop = p->firstDisease().pathologyProperty(info.id);
+    }
+
     if (prop.isNull())
     {
         return QVariant();
     }
+
     ValueTypeCategoryInfo typeInfo(info.valueType);
 
     switch (role)
@@ -254,6 +277,10 @@ QVariant ModelDataGenerator::fieldDatum()
             {
                 return prop.detail;
             }
+        }
+        else if (info.isCombined())
+        {
+            return combinedString;
         }
         return typeInfo.toDisplayString(prop);
     }
@@ -277,12 +304,20 @@ QVariant ModelDataGenerator::fieldHeader()
 
 QVariant ModelDataGenerator::otherMutationsDatum()
 {
+    QList<QString> blacklist;
+    blacklist << PathologyPropertyInfo(PathologyPropertyInfo::IHC_HER2).id;
+
     switch (role)
     {
     case Qt::DisplayRole:
+    case PatientModel::VariantDataRole:
         QString data;
         foreach (const Property& prop, p->firstDisease().allPathologyProperties())
         {
+            if (blacklist.contains(prop.property))
+            {
+                continue;
+            }
             bool isInList = false;
             foreach (const PathologyPropertyInfo& info, infos)
             {
@@ -296,7 +331,7 @@ QVariant ModelDataGenerator::otherMutationsDatum()
             {
                 continue;
             }
-            qDebug() << "Not in list:" << prop.property << prop.value;
+            //qDebug() << "Not in list:" << prop.property << prop.value;
             PathologyPropertyInfo info = PathologyPropertyInfo::info(prop.property);
             ValueTypeCategoryInfo typeInfo(info.valueType);
             QVariant value = typeInfo.toValue(prop.value);
@@ -349,6 +384,9 @@ QVariant ModelDataGenerator::completenessDatum(CompletenessField value)
         break;
     case MutationCompleteness:
         result = checker.isMutComplete(&missingProperties);
+        break;
+    case FISHCompleteness:
+        result = checker.isFishComplete(&missingProperties);
         break;
     default:
         return QVariant();
@@ -451,6 +489,8 @@ QVariant ModelDataGenerator::completenessHeader(CompletenessField value)
             return QObject::tr("IHC vorliegend");
         case MutationCompleteness:
             return QObject::tr("Mut. vorliegend");
+        case FISHCompleteness:
+            return QObject::tr("FISH vorliegend");
         }
     case PatientPropertyModel::DataAggregationNatureRole:
         return DataAggregation::Boolean;
