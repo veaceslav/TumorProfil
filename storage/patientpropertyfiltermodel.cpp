@@ -20,6 +20,10 @@
  * ============================================================ */
 
 #include "patientpropertyfiltermodel.h"
+
+#include <QDebug>
+
+#include "combinedvalue.h"
 #include "patientmodel.h"
 #include "pathologypropertyinfo.h"
 
@@ -93,52 +97,38 @@ void PatientPropertyFilterModel::filterByPathologyContext(const QString& propert
     setFilterSettings(settings);
 }
 
-bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
+bool PatientPropertyFilterSettings::matchesEntities(Patient::Ptr p) const
 {
-    QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
-    Patient::Ptr p = PatientModel::retrievePatient(index);
-    if (!p)
+    foreach (const Pathology& path, p->firstDisease().pathologies)
     {
-        return false;
-    }
-
-    const bool hasPathology = p->hasPathology();
-    if (!d->settings.entities.isEmpty())
-    {
-        if (!hasPathology)
+        if (entities.contains(path.entity))
         {
-            return false;
-        }
-        bool hasMatch = false;
-        foreach (const Pathology& path, p->firstDisease().pathologies)
-        {
-            if (d->settings.entities.contains(path.entity))
-            {
-                hasMatch = true;
-                break;
-            }
-        }
-
-        if (!hasMatch)
-        {
-            return false;
+            return true;
         }
     }
+    return false;
+}
 
-    if (!d->settings.pathologyProperties.isEmpty())
+bool PatientPropertyFilterSettings::matchesPathologyProperties(Patient::Ptr p) const
+{
+    // implementing "OR"
+    bool hasMatch = false;
+    QMap<QString,QVariant>::const_iterator it;
+    for (it = pathologyProperties.begin();
+         it != pathologyProperties.end(); ++it)
     {
-        if (!hasPathology)
+        const Disease& disease = p->firstDisease();
+        PathologyPropertyInfo info = PathologyPropertyInfo::info(it.key());
+        if (info.isCombined())
         {
-            return false;
+            CombinedValue combinedValue(info);
+            combinedValue.combine(p->firstDisease());
+            qDebug() << it.key() << combinedValue.toDisplayString() << combinedValue.toValue();
+            hasMatch = (it.value() == combinedValue.toValue());
         }
-
-        // implementing "OR"
-        bool hasMatch = false;
-        QMap<QString,QVariant>::const_iterator it;
-        for (it = d->settings.pathologyProperties.begin();
-             it != d->settings.pathologyProperties.end(); ++it)
+        else
         {
-            foreach (const Pathology& path, p->firstDisease().pathologies)
+            foreach (const Pathology& path, disease.pathologies)
             {
                 if (it.value().type() == QVariant::String)
                 {
@@ -162,35 +152,142 @@ bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIn
             }
         }
 
-        if (!hasMatch)
+        if (hasMatch)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool PatientPropertyFilterSettings::matchesPathologyContexts(Patient::Ptr p) const
+{
+    QMap<QString,bool>::const_iterator it;
+    for (it = pathologyContexts.begin();
+         it != pathologyContexts.end(); ++it)
+    {
+        foreach (const Pathology& path, p->firstDisease().pathologies)
+        {
+            if (path.context == it.key())
+            {
+                // Searching for "NOT"?
+                if (it.value() == false)
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+static bool hasMatchingResultDate(const Disease& disease, const QDate& date, int compareTarget,
+                                  const QMap<QString, bool>& pathologyContexts)
+{
+    foreach (const Pathology& path, disease.pathologies)
+    {
+        if (!pathologyContexts.isEmpty())
+        {
+            QMap<QString, bool>::const_iterator it = pathologyContexts.find(path.context);
+            if (it == pathologyContexts.end() || it.value() == false)
+            {
+                continue;
+            }
+        }
+
+        if (compareTarget == -1 && path.date < date)
+        {
+            return true;
+        }
+        if (compareTarget == 1 && path.date > date)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool PatientPropertyFilterSettings::matchesDates(Patient::Ptr p) const
+{
+    const Disease& disease = p->firstDisease();
+    QMap<QString, bool> filterContexts;
+    if(dateAppliesCombinedWithContext)
+    {
+        filterContexts = pathologyContexts;
+    }
+
+    if (resultDateBegin.isValid())
+    {
+        if (!hasMatchingResultDate(disease, resultDateBegin, 1, filterContexts))
+        {
+            return false;
+        }
+    }
+    if (resultDateBegin.isValid())
+    {
+        if (!hasMatchingResultDate(disease, resultDateEnd, -1, filterContexts))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
+{
+    QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
+    Patient::Ptr p = PatientModel::retrievePatient(index);
+    if (!p)
+    {
+        return false;
+    }
+
+    const bool filteringByEntity    = !d->settings.entities.isEmpty();
+    const bool filteringByPathology = !d->settings.pathologyProperties.isEmpty();
+    const bool filteringByContext   = !d->settings.pathologyContexts.isEmpty();
+    const bool filteringByDate      = d->settings.resultDateBegin.isValid() ||
+                                        d->settings.resultDateEnd.isValid();
+
+    if (!filteringByEntity && !filteringByPathology && !filteringByContext)
+    {
+        return true;
+    }
+    else
+    {
+        if (!p->hasPathology())
         {
             return false;
         }
     }
 
-    if (!d->settings.pathologyContexts.isEmpty())
+    if (filteringByContext)
     {
-        bool hasMatch = false;
-        QMap<QString,bool>::const_iterator it;
-        for (it = d->settings.pathologyContexts.begin();
-             it != d->settings.pathologyContexts.end(); ++it)
+        if (!d->settings.matchesPathologyContexts(p))
         {
-            foreach (const Pathology& path, p->firstDisease().pathologies)
-            {
-                if (path.context == it.key())
-                {
-                    // Searching for "NOT"?
-                    if (it.value() == false)
-                    {
-                        return false;
-                    }
-                    hasMatch = true;
-                    break;
-                }
-            }
+            return false;
         }
+    }
 
-        if (!hasMatch)
+    if (filteringByDate)
+    {
+        if (!d->settings.matchesDates(p))
+        {
+            return false;
+        }
+    }
+
+    if (filteringByEntity)
+    {
+        if (!d->settings.matchesEntities(p))
+        {
+            return false;
+        }
+    }
+
+    if (filteringByPathology)
+    {
+        if (!d->settings.matchesPathologyProperties(p))
         {
             return false;
         }

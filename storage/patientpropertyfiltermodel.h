@@ -24,16 +24,20 @@
 
 // Qt includes
 
+#include <QDate>
 #include <QSortFilterProxyModel>
 #include <QMap>
 
 // Local includes
 
 #include "pathology.h"
+#include "patient.h"
 
 class PatientPropertyFilterSettings
 {
 public:
+
+    PatientPropertyFilterSettings() : dateAppliesCombinedWithContext(true) {}
 
     QList<Pathology::Entity> entities;
     /**
@@ -44,6 +48,16 @@ public:
     QMap<QString, QVariant>   pathologyProperties;
 
     QMap<QString, bool> pathologyContexts;
+
+    QDate resultDateBegin;
+    QDate resultDateEnd;
+    bool  dateAppliesCombinedWithContext;
+
+    bool matchesEntities(Patient::Ptr p) const;
+    bool matchesPathologyProperties(Patient::Ptr p) const;
+    bool matchesPathologyContexts(Patient::Ptr p) const;
+    bool matchesDates(Patient::Ptr p) const;
+
 };
 
 class PatientPropertyFilterModel : public QSortFilterProxyModel
