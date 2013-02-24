@@ -19,6 +19,8 @@
  *
  * ============================================================ */
 
+#include <QDebug>
+
 #include "patient.h"
 
 Patient::Patient()
@@ -45,6 +47,10 @@ bool Patient::hasDisease() const
 }
 Disease& Patient::firstDisease()
 {
+    if (diseases.isEmpty())
+    {
+        qDebug() << "Expect crash";
+    }
     return diseases.first();
 }
 
