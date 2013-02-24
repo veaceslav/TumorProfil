@@ -42,6 +42,7 @@ public:
 
     CompletenessResult isIHCComplete(QList<PathologyPropertyInfo>* missingProperties);
     CompletenessResult isMutComplete(QList<PathologyPropertyInfo>* missingProperties);
+    CompletenessResult isFishComplete(QList<PathologyPropertyInfo>* missingProperties);
 
 protected:
 

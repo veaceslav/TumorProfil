@@ -40,7 +40,7 @@ ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isIHCCo
         requiredFields << PathologyPropertyInfo::IHC_pAKT
                        << PathologyPropertyInfo::IHC_ALK
                        << PathologyPropertyInfo::IHC_pERK
-                       << PathologyPropertyInfo::IHC_HER2
+                       << PathologyPropertyInfo::IHC_HER2_DAKO
                        << PathologyPropertyInfo::IHC_PTEN;
         break;
     case Pathology::PulmonarySquamous:
@@ -170,7 +170,7 @@ QVariant checkCompleteness(const Disease& disease, PathologyPropertyInfo::Proper
         }
         return QVariant();
     }
-    return ValueTypeCategoryInfo(field).toValue(prop.value);
+    return ValueTypeCategoryInfo(field).toMedicalValue(prop);
 }
 
 ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isMutComplete(QList<PathologyPropertyInfo>* missingProperties)
@@ -214,4 +214,48 @@ ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isMutCo
         break;
     }
     return Undefined;
+}
+
+ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isFishComplete(QList<PathologyPropertyInfo>* missingProperties)
+{
+    const Disease& disease = p->firstDisease();
+    bool checkHer2 = false;
+    bool checkAlk = false;
+    switch (disease.entity())
+    {
+    case Pathology::PulmonaryAdeno:
+    case Pathology::PulmonaryBronchoalveloar:
+    case Pathology::PulmonaryAdenosquamous:
+        checkAlk = true;
+    case Pathology::Breast:
+        checkHer2 = true;
+        break;
+    default:
+        break;
+    }
+
+    if (!checkHer2 && !checkAlk)
+    {
+        return Undefined;
+    }
+
+    bool complete = true, discardValue;
+    if (checkHer2)
+    {
+        QVariant dakoscore = checkCompleteness(disease, PathologyPropertyInfo::IHC_HER2_DAKO, discardValue, 0);
+        if (dakoscore.toInt() == 2)
+        {
+            checkCompleteness(disease, PathologyPropertyInfo::Fish_HER2, complete, missingProperties);
+        }
+    }
+    if (checkAlk)
+    {
+        QVariant score = checkCompleteness(disease, PathologyPropertyInfo::IHC_ALK, discardValue, 0);
+        if (score.toInt() != 0)
+        {
+            checkCompleteness(disease, PathologyPropertyInfo::Fish_ALK, complete, missingProperties);
+        }
+    }
+
+    return complete ? Complete : Incomplete;
 }
