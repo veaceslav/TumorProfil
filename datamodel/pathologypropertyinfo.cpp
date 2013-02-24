@@ -80,68 +80,77 @@ bool PathologyPropertyInfo::isIHC() const
            valueType == IHCTwoDim;
 }
 
+bool PathologyPropertyInfo::isCombined() const
+{
+    return valueType == BooleanCombination;
+}
+
 PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
 {
     switch (property)
     {
     case IHC_PTEN:
-        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/pten", QObject::QObject::tr("PTEN"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/pten", QObject::tr("PTEN"));
     case IHC_pAKT:
-        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-akt?p=s473", QObject::QObject::tr("<qt>p-AKT<sup>S473</sup></qt>"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-akt?p=s473", QObject::tr("<qt>p-AKT<sup>S473</sup></qt>"));
     case IHC_pERK:
-        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-erk", QObject::QObject::tr("p-ERK"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-erk", QObject::tr("p-ERK"));
     case IHC_ALK:
-        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/alk", QObject::QObject::tr("ALK"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/alk", QObject::tr("ALK"));
     case IHC_HER2:
-        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/her2", QObject::QObject::tr("HER2"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/her2?score=twodim", QObject::tr("HER2"));
+    case IHC_HER2_DAKO:
+        return PathologyPropertyInfo(property, IHCClassical, "ihc/her2", QObject::tr("HER2 DAKO"));
     case IHC_ER:
-        return PathologyPropertyInfo(property, IHCClassical, "ihc/er", QObject::QObject::tr("ER"));
+        return PathologyPropertyInfo(property, IHCClassical, "ihc/er", QObject::tr("ER"));
     case IHC_PR:
-        return PathologyPropertyInfo(property, IHCClassical, "ihc/pr", QObject::QObject::tr("PR"));
+        return PathologyPropertyInfo(property, IHCClassical, "ihc/pr", QObject::tr("PR"));
     case Fish_ALK:
-        return PathologyPropertyInfo(property, Fish, "fish/alk", QObject::QObject::tr("ALK-Translokation"), QObject::QObject::tr("Prozentsatz:"));
+        return PathologyPropertyInfo(property, Fish, "fish/alk", QObject::tr("ALK-Translokation"), QObject::tr("Prozentsatz:"));
     case Fish_HER2:
-        return PathologyPropertyInfo(property, Fish, "fish/her2", QObject::QObject::tr("HER2-Amplifikation"), QObject::QObject::tr("Ratio HER2/CEP7:"));
+        return PathologyPropertyInfo(property, Fish, "fish/her2", QObject::tr("HER2-Amplifikation"), QObject::tr("Ratio HER2/CEP7:"));
     case Mut_KRAS_2:
-        return PathologyPropertyInfo(property, Mutation, "mut/kras?exon=2", QObject::QObject::tr("KRAS Exon 2"));
+        return PathologyPropertyInfo(property, Mutation, "mut/kras?exon=2", QObject::tr("KRAS Exon 2"));
     case Mut_EGFR_19_21:
-        return PathologyPropertyInfo(property, Mutation, "mut/egfr?exon=19,21", QObject::QObject::tr("EGFR Exon 19 & 21"));
+        return PathologyPropertyInfo(property, Mutation, "mut/egfr?exon=19,21", QObject::tr("EGFR Exon 19 & 21"));
     case Mut_PIK3CA_10_21:
-        return PathologyPropertyInfo(property, Mutation, "mut/pik3ca?exon=10,21", QObject::QObject::tr("PIK3CA Exon 10 & 21"));
+        return PathologyPropertyInfo(property, Mutation, "mut/pik3ca?exon=10,21", QObject::tr("PIK3CA Exon 10 & 21"));
     case Mut_BRAF_15:
-        return PathologyPropertyInfo(property, Mutation, "mut/braf?exon=15", QObject::QObject::tr("BRAF Exon 15"));
+        return PathologyPropertyInfo(property, Mutation, "mut/braf?exon=15", QObject::tr("BRAF Exon 15"));
     case Mut_EGFR_18_20:
-        return PathologyPropertyInfo(property, Mutation, "mut/egfr?exon=18,20", QObject::QObject::tr("EGFR Exon 18 & 20"));
+        return PathologyPropertyInfo(property, Mutation, "mut/egfr?exon=18,20", QObject::tr("EGFR Exon 18 & 20"));
     case Mut_KRAS_3:
-        return PathologyPropertyInfo(property, Mutation, "mut/kras?exon=3", QObject::QObject::tr("KRAS Exon 3"));
+        return PathologyPropertyInfo(property, Mutation, "mut/kras?exon=3", QObject::tr("KRAS Exon 3"));
     case Mut_BRAF_11:
-        return PathologyPropertyInfo(property, Mutation, "mut/braf?exon=11", QObject::QObject::tr("BRAF Exon 11"));
+        return PathologyPropertyInfo(property, Mutation, "mut/braf?exon=11", QObject::tr("BRAF Exon 11"));
     case Fish_FGFR1:
-        return PathologyPropertyInfo(property, Fish, "fish/fgfr1", QObject::QObject::tr("FGFR1-Amplifikation"), QObject::QObject::tr("Ratio FGFR1/CEP8:"));
+        return PathologyPropertyInfo(property, Fish, "fish/fgfr1", QObject::tr("FGFR1-Amplifikation"), QObject::tr("Ratio FGFR1/CEP8:"));
     case Fish_PIK3CA:
-        return PathologyPropertyInfo(property, Fish, "fish/pik3ca", QObject::QObject::tr("PIK3ca-Amplifikation"));
+        return PathologyPropertyInfo(property, Fish, "fish/pik3ca", QObject::tr("PIK3ca-Amplifikation"));
     case Mut_DDR2:
-        return PathologyPropertyInfo(property, Mutation, "mut/ddr2?exon=15-18", QObject::QObject::tr("DDR2 Exon 15-18"));
+        return PathologyPropertyInfo(property, Mutation, "mut/ddr2?exon=15-18", QObject::tr("DDR2 Exon 15-18"));
     case Mut_PTEN:
-        return PathologyPropertyInfo(property, Mutation, "mut/pten", QObject::QObject::tr("PTEN"));
+        return PathologyPropertyInfo(property, Mutation, "mut/pten", QObject::tr("PTEN"));
     case IHC_pP70S6K:
-        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-p70S6k", QObject::QObject::tr("p-p70S6K"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-p70S6k", QObject::tr("p-p70S6K"));
     case IHC_MLH1:
-        return PathologyPropertyInfo(property, IHCClassical, "ihc/mlh1", QObject::QObject::tr("MLH1"));
+        return PathologyPropertyInfo(property, IHCClassical, "ihc/mlh1", QObject::tr("MLH1"));
     case IHC_MSH2:
-        return PathologyPropertyInfo(property, IHCClassical, "ihc/msh2", QObject::QObject::tr("MSH2"));
+        return PathologyPropertyInfo(property, IHCClassical, "ihc/msh2", QObject::tr("MSH2"));
     case IHC_MSH6:
-        return PathologyPropertyInfo(property, IHCClassical, "ihc/msh6", QObject::QObject::tr("MSH6"));
+        return PathologyPropertyInfo(property, IHCClassical, "ihc/msh6", QObject::tr("MSH6"));
     case PCR_D5S346:
-        return PathologyPropertyInfo(property, StableUnstable, "msi/d5s346", QObject::QObject::tr("MSI PCR: D5S346"));
+        return PathologyPropertyInfo(property, StableUnstable, "msi/d5s346", QObject::tr("MSI PCR: D5S346"));
     case PCR_BAT26:
-        return PathologyPropertyInfo(property, StableUnstable, "msi/bat26", QObject::QObject::tr("MSI PCR: BAT26"));
+        return PathologyPropertyInfo(property, StableUnstable, "msi/bat26", QObject::tr("MSI PCR: BAT26"));
     case PCR_BAT25:
-        return PathologyPropertyInfo(property, StableUnstable, "msi/bat25", QObject::QObject::tr("MSI PCR: BAT25"));
+        return PathologyPropertyInfo(property, StableUnstable, "msi/bat25", QObject::tr("MSI PCR: BAT25"));
     case PCR_D17S250:
-        return PathologyPropertyInfo(property, StableUnstable, "msi/d17s250", QObject::QObject::tr("MSI PCR: D17S250"));
+        return PathologyPropertyInfo(property, StableUnstable, "msi/d17s250", QObject::tr("MSI PCR: D17S250"));
     case PCR_D2S123:
-        return PathologyPropertyInfo(property, StableUnstable, "msi/d2s123", QObject::QObject::tr("MSI PCR: D2S123"));
+        return PathologyPropertyInfo(property, StableUnstable, "msi/d2s123", QObject::tr("MSI PCR: D2S123"));
+    case Comb_HER2:
+        return PathologyPropertyInfo(property, BooleanCombination, "combination/her2", QObject::tr("HER2-Status"));
     case InvalidProperty:
         break;
     }
@@ -184,18 +193,11 @@ QList<QVariant> ValueTypeCategoryInfo::possibleValues() const
                << 0 << 1 << 2 << 3;
         break;
     case PathologyPropertyInfo::IHCBoolean:
-        values << QVariant(QVariant::Bool) << false << true;
-        break;
     case PathologyPropertyInfo::IHCBooleanPercentage:
-        values << QVariant(QVariant::Bool) << false << true;
-        break;
     case PathologyPropertyInfo::Fish:
-        values << QVariant(QVariant::Bool) << false << true;
-        break;
     case PathologyPropertyInfo::Mutation:
-        values << QVariant(QVariant::Bool) << false << true;
-        break;
     case PathologyPropertyInfo::StableUnstable:
+    case PathologyPropertyInfo::BooleanCombination:
         values << QVariant(QVariant::Bool) << false << true;
         break;
     case PathologyPropertyInfo::InvalidCategory:
@@ -268,6 +270,7 @@ QString ValueTypeCategoryInfo::toString(const QVariant& value) const
     case PathologyPropertyInfo::IHCBooleanPercentage:
     case PathologyPropertyInfo::Fish:
     case PathologyPropertyInfo::Mutation:
+    case PathologyPropertyInfo::BooleanCombination:
         if (value.toBool())
         {
             return QObject::tr("positiv");
@@ -378,6 +381,7 @@ QString ValueTypeCategoryInfo::toDisplayString(const Property& prop) const
     case PathologyPropertyInfo::Fish:
     case PathologyPropertyInfo::Mutation:
     case PathologyPropertyInfo::StableUnstable:
+    case PathologyPropertyInfo::BooleanCombination:
         return toPlusMinus(value.toBool());
     case PathologyPropertyInfo::InvalidCategory:
         break;
@@ -421,6 +425,7 @@ QVariant ValueTypeCategoryInfo::toVariantData(const Property& prop) const
     case PathologyPropertyInfo::Fish:
     case PathologyPropertyInfo::Mutation:
     case PathologyPropertyInfo::StableUnstable:
+    case PathologyPropertyInfo::BooleanCombination:
         return value;
     case PathologyPropertyInfo::InvalidCategory:
         break;
@@ -483,6 +488,7 @@ QString ValueTypeCategoryInfo::toPropertyValue(const QVariant& value) const
     case PathologyPropertyInfo::Fish:
     case PathologyPropertyInfo::Mutation:
     case PathologyPropertyInfo::StableUnstable:
+    case PathologyPropertyInfo::BooleanCombination:
         return boolToString(value);
     case PathologyPropertyInfo::InvalidCategory:
         break;
@@ -504,6 +510,7 @@ QVariant ValueTypeCategoryInfo::toValue(const QString& propertyValue) const
     case PathologyPropertyInfo::Fish:
     case PathologyPropertyInfo::Mutation:
     case PathologyPropertyInfo::StableUnstable:
+    case PathologyPropertyInfo::BooleanCombination:
         return stringToBool(propertyValue);
         break;
     case PathologyPropertyInfo::InvalidCategory:
@@ -512,6 +519,14 @@ QVariant ValueTypeCategoryInfo::toValue(const QString& propertyValue) const
     return QVariant();
 }
 
+QVariant ValueTypeCategoryInfo::toMedicalValue(const Property &prop) const
+{
+    if (isTwoDimScored())
+    {
+        return QVariant::fromValue(toIHCScore(prop));
+    }
+    return toValue(prop.value);
+}
 
 bool ValueTypeCategoryInfo::hasDetail() const
 {
@@ -536,6 +551,7 @@ QPair<QString, QString> ValueTypeCategoryInfo::defaultDetailLabel() const
     case PathologyPropertyInfo::IHCBoolean:
     case PathologyPropertyInfo::StableUnstable:
     case PathologyPropertyInfo::InvalidCategory:
+    case PathologyPropertyInfo::BooleanCombination:
         break;
     case PathologyPropertyInfo::IHCBooleanPercentage:
     case PathologyPropertyInfo::IHCTwoDim:

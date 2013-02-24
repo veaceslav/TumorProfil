@@ -44,6 +44,7 @@ public:
         IHC_pERK,
         IHC_ALK,
         IHC_HER2,
+        IHC_HER2_DAKO,
         IHC_MLH1,
         IHC_MSH2,
         IHC_MSH6,
@@ -68,9 +69,10 @@ public:
         PCR_BAT25,
         PCR_D17S250,
         PCR_D2S123,
+        Comb_HER2, // Reminder: Adjust LastProperty
 
         FirstProperty = IHC_PTEN,
-        LastProperty  = PCR_D2S123
+        LastProperty  = Comb_HER2
     };
 
     enum ValueTypeCategory
@@ -83,7 +85,8 @@ public:
         IHCTwoDim,
         Fish,
         Mutation,
-        StableUnstable
+        StableUnstable,
+        BooleanCombination
     };
 
     PathologyPropertyInfo();
@@ -92,6 +95,10 @@ public:
                           const QString& detailLabel = QString());
     PathologyPropertyInfo(Property property);
     bool isValid() const { return !id.isNull(); }
+    bool operator<(const PathologyPropertyInfo& other) const
+    { return (property == other.property) ? (valueType < other.valueType) : (property < other.property); }
+    bool operator==(const PathologyPropertyInfo& other) const
+    { return property == other.property && valueType == other.valueType; }
 
     Property          property;
     ValueTypeCategory valueType;
@@ -101,6 +108,7 @@ public:
 
     QString plainTextLabel() const;
     bool isIHC() const;
+    bool isCombined() const;
 
     static PathologyPropertyInfo info(Property property);
     static PathologyPropertyInfo info(const QString& id);
@@ -125,6 +133,9 @@ public:
     // Methods serving translation between UI, internal representation and database
     QString toPropertyValue(const QVariant& value) const;
     QVariant toValue(const QString& propertyValue) const;
+
+    // Gives a special value depending on medical meaning (IHCScore), or toValue()
+    QVariant toMedicalValue(const Property& prop) const;
 
     // Methods providing information for IHC value types
     bool isScored() const;
