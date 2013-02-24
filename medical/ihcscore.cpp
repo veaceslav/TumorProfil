@@ -118,6 +118,17 @@ bool IHCScore::isPositive(PathologyPropertyInfo::Property field) const
     switch (field)
     {
     // TODO: specify "positive" depending on field
+    case PathologyPropertyInfo::IHC_HER2:
+        // Positivity of "scored" Her2 is undefined, only defined for DAKO!
+        if (s.type() == QVariant::Int)
+            return s.toInt() >= 4;
+        else
+            return false;
+    case PathologyPropertyInfo::IHC_PTEN:
+        if (s.type() == QVariant::Int)
+            return s.toInt() >= 2;
+        else
+            return s.toBool();
     default:
         if (s.type() == QVariant::Int)
             return s.toInt() > 1;
