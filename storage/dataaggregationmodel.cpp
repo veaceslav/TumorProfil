@@ -47,6 +47,7 @@ public:
     QList<AggregatedDatumInfo> rows;
     QList< QMap<AggregatedDatumInfo, QVariant> > columns;
     QStringList extraColumnTitles;
+    QList< QList<PathologyPropertyInfo> > extraCombinations; // corresponding to extraColumnTitles
 
     QTimer* recomputeTimer;
 
@@ -289,6 +290,7 @@ void DataAggregationModel::computeData()
             titles << "Kein relevanter Befund";
         }
         extraColumnTitles << titles.join(", ");
+
     }
     qDeleteAll(actionableCombinations);
 
@@ -303,6 +305,7 @@ void DataAggregationModel::computeData()
     d->columns = cols;
     d->rows = rows;
     d->extraColumnTitles = extraColumnTitles;
+    d->extraCombinations = actionableCombinations.keys();
     layoutChanged();
 }
 
@@ -429,26 +432,50 @@ QList<QModelIndex> DataAggregationModel::sourceModelReferenceIndexes(const QMode
 {
     QList<QModelIndex> results;
 
-    PathologyPropertyInfo info = index.data(DataAggregationModel::PathologyPropertyInfoRole)
-            .value<PathologyPropertyInfo>();
-    AggregatedDatumInfo datumInfo = index.data(DataAggregationModel::AggregatedDatumInfoRole)
-            .value<AggregatedDatumInfo>();
-
-    if (!info.isValid() || !datumInfo.isValid())
+    // 1) Simple aggregation over source model
+    if (index.column() <= d->sourceModel->columnCount())
     {
-        return results;
-    }
 
-    DataAggregator aggregator(info);
-    const int sourceRows = d->sourceModel->rowCount();
-    const int col = index.column(); // our columns and source model columns are identical
-    for (int row=0; row<sourceRows; row++)
-    {
-        QModelIndex index = d->sourceModel->index(row, col);
-        Property prop = index.data(PatientPropertyModel::PathologyPropertyRole).value<Property>();
-        if (aggregator.isCountedAs(prop, datumInfo))
+        PathologyPropertyInfo info = index.data(DataAggregationModel::PathologyPropertyInfoRole)
+                .value<PathologyPropertyInfo>();
+        AggregatedDatumInfo datumInfo = index.data(DataAggregationModel::AggregatedDatumInfoRole)
+                .value<AggregatedDatumInfo>();
+
+        if (!info.isValid() || !datumInfo.isValid())
         {
-            results << index;
+            return results;
+        }
+
+        DataAggregator aggregator(info);
+        const int sourceRows = d->sourceModel->rowCount();
+        const int col = index.column(); // our columns and source model columns are identical
+        for (int row=0; row<sourceRows; row++)
+        {
+            QModelIndex index = d->sourceModel->index(row, col);
+            Property prop = index.data(PatientPropertyModel::PathologyPropertyRole).value<Property>();
+            if (aggregator.isCountedAs(prop, datumInfo))
+            {
+                results << index;
+            }
+        }
+    }
+    // 2) Actionable results-based aggregation
+    else
+    {
+        const int extraColumn = index.column() - d->sourceModel->columnCount();
+        const int rowCount = d->sourceModel->rowCount();
+        // Iterate individual patients and check if combination applies.
+        // Combination of column is stored in extraCombinations.
+        for (int row=0; row<rowCount; ++row)
+        {
+            QModelIndex index = d->sourceModel->index(row, 0);
+            Patient::Ptr p = PatientModel::retrievePatient(index);
+
+            ActionableResultChecker checker(p, ActionableResultChecker::IncludeKRAS);
+            if (checker.hasResults(d->extraCombinations[extraColumn]).toBool())
+            {
+                results << index;
+            }
         }
     }
     return results;
