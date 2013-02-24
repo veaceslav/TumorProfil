@@ -55,7 +55,11 @@ SOURCES += main.cpp\
     ui/aggregatetableview.cpp \
     storage/dataaggregationfiltermodel.cpp \
     medical/confidenceinterval.cpp \
-    medical/ihcscore.cpp
+    medical/ihcscore.cpp \
+    ui/columnselectiondialog.cpp \
+    medical/combinedvalue.cpp \
+    datamodel/historyelements.cpp \
+    datamodel/diseasehistory.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -104,7 +108,13 @@ HEADERS  += mainwindow.h \
     ui/aggregatetableview.h \
     storage/dataaggregationfiltermodel.h \
     medical/confidenceinterval.h \
-    medical/ihcscore.h
+    medical/ihcscore.h \
+    ui/columnselectiondialog.h \
+    medical/combinedvalue.h \
+    datamodel/historyelements.h \
+    datamodel/diseasehistory.h \
+    util/xmltextintmapper.h \
+    util/xmlstreamutils.h
 
 INCLUDEPATH += datamodel/ \
     ui/ \
