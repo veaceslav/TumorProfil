@@ -102,6 +102,7 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
             m_objects << create(PathologyPropertyInfo::IHC_pERK);
             m_objects << create(PathologyPropertyInfo::IHC_ALK);
             m_objects << create(PathologyPropertyInfo::IHC_HER2);
+            m_objects << create(PathologyPropertyInfo::IHC_HER2_DAKO);
 
             m_objects << new QLabel(tr("FISH"));
             m_objects << create(PathologyPropertyInfo::Fish_ALK);
@@ -190,7 +191,7 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
             m_objects << new QLabel(tr("Rezeptorstatus"));
             m_objects << create(PathologyPropertyInfo::IHC_ER);
             m_objects << create(PathologyPropertyInfo::IHC_PR);
-            m_objects << create(PathologyPropertyInfo::IHC_HER2);
+            m_objects << create(PathologyPropertyInfo::IHC_HER2_DAKO);
             m_objects << new QLabel(tr("FISH (je nach Her2-Status)"));
             m_objects << create(PathologyPropertyInfo::Fish_HER2);
             m_objects << new QLabel(tr("FISH"));
@@ -230,7 +231,7 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
         m_objects << new QLabel(tr("Hormonstatus"));
         m_objects << create(PathologyPropertyInfo::IHC_ER);
         m_objects << create(PathologyPropertyInfo::IHC_PR);
-        m_objects << create(PathologyPropertyInfo::IHC_HER2);
+        m_objects << create(PathologyPropertyInfo::IHC_HER2_DAKO);
         m_objects << create(PathologyPropertyInfo::Fish_HER2);
         break;
     default:
