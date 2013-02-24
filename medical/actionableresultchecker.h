@@ -51,6 +51,7 @@ protected:
                      QList<PathologyPropertyInfo> &actionableFields,
                      QList<PathologyPropertyInfo> fieldsToCheck,
                      bool valueToCheck);
+    QList<Property> fields(const PathologyPropertyInfo& info, const Disease& disease);
 
 
     Patient::Ptr const p;

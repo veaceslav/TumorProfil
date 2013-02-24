@@ -20,6 +20,7 @@
  * ============================================================ */
 
 #include "actionableresultchecker.h"
+#include "combinedvalue.h"
 #include "dataaggregator.h"
 #include "disease.h"
 #include "pathology.h"
@@ -41,7 +42,7 @@ void ActionableResultChecker::checkFields(const Disease& disease,
 {
     foreach (const PathologyPropertyInfo& field, fieldsToCheck)
     {
-        foreach (const Property& prop, disease.pathologyProperties(field.id))
+        foreach (const Property& prop, fields(field, disease))
         {
             ValueTypeCategoryInfo valueType(field);
             bool isPositive = DataAggregator::isPositive(field, valueType.toMedicalValue(prop));
@@ -54,6 +55,23 @@ void ActionableResultChecker::checkFields(const Disease& disease,
     }
 }
 
+QList<Property> ActionableResultChecker::fields(const PathologyPropertyInfo& info,
+                                                             const Disease& disease)
+{
+    if (info.isCombined())
+    {
+        CombinedValue combinedValue(info);
+        combinedValue.combine(disease);
+        Property prop = combinedValue.result();
+        if (prop.isNull())
+        {
+            return QList<Property>();
+        }
+        return QList<Property>() << prop;
+    }
+    return disease.pathologyProperties(info.id);
+}
+
 void ActionableResultChecker::fillFields(const Disease &disease)
 {
     switch (disease.entity())
@@ -64,7 +82,7 @@ void ActionableResultChecker::fillFields(const Disease &disease)
     case Pathology::PulmonaryAdeno:
     case Pathology::PulmonaryBronchoalveloar:
     case Pathology::PulmonaryAdenosquamous:
-        positiveFields << PathologyPropertyInfo::IHC_HER2;
+        positiveFields << PathologyPropertyInfo::Comb_HER2;
     case Pathology::ColorectalAdeno:
         positiveFields << PathologyPropertyInfo::Mut_EGFR_18_20
                        << PathologyPropertyInfo::Mut_EGFR_19_21
@@ -122,7 +140,7 @@ QVariant ActionableResultChecker::hasResults(const QList<PathologyPropertyInfo>&
         bool valueToCheck = positiveFields.contains(field);
         bool hasField = false;
         bool match   = false;
-        foreach (const Property& prop, disease.pathologyProperties(field.id))
+        foreach (const Property& prop, fields(field, disease))
         {
             hasField = true;
             ValueTypeCategoryInfo valueType(field);
