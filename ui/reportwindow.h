@@ -47,6 +47,8 @@ protected slots:
     void filterByContext();
     void setAggregateVisible(bool);
     void activatedFromAggregate(const QList<QModelIndex>& sourceReferenceIndexes);
+    void filterByDate();
+    void clearDateFilter();
 
 private:
 

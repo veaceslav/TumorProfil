@@ -46,7 +46,10 @@ public:
         PIK3Mutation,
         EGFRMutation,
         BRAFMutation,
-        PTENLoss
+        PTENLoss,
+        NSCLCKRASMutation,
+        NSCLCHer2Amplification,
+        ALKAmplification
     };
 
     explicit ReportTableView(QWidget *parent = 0);

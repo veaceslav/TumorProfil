@@ -25,6 +25,7 @@
 
 #include <QAction>
 #include <QComboBox>
+#include <QDateEdit>
 #include <QDebug>
 #include <QHeaderView>
 #include <QIcon>
@@ -33,6 +34,7 @@
 #include <QTableView>
 #include <QToolBar>
 #include <QToolButton>
+#include <QWidgetAction>
 
 // Local includes
 
@@ -50,7 +52,9 @@ public:
          aggregateView(0),
          viewSplitter(0),
          toolBar(0),
-         reportComboBox(0)
+         reportComboBox(0),
+         fromEdit(0),
+         toEdit(0)
     {
     }
 
@@ -61,6 +65,9 @@ public:
 
     QToolBar   *toolBar;
     QComboBox  *reportComboBox;
+
+    QDateEdit  *fromEdit;
+    QDateEdit  *toEdit;
 
     QList<QAction*> contextFilterActions;
 };
@@ -137,6 +144,9 @@ void ReportWindow::setupToolbar()
     byMutationMenu->addAction(tr("PIK3CA-Mutation"), ReportTableView::PIK3Mutation, this);
     byMutationMenu->addAction(tr("PTEN-Verlust"), ReportTableView::PTENLoss, this);
     byMutationMenu->addAction(tr("BRAF-Mutation"), ReportTableView::BRAFMutation, this);
+    byMutationMenu->addAction(tr("ALK-Amplifikation"), ReportTableView::ALKAmplification, this);
+    byMutationMenu->addAction(tr("NSCLC KRAS-Mutation"), ReportTableView::NSCLCKRASMutation, this);
+    byMutationMenu->addAction(tr("NSCLC Her2-Amplifikation"), ReportTableView::NSCLCHer2Amplification, this);
     byMutationButton->setMenu(byMutationMenu);
 
     d->toolBar->addSeparator();
@@ -164,6 +174,30 @@ void ReportWindow::setupToolbar()
         byContextMenu->addAction(tr("(kein Filter)"), PathologyContextInfo::InvalidContext,
                                  this, SLOT(filterByContext()), false);
     byContextButton->setMenu(byContextMenu);
+
+    d->toolBar->addSeparator();
+
+    QAction* byDateAction = d->toolBar->addAction(QIcon::fromTheme("calendar"), tr("Nach Datum"));
+    QToolButton* byDateButton = static_cast<QToolButton*>(d->toolBar->widgetForAction(byDateAction));
+    byDateButton->setPopupMode(QToolButton::InstantPopup);
+    QMenu* byDateMenu = new QMenu;
+
+    byDateMenu->addAction(tr("Datumsfilter zurücksetzen"), this, SLOT(clearDateFilter()));
+
+    d->fromEdit = new QDateEdit;
+    connect(d->fromEdit, SIGNAL(dateChanged(QDate)), this, SLOT(filterByDate()));
+    QWidgetAction* fromAction = new QWidgetAction(this);
+    fromAction->setDefaultWidget(d->fromEdit);
+    byDateMenu->addAction(fromAction);
+
+    d->toEdit = new QDateEdit;
+    d->toEdit->setDate(QDate(2014,1,1));
+    connect(d->toEdit, SIGNAL(dateChanged(QDate)), this, SLOT(filterByDate()));
+    QWidgetAction* toAction = new QWidgetAction(this);
+    toAction->setDefaultWidget(d->toEdit);
+    byDateMenu->addAction(toAction);
+
+    byDateButton->setMenu(byDateMenu);
 
     d->toolBar->addSeparator();
 
@@ -231,6 +265,23 @@ void ReportWindow::filterByContext()
     }
     d->view->filterModel()->setFilterSettings(settings);
 }
+
+void ReportWindow::filterByDate()
+{
+    PatientPropertyFilterSettings settings = d->view->filterModel()->filterSettings();
+    settings.resultDateBegin = d->fromEdit->date();
+    settings.resultDateEnd = d->toEdit->date();
+    d->view->filterModel()->setFilterSettings(settings);
+}
+
+void ReportWindow::clearDateFilter()
+{
+    PatientPropertyFilterSettings settings = d->view->filterModel()->filterSettings();
+    settings.resultDateBegin = QDate();
+    settings.resultDateEnd = QDate();
+    d->view->filterModel()->setFilterSettings(settings);
+}
+
 
 void ReportWindow::setAggregateVisible(bool visible)
 {

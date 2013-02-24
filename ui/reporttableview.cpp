@@ -106,7 +106,8 @@ void ReportTableView::setReportType(int type)
         d->model->setProfile(PatientPropertyModel::PulmonaryAdenoProfile);
         d->filterModel->filterByEntity(QList<Pathology::Entity>()
                                        << Pathology::PulmonaryAdeno
-                                       << Pathology::PulmonaryBronchoalveloar);
+                                       << Pathology::PulmonaryBronchoalveloar
+                                       << Pathology::PulmonaryAdenosquamous);
         break;
     case PulmonarySquamousIHCMut:
         d->model->setProfile(PatientPropertyModel::PulmonarySqamousProfile);
@@ -127,6 +128,7 @@ void ReportTableView::setReportType(int type)
                                        << Pathology::PulmonaryAdeno
                                        << Pathology::PulmonaryBronchoalveloar
                                        << Pathology::PulmonarySquamous
+                                       << Pathology::PulmonaryAdenosquamous
                                        << Pathology::ColorectalAdeno
                                        << Pathology::Breast);
         break;
@@ -158,6 +160,41 @@ void ReportTableView::setReportType(int type)
         d->model->setProfile(PatientPropertyModel::PTENLossProfile);
         d->filterModel->filterByPathologyProperty(
                     PathologyPropertyInfo::info(PathologyPropertyInfo::IHC_PTEN).id, 0);
+        break;
+    case NSCLCKRASMutation:
+    {
+        d->model->setProfile(PatientPropertyModel::PulmonaryAdenoProfile);
+        PatientPropertyFilterSettings settings = d->filterModel->filterSettings();
+        settings.entities = (QList<Pathology::Entity>()
+                << Pathology::PulmonaryAdeno
+                << Pathology::PulmonaryBronchoalveloar
+                << Pathology::PulmonaryAdenosquamous);
+        settings.pathologyProperties.clear();
+        settings.pathologyProperties[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_KRAS_2).id]
+                = true;
+        settings.pathologyProperties[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_KRAS_3).id]
+                = true;
+        d->filterModel->setFilterSettings(settings);
+        break;
+    }
+    case NSCLCHer2Amplification:
+    {
+        d->model->setProfile(PatientPropertyModel::PulmonaryAdenoProfile);
+        PatientPropertyFilterSettings settings = d->filterModel->filterSettings();
+        settings.entities = QList<Pathology::Entity>()
+                << Pathology::PulmonaryAdeno
+                << Pathology::PulmonaryBronchoalveloar
+                << Pathology::PulmonaryAdenosquamous;
+        settings.pathologyProperties.clear();
+        settings.pathologyProperties[PathologyPropertyInfo::info(PathologyPropertyInfo::Comb_HER2).id]
+                = true;
+        d->filterModel->setFilterSettings(settings);
+        break;
+    }
+    case ALKAmplification:
+        d->model->setProfile(PatientPropertyModel::PulmonaryAdenoProfile);
+        d->filterModel->filterByPathologyProperty(
+                    PathologyPropertyInfo::info(PathologyPropertyInfo::Fish_ALK).id, true);
         break;
     case InvalidReport:
         break;

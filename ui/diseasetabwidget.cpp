@@ -275,6 +275,9 @@ void DiseaseTabWidget::setPatient(const Patient::Ptr& p)
     // updatePathologyTab was now called by signal, widgets are built
     loadPathologyData();
 
+    // Enable for convenience / fast-edit mode
+    //setCurrentWidget(d->tabs.first());
+
     // TODO: Set smoking history
 }
 
