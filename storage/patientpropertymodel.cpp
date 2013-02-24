@@ -53,7 +53,8 @@ public:
                   << PathologyPropertyInfo::IHC_pAKT
                   << PathologyPropertyInfo::IHC_pERK
                   << PathologyPropertyInfo::IHC_ALK
-                  << PathologyPropertyInfo::IHC_HER2
+                  << PathologyPropertyInfo::Comb_HER2
+                  << PathologyPropertyInfo::Fish_ALK
                   << PathologyPropertyInfo::Mut_KRAS_2
                   << PathologyPropertyInfo::Mut_EGFR_19_21
                   << PathologyPropertyInfo::Mut_PIK3CA_10_21
@@ -64,7 +65,8 @@ public:
                   << PathologyPropertyInfo::IHC_pAKT
                   << PathologyPropertyInfo::IHC_pERK
                   << PathologyPropertyInfo::Mut_PIK3CA_10_21
-                  << PathologyPropertyInfo::Mut_DDR2;
+                  << PathologyPropertyInfo::Mut_DDR2
+                  << PathologyPropertyInfo::Fish_FGFR1;
             break;
         case PatientPropertyModel::CRCProfile:
             props << PathologyPropertyInfo::IHC_PTEN
@@ -82,18 +84,20 @@ public:
                   << PathologyPropertyInfo::IHC_pP70S6K
                   << PathologyPropertyInfo::IHC_pERK
                   << PathologyPropertyInfo::Mut_PIK3CA_10_21
+                  << PathologyPropertyInfo::Fish_PIK3CA
                   << PathologyPropertyInfo::Fish_FGFR1
                   << PathologyPropertyInfo::IHC_ER
                   << PathologyPropertyInfo::IHC_PR
-                  << PathologyPropertyInfo::IHC_HER2
-                  << PathologyPropertyInfo::Fish_HER2;
+                  << PathologyPropertyInfo::IHC_HER2_DAKO
+                  << PathologyPropertyInfo::Fish_HER2
+                  << PathologyPropertyInfo::Comb_HER2;
             break;
         case PatientPropertyModel::AllTumorprofilProfile:
             props << PathologyPropertyInfo::IHC_PTEN
                   << PathologyPropertyInfo::IHC_pAKT
                   << PathologyPropertyInfo::IHC_pERK
                   << PathologyPropertyInfo::IHC_ALK
-                  << PathologyPropertyInfo::IHC_HER2
+                  << PathologyPropertyInfo::IHC_HER2_DAKO
                   << PathologyPropertyInfo::IHC_pP70S6K
                   << PathologyPropertyInfo::Mut_KRAS_2
                   << PathologyPropertyInfo::Mut_EGFR_19_21
@@ -176,7 +180,8 @@ enum Columns
     // for completeness columns
     IHCCompletenessColumn      = 0,
     MutationCompletenessColumn = 1,
-    CompletenessColumnCount    = 2,
+    FISHCompletenessColumn     = 2,
+    CompletenessColumnCount    = 3,
 
     // for actionable results
     ActionableResultsColumnCount = 2
@@ -279,7 +284,8 @@ public:
 
         if (field < CompletenessColumnCount)
         {
-            CompletenessField comp = (field==IHCCompletenessColumn) ? IHCCompleteness : MutationCompleteness;
+            // trans-enum casting
+            CompletenessField comp = static_cast<CompletenessField>(field);
             return completenessDatum(comp);
         }
         field -= CompletenessColumnCount;
@@ -311,7 +317,8 @@ public:
         field -= OtherMutationsColumnCount;
         if (field < CompletenessColumnCount)
         {
-            CompletenessField comp = field==IHCCompletenessColumn ? IHCCompleteness : MutationCompleteness;
+            // trans-enum casting
+            CompletenessField comp = static_cast<CompletenessField>(field);
             return completenessHeader(comp);
         }
         field -= CompletenessColumnCount;
