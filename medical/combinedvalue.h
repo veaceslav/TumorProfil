@@ -23,7 +23,7 @@
 #define COMBINEDVALUE_H
 
 #include "pathologypropertyinfo.h"
-#include "patient.h"
+#include "disease.h"
 #include "property.h"
 
 class CombinedValue
@@ -31,11 +31,17 @@ class CombinedValue
 public:
     CombinedValue(const PathologyPropertyInfo& info);
 
-    Property combine(Patient::Ptr p);
+    void combine(const Disease& disease);
+    Property result() const;
+    QString toDisplayString() const;
+    QVariant toValue() const;
 
 protected:
 
-    PathologyPropertyInfo info;
+    QVariant resultValue;
+    Property determiningProperty;
+
+    const PathologyPropertyInfo info;
 };
 
 #endif // COMBINEDVALUE_H

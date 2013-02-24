@@ -33,43 +33,90 @@ CombinedValue::CombinedValue(const PathologyPropertyInfo& info)
 {
 }
 
-Property CombinedValue::combine(Patient::Ptr p)
+void CombinedValue::combine(const Disease& disease)
 {
-    if (!p->hasDisease())
-    {
-        return Property();
-    }
-    QVariant returnValue;
+    resultValue = QVariant();
+    determiningProperty = Property();
     switch (info.property)
     {
     case PathologyPropertyInfo::Comb_HER2:
     {
-        PathologyPropertyInfo ihcInfo(PathologyPropertyInfo::IHC_HER2);
+        PathologyPropertyInfo ihcInfo(PathologyPropertyInfo::IHC_HER2_DAKO);
         PathologyPropertyInfo fishInfo(PathologyPropertyInfo::Fish_HER2);
 
-        Property ihc = p->firstDisease().pathologyProperty(ihcInfo.id);
-        Property fish = p->firstDisease().pathologyProperty(fishInfo.id);
+        Property ihc = disease.pathologyProperty(ihcInfo.id);
+        Property fish = disease.pathologyProperty(fishInfo.id);
+
+        if (fish.isNull() && ihc.isNull())
+        {
+            return;
+        }
 
         // If we have FISH, it has precedence and decides yes/no
         if (!fish.isNull())
         {
             ValueTypeCategoryInfo fishType(PathologyPropertyInfo::Fish_HER2);
-            QVariant value = fishType.toMedicalValue(fish);
+            determiningProperty = fish;
+            resultValue = fishType.toMedicalValue(fish);
             break;
         }
-        ValueTypeCategoryInfo ihcType(PathologyPropertyInfo::IHC_HER2);
-        IHCScore score = ihcType.toIHCScore(ihc);
-        if (score.isValid())
+        if (!ihc.isNull())
         {
-            returnValue = (score.score().toInt() >= 7);
+            ValueTypeCategoryInfo ihcType(PathologyPropertyInfo::IHC_HER2_DAKO);
+            determiningProperty = ihc;
+            resultValue = (ihc.value.toInt() == 3);
         }
         break;
     }
     default:
         qDebug() << "Unsupported combined value" << info.id << info.property;
-        return Property();
+        break;
     }
-
-    ValueTypeCategoryInfo ownType(info);
-    return Property(info.id, ownType.toPropertyValue(returnValue));
 }
+
+Property CombinedValue::result() const
+{
+    if (!resultValue.isNull())
+    {
+        ValueTypeCategoryInfo ownType(info);
+        return Property(info.id, ownType.toPropertyValue(resultValue));
+    }
+    return Property();
+}
+
+QVariant CombinedValue::toValue() const
+{
+    return resultValue;
+}
+
+QString CombinedValue::toDisplayString() const
+{
+    switch (info.property)
+    {
+    case PathologyPropertyInfo::Comb_HER2:
+    {
+        // "+" or "-"
+        ValueTypeCategoryInfo ownType(info);
+        QString str = ownType.toDisplayString(result());
+
+        // "1+" etc. org "+"/"-"
+        ValueTypeCategoryInfo detInfoType(PathologyPropertyInfo::info(determiningProperty.property));
+        QString propStr = detInfoType.toDisplayString(determiningProperty);
+
+        if (determiningProperty.property == PathologyPropertyInfo(PathologyPropertyInfo::IHC_HER2_DAKO).id)
+        {
+            str += " (IHC ";
+        }
+        else
+        {
+            str += " (FISH ";
+        }
+        str += propStr;
+        str += ")";
+        return str;
+    }
+    default:
+        return QString();
+    }
+}
+
