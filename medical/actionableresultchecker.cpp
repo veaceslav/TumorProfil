@@ -74,6 +74,14 @@ QList<Property> ActionableResultChecker::fields(const PathologyPropertyInfo& inf
 
 void ActionableResultChecker::fillFields(const Disease &disease)
 {
+    positiveFields << PathologyPropertyInfo::Mut_PIK3CA_10_21
+                   << PathologyPropertyInfo::Mut_PTEN
+                   << PathologyPropertyInfo::Fish_HER2
+                   << PathologyPropertyInfo::Fish_PIK3CA
+                   << PathologyPropertyInfo::Fish_cMET
+                   << PathologyPropertyInfo::Fish_FGFR1;
+    negativeFields << PathologyPropertyInfo::IHC_PTEN;
+
     switch (disease.entity())
     {
     case Pathology::PulmonarySquamous:
@@ -95,13 +103,15 @@ void ActionableResultChecker::fillFields(const Disease &disease)
                     << PathologyPropertyInfo::Mut_KRAS_2
                     << PathologyPropertyInfo::Mut_KRAS_3;
         }
+        break;
+    case Pathology::Breast:
+        if (flags & IncludeReceptorStatus)
+        {
+            positiveFields << PathologyPropertyInfo::IHC_ER
+                           << PathologyPropertyInfo::IHC_PR
+                           << PathologyPropertyInfo::Comb_HER2;
+        }
     default:
-        positiveFields << PathologyPropertyInfo::Mut_PIK3CA_10_21
-                       << PathologyPropertyInfo::Mut_PTEN
-                       << PathologyPropertyInfo::Fish_HER2
-                       << PathologyPropertyInfo::Fish_PIK3CA
-                       << PathologyPropertyInfo::Fish_FGFR1;
-        negativeFields << PathologyPropertyInfo::IHC_PTEN;
         break;
     }
 }

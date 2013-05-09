@@ -201,3 +201,78 @@ void IHCScore::parseCells(const QString &detail)
         return;
     }
 }
+
+static int threeToOne(int strong, int medium, int weak)
+{
+    int i = 0;
+    i |= ( ((uchar)strong) << 16 );
+    i |= ( ((uchar)medium) <<  8 );
+    i |= ( ((uchar)weak)       );
+    return i;
+}
+
+HScore::HScore()
+    : binaryScore(-1)
+{
+}
+
+HScore::HScore(int strong, int medium, int weak)
+    : binaryScore(threeToOne(strong, medium, weak))
+{
+}
+
+HScore::HScore(int binaryScore)
+    : binaryScore(binaryScore)
+{
+}
+
+HScore::HScore(QVariant binaryScore)
+    : binaryScore(binaryScore.toInt())
+{
+}
+
+bool HScore::isNull() const
+{
+    return binaryScore == -1;
+}
+
+bool HScore::isValid() const
+{
+    int sc = score().toInt();
+    return sc >= 0 && sc <= 300 && percentageStrong()+percentageMedium()+percentageWeak()<=100;
+}
+
+QVariant HScore::score() const
+{
+    return percentageStrong() * 3 + percentageMedium() * 2 + percentageWeak();
+}
+
+QVector<int> HScore::percentages() const
+{
+    QVector<int> ret;
+    ret << percentageStrong();
+    ret << percentageMedium();
+    ret << percentageWeak();
+    ret << percentageNone();
+    return ret;
+}
+
+int HScore::percentageStrong() const
+{
+    return (binaryScore & (0xFF << 16)) >> 16;
+}
+
+int HScore::percentageMedium() const
+{
+    return (binaryScore & (0xFF << 8)) >> 8;
+}
+
+int HScore::percentageWeak() const
+{
+    return binaryScore & 0xFF;
+}
+
+int HScore::percentageNone() const
+{
+    return qMax(0, 100 - percentageStrong() - percentageMedium() - percentageWeak());
+}

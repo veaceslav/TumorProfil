@@ -30,6 +30,7 @@
 #include <QVariant>
 
 class IHCScore;
+class HScore;
 class Property;
 
 class PathologyPropertyInfo
@@ -51,10 +52,12 @@ public:
         IHC_pP70S6K,
         IHC_ER,
         IHC_PR,
+        IHC_cMET,
         Fish_ALK,
         Fish_HER2,
         Fish_FGFR1,
         Fish_PIK3CA,
+        Fish_cMET,
         Mut_KRAS_2,
         Mut_KRAS_3,
         Mut_EGFR_19_21,
@@ -69,10 +72,12 @@ public:
         PCR_BAT25,
         PCR_D17S250,
         PCR_D2S123,
-        Comb_HER2, // Reminder: Adjust LastProperty
+        Comb_HER2,
+        Comb_HormoneReceptor,
+        Comb_TripleNegative, // Reminder: Adjust LastProperty
 
         FirstProperty = IHC_PTEN,
-        LastProperty  = Comb_HER2
+        LastProperty  = Comb_TripleNegative
     };
 
     enum ValueTypeCategory
@@ -83,6 +88,7 @@ public:
         IHCBoolean, // "<10%, niedrige Intensität"
         IHCBooleanPercentage,
         IHCTwoDim,
+        IHCHScore,
         Fish,
         Mutation,
         StableUnstable,
@@ -123,10 +129,10 @@ public:
 
     const PathologyPropertyInfo::ValueTypeCategory category;
 
-    QList<QVariant> possibleValues() const;
+    QList<QVariant> optionsInUI() const;
+    QString toUILabel(const QVariant& value) const;
 
     // Methods serving display and sorting in a model
-    QString toString(const QVariant& value) const;
     QString toDisplayString(const Property& prop) const;
     QVariant toVariantData(const Property& prop) const;
 
@@ -140,8 +146,10 @@ public:
     // Methods providing information for IHC value types
     bool isScored() const;
     bool isTwoDimScored() const;
+    bool isHScored() const;
     // If category is IHCTwoDim
     IHCScore toIHCScore(const Property& prop) const;
+    HScore toHScore(const Property& prop) const;
 
     bool hasDetail() const;
 

@@ -32,6 +32,7 @@
 #include <QMetaType>
 #include <QString>
 #include <QVariant>
+#include <QVector>
 
 // Local includes
 
@@ -70,6 +71,36 @@ protected:
     void parseCells(const QString& detail);
 };
 
+class HScore
+{
+public:
+
+    HScore();
+    HScore(int strong, int medium, int weak);
+    HScore(int binaryScore);
+    HScore(QVariant binaryScore);
+
+    // A null score has a score of -1
+    bool isNull() const;
+    // Has a score in 0-300 and string + medium + weak == 100
+    bool isValid() const;
+
+    /// Score as strong * 100 + medium * 10 + weak
+    int binaryScore;
+
+    /// Returns the H-score (0-300)
+    QVariant score() const;
+    /// in order strong - medium - weak - none
+    QVector<int> percentages() const;
+
+    int percentageStrong() const;
+    int percentageMedium() const;
+    int percentageWeak() const;
+
+    int percentageNone() const;
+};
+
 Q_DECLARE_METATYPE(IHCScore)
+Q_DECLARE_METATYPE(HScore)
 
 #endif // IHCSCORE_H

@@ -39,7 +39,9 @@ public:
 
     DataAggregationModelPriv()
         : sourceModel(0),
-          recomputeTimer(0)
+          recomputeTimer(0),
+          actionableResultsFlags(ActionableResultChecker::IncludeKRAS)
+                             //  | ActionableResultChecker::IncludeReceptorStatus)
     {
     }
 
@@ -50,6 +52,8 @@ public:
     QList< QList<PathologyPropertyInfo> > extraCombinations; // corresponding to extraColumnTitles
 
     QTimer* recomputeTimer;
+
+    const ActionableResultChecker::Flags actionableResultsFlags;
 
     DataAggregation::FieldNature natureOfColumn(int col)
     {
@@ -228,7 +232,7 @@ void DataAggregationModel::computeData()
         QModelIndex index = d->sourceModel->index(row, 0);
         Patient::Ptr p = PatientModel::retrievePatient(index);
 
-        ActionableResultChecker checker(p, ActionableResultChecker::IncludeKRAS);
+        ActionableResultChecker checker(p, d->actionableResultsFlags);
         QList<PathologyPropertyInfo> combination = checker.actionableResults();
         if (!actionableCombinations.contains(combination))
         {
@@ -242,7 +246,7 @@ void DataAggregationModel::computeData()
         QModelIndex index = d->sourceModel->index(row, 0);
         Patient::Ptr p = PatientModel::retrievePatient(index);
 
-        ActionableResultChecker checker(p, ActionableResultChecker::IncludeKRAS);
+        ActionableResultChecker checker(p, d->actionableResultsFlags);
         // Extra measure: If a patient has a combination of two results, he may fit into three combinations etc.
         // Give the patient to the last in the list (which has the largest number of properties, see operator< above)
         QList<DataAggregator*> positiveAggregators;
@@ -471,7 +475,7 @@ QList<QModelIndex> DataAggregationModel::sourceModelReferenceIndexes(const QMode
             QModelIndex index = d->sourceModel->index(row, 0);
             Patient::Ptr p = PatientModel::retrievePatient(index);
 
-            ActionableResultChecker checker(p, ActionableResultChecker::IncludeKRAS);
+            ActionableResultChecker checker(p, d->actionableResultsFlags);
             if (checker.hasResults(d->extraCombinations[extraColumn]).toBool())
             {
                 results << index;

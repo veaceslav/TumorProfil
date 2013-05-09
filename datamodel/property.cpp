@@ -102,3 +102,29 @@ bool PropertyList::hasProperty(const QString& key,
     return false;
 }
 
+void PropertyList::setProperty(const QString& prop, const QString& value, const QString& detail)
+{
+    removeProperty(prop);
+    addProperty(prop, value, detail);
+}
+
+void PropertyList::addProperty(const QString& prop, const QString& value, const QString& detail)
+{
+    append(Property(prop, value, detail));
+}
+
+void PropertyList::removeProperty(const QString& prop)
+{
+    for (QList<Property>::iterator it = begin(); it != end();)
+    {
+        if (it->property == prop)
+        {
+            it = erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+

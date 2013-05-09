@@ -73,6 +73,21 @@ public:
     bool hasProperty(const QString& prop,
                      const QString& value = QString(),
                      const QString& detail = QString()) const;
+
+    /**
+      Sets the given property. Removes any previous entry.
+      */
+    void setProperty(const QString& prop, const QString& value, const QString& detail = QString());
+
+    /**
+      Adds the given property. Allows multiple entries.
+      */
+    void addProperty(const QString& prop, const QString& value, const QString& detail = QString());
+
+    /**
+      Removes all occurrences of the given property.
+      */
+    void removeProperty(const QString& prop);
 };
 
 Q_DECLARE_METATYPE(Property)

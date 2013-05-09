@@ -46,6 +46,7 @@ public:
       or a string: Filters if the value is identical.
       */
     QMap<QString, QVariant>   pathologyProperties;
+    QMap<QString, QVariant>   pathologyPropertiesAnd;
 
     QMap<QString, bool> pathologyContexts;
 
@@ -55,9 +56,20 @@ public:
 
     bool matchesEntities(Patient::Ptr p) const;
     bool matchesPathologyProperties(Patient::Ptr p) const;
+    bool matchesPathologyPropertiesAnd(Patient::Ptr p) const;
     bool matchesPathologyContexts(Patient::Ptr p) const;
     bool matchesDates(Patient::Ptr p) const;
 
+protected:
+
+    enum Logic
+    {
+        And,
+        Or
+    };
+
+    bool matchesPathologyProperties(Patient::Ptr p, const QMap<QString, QVariant>& pathProps,
+                                    Logic logic) const;
 };
 
 class PatientPropertyFilterModel : public QSortFilterProxyModel

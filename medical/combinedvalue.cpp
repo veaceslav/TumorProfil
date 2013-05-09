@@ -33,6 +33,11 @@ CombinedValue::CombinedValue(const PathologyPropertyInfo& info)
 {
 }
 
+bool CombinedValue::isValid() const
+{
+    return !resultValue.isNull();
+}
+
 void CombinedValue::combine(const Disease& disease)
 {
     resultValue = QVariant();
@@ -68,6 +73,76 @@ void CombinedValue::combine(const Disease& disease)
         }
         break;
     }
+    case PathologyPropertyInfo::Comb_HormoneReceptor:
+    {
+        PathologyPropertyInfo erInfo(PathologyPropertyInfo::IHC_ER);
+        PathologyPropertyInfo prInfo(PathologyPropertyInfo::IHC_PR);
+
+        Property erProp = disease.pathologyProperty(erInfo.id);
+        Property prProp = disease.pathologyProperty(prInfo.id);
+
+        bool complete = !erProp.isNull() && !prProp.isNull();
+
+        bool er = false, pr = false;
+
+        if (!erProp.isNull())
+        {
+            ValueTypeCategoryInfo erType(PathologyPropertyInfo::IHC_ER);
+            er = erType.toVariantData(erProp).toBool();
+        }
+        if (!prProp.isNull())
+        {
+            ValueTypeCategoryInfo prType(PathologyPropertyInfo::IHC_PR);
+            pr = prType.toVariantData(prProp).toBool();
+        }
+
+        if (er && pr)
+        {
+            resultValue = true;
+            // keep determiningProperty empty, indicating "both"
+        }
+        else if (!er && !pr)
+        {
+            if (!complete)
+            {
+                // can't decide
+                resultValue = QVariant();
+            }
+            else
+            {
+                resultValue = false;
+            }
+        }
+        else
+        {
+            resultValue = true;
+            if (er)
+            {
+                determiningProperty = erProp;
+            }
+            else
+            {
+                determiningProperty = prProp;
+            }
+        }
+        break;
+    }
+    case PathologyPropertyInfo::Comb_TripleNegative:
+    {
+        CombinedValue her2(PathologyPropertyInfo::info(PathologyPropertyInfo::Comb_HER2));
+        her2.combine(disease);
+        CombinedValue hr(PathologyPropertyInfo::info(PathologyPropertyInfo::Comb_HormoneReceptor));
+        hr.combine(disease);
+        if (!her2.isValid() || !hr.isValid())
+        {
+            resultValue = QVariant();
+        }
+        else
+        {
+            resultValue = !her2.toValue().toBool() && !hr.toValue().toBool();
+        }
+        break;
+    }
     default:
         qDebug() << "Unsupported combined value" << info.id << info.property;
         break;
@@ -91,14 +166,14 @@ QVariant CombinedValue::toValue() const
 
 QString CombinedValue::toDisplayString() const
 {
+    // "+" or "-"
+    ValueTypeCategoryInfo ownType(info);
+    QString str = ownType.toDisplayString(result());
+
     switch (info.property)
     {
     case PathologyPropertyInfo::Comb_HER2:
     {
-        // "+" or "-"
-        ValueTypeCategoryInfo ownType(info);
-        QString str = ownType.toDisplayString(result());
-
         // "1+" etc. org "+"/"-"
         ValueTypeCategoryInfo detInfoType(PathologyPropertyInfo::info(determiningProperty.property));
         QString propStr = detInfoType.toDisplayString(determiningProperty);
@@ -115,8 +190,27 @@ QString CombinedValue::toDisplayString() const
         str += ")";
         return str;
     }
+    case PathologyPropertyInfo::Comb_HormoneReceptor:
+    {
+        if (resultValue.toBool())
+        {
+            if (determiningProperty.isNull())
+            {
+                str += " (ER/PR)";
+            }
+            else if (determiningProperty.property == PathologyPropertyInfo(PathologyPropertyInfo::IHC_ER).id)
+            {
+                str += " (ER)";
+            }
+            else
+            {
+                str += " (PR)";
+            }
+        }
+        return str;
+    }
     default:
-        return QString();
+        return str;
     }
 }
 

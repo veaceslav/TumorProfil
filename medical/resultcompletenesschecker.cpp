@@ -31,6 +31,12 @@ ResultCompletenessChecker::ResultCompletenessChecker(const Patient::Ptr& p)
 ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isIHCComplete(QList<PathologyPropertyInfo>* missingProperties)
 {
     const Disease& disease = p->firstDisease();
+    QDate profileDate;
+    if (disease.hasProfilePathology())
+    {
+        const Pathology& p = disease.firstProfilePathology();
+        profileDate = p.date;
+    }
     QList<PathologyPropertyInfo> requiredFields;
     switch (disease.entity())
     {
@@ -62,6 +68,25 @@ ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isIHCCo
         break;
     default:
         return Undefined;
+    }
+    // cMET, PIK3CA-amplification 04/2013
+    if (profileDate >= QDate(2013, 5, 1))
+    {
+        switch (disease.entity())
+        {
+        case Pathology::PulmonaryAdeno:
+        case Pathology::PulmonaryBronchoalveloar:
+        case Pathology::PulmonaryAdenosquamous:
+            requiredFields << PathologyPropertyInfo::IHC_cMET;
+            break;
+        case Pathology::PulmonarySquamous:
+            requiredFields << PathologyPropertyInfo::Fish_PIK3CA;
+        case Pathology::ColorectalAdeno:
+            requiredFields << PathologyPropertyInfo::IHC_cMET;
+            break;
+        default:
+            break;
+        }
     }
 
     bool complete = true;

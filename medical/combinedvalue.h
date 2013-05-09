@@ -33,8 +33,9 @@ public:
 
     void combine(const Disease& disease);
     Property result() const;
-    QString toDisplayString() const;
+    QString  toDisplayString() const;
     QVariant toValue() const;
+    bool isValid() const;
 
 protected:
 

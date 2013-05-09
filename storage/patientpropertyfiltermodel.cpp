@@ -109,13 +109,14 @@ bool PatientPropertyFilterSettings::matchesEntities(Patient::Ptr p) const
     return false;
 }
 
-bool PatientPropertyFilterSettings::matchesPathologyProperties(Patient::Ptr p) const
+bool PatientPropertyFilterSettings::matchesPathologyProperties(Patient::Ptr p,
+                                                               const QMap<QString, QVariant>& pathProps,
+                                                               Logic logic) const
 {
-    // implementing "OR"
     bool hasMatch = false;
     QMap<QString,QVariant>::const_iterator it;
-    for (it = pathologyProperties.begin();
-         it != pathologyProperties.end(); ++it)
+    for (it = pathProps.begin();
+         it != pathProps.end(); ++it)
     {
         const Disease& disease = p->firstDisease();
         PathologyPropertyInfo info = PathologyPropertyInfo::info(it.key());
@@ -140,8 +141,16 @@ bool PatientPropertyFilterSettings::matchesPathologyProperties(Patient::Ptr p) c
                     if (prop.isValid())
                     {
                         PathologyPropertyInfo info = PathologyPropertyInfo::info(prop.property);
-                        hasMatch = (it.value() ==
-                                    ValueTypeCategoryInfo(info.valueType).toValue(prop.value));
+                        QVariant propValue = ValueTypeCategoryInfo(info.valueType).toValue(prop.value);
+                        if (it.value().type() == QVariant::Bool && propValue.type() != QVariant::Bool)
+                        {
+                            // This allows to simplify IHC scores to boolean comparison
+                            hasMatch = (it.value().toBool() == propValue.toBool());
+                        }
+                        else
+                        {
+                            hasMatch = (it.value() == propValue);
+                        }
                     }
                 }
 
@@ -152,12 +161,42 @@ bool PatientPropertyFilterSettings::matchesPathologyProperties(Patient::Ptr p) c
             }
         }
 
-        if (hasMatch)
+        switch (logic)
         {
-            return true;
+        case And:
+            if (!hasMatch)
+            {
+                return false;
+            }
+            break;
+        case Or:
+            if (hasMatch)
+            {
+                return true;
+            }
+            break;
         }
+
     }
-    return false;
+
+    switch (logic)
+    {
+    case And:
+        return true;
+    case Or:
+    default:
+        return false;
+    }
+}
+
+bool PatientPropertyFilterSettings::matchesPathologyProperties(Patient::Ptr p) const
+{
+    return matchesPathologyProperties(p, pathologyProperties, Or);
+}
+
+bool PatientPropertyFilterSettings::matchesPathologyPropertiesAnd(Patient::Ptr p) const
+{
+    return matchesPathologyProperties(p, pathologyPropertiesAnd, And);
 }
 
 bool PatientPropertyFilterSettings::matchesPathologyContexts(Patient::Ptr p) const
@@ -243,11 +282,12 @@ bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIn
         return false;
     }
 
-    const bool filteringByEntity    = !d->settings.entities.isEmpty();
-    const bool filteringByPathology = !d->settings.pathologyProperties.isEmpty();
-    const bool filteringByContext   = !d->settings.pathologyContexts.isEmpty();
-    const bool filteringByDate      = d->settings.resultDateBegin.isValid() ||
-                                        d->settings.resultDateEnd.isValid();
+    const bool filteringByEntity       = !d->settings.entities.isEmpty();
+    const bool filteringByPathology    = !d->settings.pathologyProperties.isEmpty();
+    const bool filteringByPathologyAnd = !d->settings.pathologyPropertiesAnd.isEmpty();
+    const bool filteringByContext      = !d->settings.pathologyContexts.isEmpty();
+    const bool filteringByDate         = d->settings.resultDateBegin.isValid() ||
+                                           d->settings.resultDateEnd.isValid();
 
     if (!filteringByEntity && !filteringByPathology && !filteringByContext)
     {
@@ -288,6 +328,14 @@ bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIn
     if (filteringByPathology)
     {
         if (!d->settings.matchesPathologyProperties(p))
+        {
+            return false;
+        }
+    }
+
+    if (filteringByPathologyAnd)
+    {
+        if (!d->settings.matchesPathologyPropertiesAnd(p))
         {
             return false;
         }
