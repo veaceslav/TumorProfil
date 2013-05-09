@@ -30,7 +30,12 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QRadioButton>
+#include <QSpinBox>
 #include <QVariant>
+
+// Local includes
+
+#include "ihcscore.h"
 
 class PathologyPropertyWidget::PathologyPropertyWidgetPriv
 {
@@ -56,9 +61,11 @@ public:
     QHBoxLayout  *layout;
     QRadioButton *radioNP;
     QButtonGroup *radioButtons;
+    QList<QSpinBox*> spinBoxes;
     QLineEdit    *freeInput;
     QLabel       *freeInputLabel;
     QLabel       *freeInputSuffix;
+    QList<QWidget*> otherWidgets;
     const char   *const propertyName;
     PathologyPropertyWidget* const q;
 
@@ -77,6 +84,21 @@ public:
         radio->setProperty(propertyName, value);
         layout->addWidget(radio);
         radioButtons->addButton(radio);
+    }
+
+    void createPercentageEdit(const QString& text, const QVariant& value)
+    {
+        QLabel* label = new QLabel(text);
+        layout->addWidget(label);
+        otherWidgets << label;
+        QSpinBox* box = new QSpinBox;
+        box->setMinimum(0);
+        box->setMaximum(100);
+        box->setSingleStep(5);
+        box->setProperty(propertyName, value);
+        layout->addWidget(box);
+        spinBoxes << box;
+        connect(box, SIGNAL(valueChanged(int)), q, SLOT(HScoreSpinboxUpdated()));
     }
 
     /// Pass a null string if you dont want the label
@@ -107,7 +129,7 @@ public:
         layout = new QHBoxLayout;
         label = new QLabel;
         ValueTypeCategoryInfo typeInfo(info.valueType);
-        foreach (const QVariant& value, typeInfo.possibleValues())
+        foreach (const QVariant& value, typeInfo.optionsInUI())
         {
             if (value.isNull() && value.type() == QVariant::Bool)
             {
@@ -115,7 +137,14 @@ public:
             }
             else
             {
-                createRadioButton(typeInfo.toString(value), value);
+                if (typeInfo.category == PathologyPropertyInfo::IHCHScore)
+                {
+                    createPercentageEdit(typeInfo.toUILabel(value), value);
+                }
+                else
+                {
+                    createRadioButton(typeInfo.toUILabel(value), value);
+                }
             }
 
         }
@@ -170,6 +199,8 @@ PathologyPropertyWidget::~PathologyPropertyWidget()
     delete d->layout;
     if (d->radioButtons)
         qDeleteAll(d->radioButtons->buttons());
+    qDeleteAll(d->spinBoxes);
+    qDeleteAll(d->otherWidgets);
     delete d->radioButtons;
     delete d->freeInput;
     delete d->freeInputLabel;
@@ -242,18 +273,44 @@ Property PathologyPropertyWidget::currentProperty()
         return p;
     }
 
-    QRadioButton* checkedButton = static_cast<QRadioButton*>(d->radioButtons->checkedButton());
-    if (!checkedButton)
+    if (d->mode == PathologyPropertyInfo::IHCHScore)
     {
-        return p;
+        bool hasValues = false;
+        foreach (QSpinBox* box, d->spinBoxes)
+        {
+            if (box->value() != 0)
+            {
+                hasValues = true;
+                break;
+            }
+        }
+        qDebug() << "hasValues" << hasValues;
+        if (!hasValues)
+        {
+            return p;
+        }
+
+        ValueTypeCategoryInfo typeInfo(d->mode);
+
+        HScore score(d->spinBoxes[3]->value(), d->spinBoxes[2]->value(), d->spinBoxes[1]->value());
+        qDebug() << score.percentages() << score.score();
+        p.value = typeInfo.toPropertyValue(score.binaryScore);
     }
-
-    ValueTypeCategoryInfo typeInfo(d->mode);
-
-    p.value = typeInfo.toPropertyValue(checkedButton->property(d->propertyName));
-    if (typeInfo.hasDetail())
+    else
     {
-        p.detail = d->freeInput->text();
+        QRadioButton* checkedButton = static_cast<QRadioButton*>(d->radioButtons->checkedButton());
+        if (!checkedButton)
+        {
+            return p;
+        }
+
+        ValueTypeCategoryInfo typeInfo(d->mode);
+
+        p.value = typeInfo.toPropertyValue(checkedButton->property(d->propertyName));
+        if (typeInfo.hasDetail())
+        {
+            p.detail = d->freeInput->text();
+        }
     }
 
     return p;
@@ -269,18 +326,30 @@ void PathologyPropertyWidget::setValue(const Property& prop)
 
     QVariant value;
     ValueTypeCategoryInfo typeInfo(d->mode);
-    QRadioButton* toBeChecked = d->findRadioButton(typeInfo.toValue(prop.value));
-    if (toBeChecked)
+    if (typeInfo.isHScored())
     {
-        toBeChecked->setChecked(true);
-        if (typeInfo.category == PathologyPropertyInfo::IHCTwoDim)
+        HScore score(typeInfo.toValue(prop.value));
+        QVector<int> ps = score.percentages();
+        for (int i=0; i<4; i++)
         {
-            twoDimRadioButtonSelection(toBeChecked);
+            d->spinBoxes[i]->setValue(ps[3-i]);
         }
     }
-    if (typeInfo.hasDetail() && d->freeInput)
+    else
     {
-        d->freeInput->setText(prop.detail);
+        QRadioButton* toBeChecked = d->findRadioButton(typeInfo.toValue(prop.value));
+        if (toBeChecked)
+        {
+            toBeChecked->setChecked(true);
+            if (typeInfo.category == PathologyPropertyInfo::IHCTwoDim)
+            {
+                twoDimRadioButtonSelection(toBeChecked);
+            }
+        }
+        if (typeInfo.hasDetail() && d->freeInput)
+        {
+            d->freeInput->setText(prop.detail);
+        }
     }
 }
 /*
@@ -365,4 +434,27 @@ void PathologyPropertyWidget::twoDimRadioButtonSelection(QAbstractButton* button
         return;
     }
     d->freeInput->setEnabled(value.isNull() || value.toInt() != 0);
+}
+
+void PathologyPropertyWidget::HScoreSpinboxUpdated()
+{
+    bool hasValue = false;
+
+    foreach (QSpinBox* box, d->spinBoxes)
+    {
+        if (box->value()!= 0)
+        {
+            hasValue = true;
+        }
+    }
+    if (hasValue)
+    {
+        d->radioButtons->setExclusive(false);
+        d->radioNP->setChecked(false);
+        d->radioButtons->setExclusive(true);
+    }
+
+    d->spinBoxes.first()->setValue(100 - d->spinBoxes[1]->value()
+                                       - d->spinBoxes[2]->value()
+                                       - d->spinBoxes[3]->value());
 }

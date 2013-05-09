@@ -76,6 +76,7 @@ public slots:
     void setValue(const Property& prop);
     void textInserted(const QString& text);
     void twoDimRadioButtonSelection(QAbstractButton*);
+    void HScoreSpinboxUpdated();
 
 private:
 

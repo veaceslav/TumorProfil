@@ -103,10 +103,12 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
             m_objects << create(PathologyPropertyInfo::IHC_ALK);
             m_objects << create(PathologyPropertyInfo::IHC_HER2);
             m_objects << create(PathologyPropertyInfo::IHC_HER2_DAKO);
+            m_objects << create(PathologyPropertyInfo::IHC_cMET);
 
             m_objects << new QLabel(tr("FISH"));
             m_objects << create(PathologyPropertyInfo::Fish_ALK);
             m_objects << create(PathologyPropertyInfo::Fish_HER2);
+            m_objects << create(PathologyPropertyInfo::Fish_cMET);
 
             m_objects << new QLabel(tr("Sequenzanalysen"));
             m_objects << create(PathologyPropertyInfo::Mut_KRAS_2);
@@ -126,6 +128,8 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
 
             m_objects << new QLabel(tr("FISH"));
             m_objects << create(PathologyPropertyInfo::Fish_FGFR1);
+            m_objects << create(PathologyPropertyInfo::Fish_PIK3CA);
+            m_objects << create(PathologyPropertyInfo::Fish_cMET);
 
             m_objects << new QLabel(tr("Sequenzanalysen"));
             m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
@@ -143,6 +147,7 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
             m_objects << create(PathologyPropertyInfo::IHC_pP70S6K);
             m_objects << create(PathologyPropertyInfo::IHC_pERK);
             m_objects << create(PathologyPropertyInfo::IHC_PTEN);
+            m_objects << create(PathologyPropertyInfo::IHC_cMET);
 
             m_objects << new QLabel(tr("Sequenzanalysen"));
             m_objects << create(PathologyPropertyInfo::Mut_KRAS_2);
