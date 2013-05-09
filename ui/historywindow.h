@@ -2,7 +2,7 @@
  *
  * This file is a part of Tumorprofil
  *
- * Date        : 22.02.2012
+ * Date        : 28.02.2013
  *
  * Copyright (C) 2012 by Marcel Wiesweg <marcel dot wiesweg at uk-essen dot de>
  *
@@ -19,40 +19,35 @@
  *
  * ============================================================ */
 
-#ifndef REPORTWINDOW_H
-#define REPORTWINDOW_H
+#ifndef HISTORYWINDOW_H
+#define HISTORYWINDOW_H
 
+#include <QMainWindow>
 
 // Local includes
 
 #include "filtermainwindow.h"
-#include "patient.h"
 
-class QModelIndex;
-class ReportTableView;
-
-class ReportWindow : public FilterMainWindow
+class HistoryWindow : public FilterMainWindow
 {
     Q_OBJECT
 public:
 
-    explicit ReportWindow(QWidget *parent = 0);
-    ~ReportWindow();
+    explicit HistoryWindow(QWidget *parent = 0);
+    ~HistoryWindow();
 
-    ReportTableView* view() const;
+    //ReportTableView* view() const;
 
 protected slots:
 
-    void setAggregateVisible(bool);
-    void activatedFromAggregate(const QList<QModelIndex>& sourceReferenceIndexes);
-
+    void entryActivated();
 private:
 
     void setupToolbar();
     void setupView();
 
-    class ReportWindowPriv;
-    ReportWindowPriv* const d;
+    class Private;
+    Private* const d;
 };
 
-#endif // REPORTWINDOW_H
+#endif // HISTORYWINDOW_H

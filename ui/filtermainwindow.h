@@ -2,7 +2,7 @@
  *
  * This file is a part of Tumorprofil
  *
- * Date        : 22.02.2012
+ * Date        : 28.02.2013
  *
  * Copyright (C) 2012 by Marcel Wiesweg <marcel dot wiesweg at uk-essen dot de>
  *
@@ -19,40 +19,41 @@
  *
  * ============================================================ */
 
-#ifndef REPORTWINDOW_H
-#define REPORTWINDOW_H
+#ifndef FILTERMAINWINDOW_H
+#define FILTERMAINWINDOW_H
 
+// Qt includes
 
-// Local includes
+#include <QMainWindow>
 
-#include "filtermainwindow.h"
-#include "patient.h"
+class PatientPropertyModelViewAdapter;
 
-class QModelIndex;
-class ReportTableView;
-
-class ReportWindow : public FilterMainWindow
+class FilterMainWindow : public QMainWindow
 {
+public:
     Q_OBJECT
 public:
 
-    explicit ReportWindow(QWidget *parent = 0);
-    ~ReportWindow();
+    explicit FilterMainWindow(QWidget *parent = 0);
+    ~FilterMainWindow();
 
-    ReportTableView* view() const;
+    PatientPropertyModelViewAdapter* adapter() const;
+    /// Returns the toolbar created by setupToolbar
+    QToolBar* toolBar() const;
 
 protected slots:
 
-    void setAggregateVisible(bool);
-    void activatedFromAggregate(const QList<QModelIndex>& sourceReferenceIndexes);
+    void entryActivated();
+    void filterByContext();
+    void filterByDate();
+    void clearDateFilter();
 
-private:
+protected:
 
     void setupToolbar();
-    void setupView();
 
-    class ReportWindowPriv;
-    ReportWindowPriv* const d;
+    class FilterMainWindowPriv;
+    FilterMainWindowPriv* const d;
 };
 
-#endif // REPORTWINDOW_H
+#endif // FILTERMAINWINDOW_H

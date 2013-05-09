@@ -24,28 +24,25 @@
 // Qt includes
 
 #include <QDebug>
+#include <QMenu>
 #include <QHeaderView>
 
 // Local includes
 
 #include "patientpropertymodel.h"
 #include "patientpropertyfiltermodel.h"
+#include "patientpropertymodelviewadapter.h"
 #include "pathologypropertyinfo.h"
 
 class ReportTableView::ReportTableViewPriv
 {
 public:
     ReportTableViewPriv()
-        : model(0),
-          filterModel(0),
-          reportType(ReportTableView::InvalidReport)
+        : adapter(0)
     {
     }
 
-    PatientPropertyModel          *model;
-    PatientPropertyFilterModel    *filterModel;
-
-    ReportTableView::ReportType    reportType;
+    PatientPropertyModelViewAdapter* adapter;
 };
 
 ReportTableView::ReportTableView(QWidget *parent) :
@@ -53,12 +50,6 @@ ReportTableView::ReportTableView(QWidget *parent) :
     d(new ReportTableViewPriv)
 {
     verticalHeader()->hide();
-    d->model = new PatientPropertyModel(this);
-    d->filterModel = new PatientPropertyFilterModel(this);
-
-    d->filterModel->setSourceModel(d->model);
-    d->filterModel->setDynamicSortFilter(true);
-    setModel(d->filterModel);
 
     sortByColumn(0, Qt::AscendingOrder);
     setSortingEnabled(true);
@@ -67,140 +58,15 @@ ReportTableView::ReportTableView(QWidget *parent) :
             this, SLOT(indexActivated(QModelIndex)));
 }
 
+void ReportTableView::setAdapter(PatientPropertyModelViewAdapter* adapter)
+{
+    d->adapter = adapter;
+    setModel(d->adapter->filterModel());
+}
+
 ReportTableView::~ReportTableView()
 {
     delete d;
-}
-
-ReportTableView::ReportType ReportTableView::reportType() const
-{
-    return d->reportType;
-}
-
-PatientPropertyModel *ReportTableView::patientModel() const
-{
-    return d->model;
-}
-
-PatientPropertyFilterModel *ReportTableView::filterModel() const
-{
-    return d->filterModel;
-}
-
-void ReportTableView::setReportType(int type)
-{
-    if (d->reportType == type)
-    {
-        return;
-    }
-    d->reportType = (ReportType)type;
-
-    // Adjust model
-    switch (d->reportType)
-    {
-    case OverviewReport:
-        d->model->setProfile(PatientPropertyModel::AllPatientsProfile);
-        d->filterModel->setFilterSettings(PatientPropertyFilterSettings());
-        break;
-    case PulmonaryAdenoIHCMut:
-        d->model->setProfile(PatientPropertyModel::PulmonaryAdenoProfile);
-        d->filterModel->filterByEntity(QList<Pathology::Entity>()
-                                       << Pathology::PulmonaryAdeno
-                                       << Pathology::PulmonaryBronchoalveloar
-                                       << Pathology::PulmonaryAdenosquamous);
-        break;
-    case PulmonarySquamousIHCMut:
-        d->model->setProfile(PatientPropertyModel::PulmonarySqamousProfile);
-        d->filterModel->filterByEntity(Pathology::PulmonarySquamous);
-        break;
-    case CRCIHCMut:
-        d->model->setProfile(PatientPropertyModel::CRCProfile);
-        d->filterModel->filterByEntity(Pathology::ColorectalAdeno);
-        break;
-    case BreastCaIHCMut:
-        d->model->setProfile(PatientPropertyModel::BreastCaProfile);
-        d->filterModel->filterByEntity(Pathology::Breast);
-        break;
-    case TumorprofilIHCMut:
-    {
-        d->model->setProfile(PatientPropertyModel::AllTumorprofilProfile);
-        d->filterModel->filterByEntity(QList<Pathology::Entity>()
-                                       << Pathology::PulmonaryAdeno
-                                       << Pathology::PulmonaryBronchoalveloar
-                                       << Pathology::PulmonarySquamous
-                                       << Pathology::PulmonaryAdenosquamous
-                                       << Pathology::ColorectalAdeno
-                                       << Pathology::Breast);
-        break;
-    }
-    case EGFRMutation:
-    {
-        d->model->setProfile(PatientPropertyModel::EGFRProfile);
-        QMap<QString, QVariant> filter;
-        filter[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_EGFR_19_21).id] = true;
-        filter[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_EGFR_18_20).id] = true;
-        d->filterModel->filterByPathologyProperty(filter);
-    }
-        break;
-    case PIK3Mutation:
-        d->model->setProfile(PatientPropertyModel::PIK3Profile);
-        d->filterModel->filterByPathologyProperty(
-                    PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_PIK3CA_10_21).id, true);
-        break;
-    case BRAFMutation:
-    {
-        d->model->setProfile(PatientPropertyModel::PIK3Profile);
-        QMap<QString, QVariant> filter;
-        filter[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_BRAF_15).id] = true;
-        filter[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_BRAF_11).id] = true;
-        d->filterModel->filterByPathologyProperty(filter);
-        break;
-    }
-    case PTENLoss:
-        d->model->setProfile(PatientPropertyModel::PTENLossProfile);
-        d->filterModel->filterByPathologyProperty(
-                    PathologyPropertyInfo::info(PathologyPropertyInfo::IHC_PTEN).id, 0);
-        break;
-    case NSCLCKRASMutation:
-    {
-        d->model->setProfile(PatientPropertyModel::PulmonaryAdenoProfile);
-        PatientPropertyFilterSettings settings = d->filterModel->filterSettings();
-        settings.entities = (QList<Pathology::Entity>()
-                << Pathology::PulmonaryAdeno
-                << Pathology::PulmonaryBronchoalveloar
-                << Pathology::PulmonaryAdenosquamous);
-        settings.pathologyProperties.clear();
-        settings.pathologyProperties[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_KRAS_2).id]
-                = true;
-        settings.pathologyProperties[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_KRAS_3).id]
-                = true;
-        d->filterModel->setFilterSettings(settings);
-        break;
-    }
-    case NSCLCHer2Amplification:
-    {
-        d->model->setProfile(PatientPropertyModel::PulmonaryAdenoProfile);
-        PatientPropertyFilterSettings settings = d->filterModel->filterSettings();
-        settings.entities = QList<Pathology::Entity>()
-                << Pathology::PulmonaryAdeno
-                << Pathology::PulmonaryBronchoalveloar
-                << Pathology::PulmonaryAdenosquamous;
-        settings.pathologyProperties.clear();
-        settings.pathologyProperties[PathologyPropertyInfo::info(PathologyPropertyInfo::Comb_HER2).id]
-                = true;
-        d->filterModel->setFilterSettings(settings);
-        break;
-    }
-    case ALKAmplification:
-        d->model->setProfile(PatientPropertyModel::PulmonaryAdenoProfile);
-        d->filterModel->filterByPathologyProperty(
-                    PathologyPropertyInfo::info(PathologyPropertyInfo::Fish_ALK).id, true);
-        break;
-    case InvalidReport:
-        break;
-    }
-
-    resizeColumnsToContents();
 }
 
 void ReportTableView::indexActivated(const QModelIndex& index)
@@ -210,4 +76,35 @@ void ReportTableView::indexActivated(const QModelIndex& index)
     {
         emit activated(p);
     }
+}
+
+void ReportTableView::addContextMenuActions(QMenu *menu)
+{
+    AnalysisTableView::addContextMenuActions(menu);
+    menu->addAction(tr("Hiernach filtern"), this, SLOT(filterWithCurrentSelection()));
+}
+
+void ReportTableView::filterWithCurrentSelection()
+{
+    qDebug() << currentIndex();
+    if (!currentIndex().isValid())
+    {
+        return;
+    }
+
+    QVariant infoVariant = currentIndex().model()->headerData(currentIndex().column(), Qt::Horizontal,
+                                                              PatientPropertyModel::PathologyPropertyInfoRole);
+    qDebug() << infoVariant;
+
+    if (infoVariant.isNull())
+    {
+        return;
+    }
+
+    PathologyPropertyInfo info = infoVariant.value<PathologyPropertyInfo>();
+    qDebug() << info.id;
+    // Filter by exact IHC score value
+    //emit filterAdded(info, currentIndex().data(PatientPropertyModel::VariantDataRole));
+    // Simplify IHC scores to boolean
+    emit filterAdded(info, currentIndex().data(PatientPropertyModel::VariantDataRole).toBool());
 }

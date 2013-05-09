@@ -42,6 +42,7 @@
 #include "pathologypropertyinfo.h"
 #include "patientpropertymodel.h"
 #include "patientpropertyfiltermodel.h"
+#include "patientpropertymodelviewadapter.h"
 #include "reporttableview.h"
 
 class ReportWindow::ReportWindowPriv
@@ -50,11 +51,7 @@ public:
     ReportWindowPriv()
        : view(0),
          aggregateView(0),
-         viewSplitter(0),
-         toolBar(0),
-         reportComboBox(0),
-         fromEdit(0),
-         toEdit(0)
+         viewSplitter(0)
     {
     }
 
@@ -62,18 +59,10 @@ public:
     AggregateTableView   *aggregateView;
 
     QSplitter  *viewSplitter;
-
-    QToolBar   *toolBar;
-    QComboBox  *reportComboBox;
-
-    QDateEdit  *fromEdit;
-    QDateEdit  *toEdit;
-
-    QList<QAction*> contextFilterActions;
 };
 
 ReportWindow::ReportWindow(QWidget *parent) :
-    QMainWindow(parent),
+    FilterMainWindow(parent),
     d(new ReportWindowPriv)
 {
     setupView();
@@ -82,8 +71,6 @@ ReportWindow::ReportWindow(QWidget *parent) :
     setCentralWidget(d->viewSplitter);
     setWindowTitle(tr("Analyse"));
     setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-
-    d->view->setReportType(ReportTableView::OverviewReport);
 }
 
 ReportWindow::~ReportWindow()
@@ -96,120 +83,25 @@ ReportTableView* ReportWindow::view() const
     return d->view;
 }
 
-class ProfileMenu : public QMenu
-{
-public:
-    QAction* addAction(const QString& text, int userData, QObject* receiver,
-                       const char* slot = SLOT(entryActivated()), bool isCheckable = false)
-    {
-        QAction* action = QMenu::addAction(text);
-        action->setData(userData);
-        if (isCheckable)
-        {
-            action->setCheckable(true);
-            connect(action, SIGNAL(toggled(bool)), receiver, slot);
-        }
-        else
-        {
-            connect(action, SIGNAL(triggered()), receiver, slot);
-        }
-        return action;
-    }
-};
-
 void ReportWindow::setupToolbar()
 {
-    d->toolBar = addToolBar(tr("Auswahl"));
+    FilterMainWindow::setupToolbar();
 
-    QAction* overviewAction = d->toolBar->addAction(QIcon::fromTheme("table"), tr("Übersicht"),
-                                                    this, SLOT(entryActivated()));
-    overviewAction->setData((int)ReportTableView::OverviewReport);
+    toolBar()->addSeparator();
 
-    QAction* profilesAction = d->toolBar->addAction(QIcon::fromTheme("photo"), tr("Nach Entität"));
-    QToolButton* profilesButton = static_cast<QToolButton*>(d->toolBar->widgetForAction(profilesAction));
-    profilesButton->setPopupMode(QToolButton::InstantPopup);
-    ProfileMenu* profilesMenu = new ProfileMenu;
-    profilesMenu->addAction(tr("Adenokarzinom Lunge"), ReportTableView::PulmonaryAdenoIHCMut, this);
-    profilesMenu->addAction(tr("Plattenepithelkarzinom Lunge"), ReportTableView::PulmonarySquamousIHCMut, this);
-    profilesMenu->addAction(tr("Kolorektales Karzinom"), ReportTableView::CRCIHCMut, this);
-    profilesMenu->addAction(tr("Mammakarzinom"), ReportTableView::BreastCaIHCMut, this);
-    profilesMenu->addAction(tr("Alle vier Tumorprofil-Entitäten"), ReportTableView::TumorprofilIHCMut, this);
-    profilesButton->setMenu(profilesMenu);
-
-    QAction* byMutationAction = d->toolBar->addAction(QIcon::fromTheme("palette"), tr("Nach Befund"));
-    QToolButton* byMutationButton = static_cast<QToolButton*>(d->toolBar->widgetForAction(byMutationAction));
-    byMutationButton->setPopupMode(QToolButton::InstantPopup);
-    ProfileMenu* byMutationMenu = new ProfileMenu;
-    byMutationMenu->addAction(tr("EGFR-Mutation"), ReportTableView::EGFRMutation, this);
-    byMutationMenu->addAction(tr("PIK3CA-Mutation"), ReportTableView::PIK3Mutation, this);
-    byMutationMenu->addAction(tr("PTEN-Verlust"), ReportTableView::PTENLoss, this);
-    byMutationMenu->addAction(tr("BRAF-Mutation"), ReportTableView::BRAFMutation, this);
-    byMutationMenu->addAction(tr("ALK-Amplifikation"), ReportTableView::ALKAmplification, this);
-    byMutationMenu->addAction(tr("NSCLC KRAS-Mutation"), ReportTableView::NSCLCKRASMutation, this);
-    byMutationMenu->addAction(tr("NSCLC Her2-Amplifikation"), ReportTableView::NSCLCHer2Amplification, this);
-    byMutationButton->setMenu(byMutationMenu);
-
-    d->toolBar->addSeparator();
-
-    QAction* byContextAction = d->toolBar->addAction(QIcon::fromTheme("folder"), tr("Filter nach Kontext"));
-    QToolButton* byContextButton = static_cast<QToolButton*>(d->toolBar->widgetForAction(byContextAction));
-    byContextButton->setPopupMode(QToolButton::InstantPopup);
-    ProfileMenu* byContextMenu = new ProfileMenu;
-    d->contextFilterActions <<
-        byContextMenu->addAction(tr("WTZ-Tumorprofil"),  PathologyContextInfo::Tumorprofil,
-                                 this, SLOT(filterByContext()), true);
-    d->contextFilterActions <<
-        byContextMenu->addAction(tr("BestRx"), PathologyContextInfo::BestRx,
-                                 this, SLOT(filterByContext()), true);
-    d->contextFilterActions <<
-        byContextMenu->addAction(tr("BEZ235-Screening"), PathologyContextInfo::ScreeningBEZ235,
-                                 this, SLOT(filterByContext()), true);
-    d->contextFilterActions <<
-        byContextMenu->addAction(tr("BGJ389-Screening"), PathologyContextInfo::ScreeningBGJ398,
-                                 this, SLOT(filterByContext()), true);
-    d->contextFilterActions <<
-        byContextMenu->addAction(tr("BKM120-Screening"), PathologyContextInfo::ScreeningBKM120,
-                                 this, SLOT(filterByContext()), true);
-    d->contextFilterActions <<
-        byContextMenu->addAction(tr("(kein Filter)"), PathologyContextInfo::InvalidContext,
-                                 this, SLOT(filterByContext()), false);
-    byContextButton->setMenu(byContextMenu);
-
-    d->toolBar->addSeparator();
-
-    QAction* byDateAction = d->toolBar->addAction(QIcon::fromTheme("calendar"), tr("Nach Datum"));
-    QToolButton* byDateButton = static_cast<QToolButton*>(d->toolBar->widgetForAction(byDateAction));
-    byDateButton->setPopupMode(QToolButton::InstantPopup);
-    QMenu* byDateMenu = new QMenu;
-
-    byDateMenu->addAction(tr("Datumsfilter zurücksetzen"), this, SLOT(clearDateFilter()));
-
-    d->fromEdit = new QDateEdit;
-    connect(d->fromEdit, SIGNAL(dateChanged(QDate)), this, SLOT(filterByDate()));
-    QWidgetAction* fromAction = new QWidgetAction(this);
-    fromAction->setDefaultWidget(d->fromEdit);
-    byDateMenu->addAction(fromAction);
-
-    d->toEdit = new QDateEdit;
-    d->toEdit->setDate(QDate(2014,1,1));
-    connect(d->toEdit, SIGNAL(dateChanged(QDate)), this, SLOT(filterByDate()));
-    QWidgetAction* toAction = new QWidgetAction(this);
-    toAction->setDefaultWidget(d->toEdit);
-    byDateMenu->addAction(toAction);
-
-    byDateButton->setMenu(byDateMenu);
-
-    d->toolBar->addSeparator();
-
-    QAction* aggregateAction = d->toolBar->addAction(QIcon::fromTheme("calculator"), tr("Zeige Auswertung"));
+    QAction* aggregateAction = toolBar()->addAction(QIcon::fromTheme("calculator"), tr("Zeige Auswertung"));
     aggregateAction->setCheckable(true);
     connect(aggregateAction, SIGNAL(toggled(bool)), this, SLOT(setAggregateVisible(bool)));
+
+    QAction* clearFilterAction = toolBar()->addAction(QIcon::fromTheme("link_break"), tr("Zweitfilter zurücksetzen"));
+    connect(clearFilterAction, SIGNAL(triggered()), adapter(), SLOT(clearFilter()));
 }
 
 void ReportWindow::setupView()
 {
     d->viewSplitter = new QSplitter(Qt::Vertical, this);
     d->view = new ReportTableView;
+    d->view->setAdapter(adapter());
     d->aggregateView = new AggregateTableView;
     d->aggregateView->setSourceModel(d->view->model());
     d->viewSplitter->addWidget(d->view);
@@ -220,68 +112,9 @@ void ReportWindow::setupView()
     connect(d->aggregateView, SIGNAL(activatedReferenceIndexes(QList<QModelIndex>)),
             this, SLOT(activatedFromAggregate(QList<QModelIndex>)));
 
-    /*connect(this, SIGNAL(activated(QModelIndex)),
-            this, SLOT(slotActivated(QModelIndex)));*/
+    connect(d->view, SIGNAL(filterAdded(PathologyPropertyInfo,QVariant)),
+            adapter(), SLOT(addFilter(PathologyPropertyInfo,QVariant)));
 }
-
-void ReportWindow::entryActivated()
-{
-    QAction *action = qobject_cast<QAction*>(sender());
-    if (!action)
-    {
-        return;
-    }
-    d->view->setReportType(action->data().toInt());
-}
-
-void ReportWindow::filterByContext()
-{
-    QAction *action = qobject_cast<QAction*>(sender());
-    if (!action)
-    {
-        return;
-    }
-    PatientPropertyFilterSettings settings = d->view->filterModel()->filterSettings();
-    PathologyContextInfo::Context context = (PathologyContextInfo::Context)action->data().toInt();
-    if (context == PathologyContextInfo::InvalidContext)
-    {
-        settings.pathologyContexts.clear();
-        foreach (QAction* a, d->contextFilterActions)
-        {
-            a->setChecked(false);
-        }
-    }
-    else
-    {
-        PathologyContextInfo info(context);
-        if (action->isChecked())
-        {
-            settings.pathologyContexts[info.id] = true;
-        }
-        else
-        {
-            settings.pathologyContexts.remove(info.id);
-        }
-    }
-    d->view->filterModel()->setFilterSettings(settings);
-}
-
-void ReportWindow::filterByDate()
-{
-    PatientPropertyFilterSettings settings = d->view->filterModel()->filterSettings();
-    settings.resultDateBegin = d->fromEdit->date();
-    settings.resultDateEnd = d->toEdit->date();
-    d->view->filterModel()->setFilterSettings(settings);
-}
-
-void ReportWindow::clearDateFilter()
-{
-    PatientPropertyFilterSettings settings = d->view->filterModel()->filterSettings();
-    settings.resultDateBegin = QDate();
-    settings.resultDateEnd = QDate();
-    d->view->filterModel()->setFilterSettings(settings);
-}
-
 
 void ReportWindow::setAggregateVisible(bool visible)
 {

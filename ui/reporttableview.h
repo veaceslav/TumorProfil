@@ -25,8 +25,8 @@
 #include "analysistableview.h"
 #include "patient.h"
 
-class PatientPropertyModel;
-class PatientPropertyFilterModel;
+class PathologyPropertyInfo;
+class PatientPropertyModelViewAdapter;
 
 class ReportTableView : public AnalysisTableView
 {
@@ -34,43 +34,25 @@ class ReportTableView : public AnalysisTableView
 
 public:
 
-    enum ReportType
-    {
-        InvalidReport,
-        OverviewReport,
-        PulmonaryAdenoIHCMut,
-        PulmonarySquamousIHCMut,
-        CRCIHCMut,
-        BreastCaIHCMut,
-        TumorprofilIHCMut,
-        PIK3Mutation,
-        EGFRMutation,
-        BRAFMutation,
-        PTENLoss,
-        NSCLCKRASMutation,
-        NSCLCHer2Amplification,
-        ALKAmplification
-    };
-
     explicit ReportTableView(QWidget *parent = 0);
     ~ReportTableView();
-    
-    ReportType reportType() const;
-    PatientPropertyModel          *patientModel() const;
-    PatientPropertyFilterModel    *filterModel() const;
 
+    void setAdapter(PatientPropertyModelViewAdapter* adapter);
+    
 signals:
 
     void activated(const Patient::Ptr& p);
-
-public slots:
-
-    void setReportType(int type);
+    void filterAdded(const PathologyPropertyInfo&, const QVariant& value);
 
 protected slots:
 
     void indexActivated(const QModelIndex& index);
-    
+    void filterWithCurrentSelection();
+
+protected:
+
+    virtual void addContextMenuActions(QMenu* menu);
+
 private:
 
     class ReportTableViewPriv;

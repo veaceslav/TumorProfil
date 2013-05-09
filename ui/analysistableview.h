@@ -44,6 +44,8 @@ protected:
     void keyPressEvent(QKeyEvent *event);
     void contextMenuEvent(QContextMenuEvent *event);
     void installDelegateToDisplayPercentages();
+
+    virtual void addContextMenuActions(QMenu* menu);
 };
 
 #endif // ANALYSISTABLEVIEW_H

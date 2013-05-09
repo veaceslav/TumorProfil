@@ -86,12 +86,17 @@ void AnalysisTableView::keyPressEvent(QKeyEvent *event)
 void AnalysisTableView::contextMenuEvent(QContextMenuEvent* event)
 {
     QMenu menu(this);
-    QAction* copyAction = menu.addAction(tr("Kopieren"), this, SLOT(copy()));
+    addContextMenuActions(&menu);
+    menu.exec(event->globalPos());
+}
+
+void AnalysisTableView::addContextMenuActions(QMenu* menu)
+{
+    QAction* copyAction = menu->addAction(tr("Kopieren"), this, SLOT(copy()));
     /*QAction* csvAction  = */
-    menu.addAction(tr("CSV-Export"), this, SLOT(toCSV()));
+    menu->addAction(tr("CSV-Export"), this, SLOT(toCSV()));
 
     copyAction->setEnabled(selectionModel()->hasSelection());
-    menu.exec(event->globalPos());
 }
 
 void AnalysisTableView::installDelegateToDisplayPercentages()
