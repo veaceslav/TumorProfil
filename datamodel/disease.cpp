@@ -19,7 +19,9 @@
  *
  * ============================================================ */
 
+#include "databaseconstants.h"
 #include "disease.h"
+#include "diseasehistory.h"
 #include "pathologypropertyinfo.h"
 
 Disease::Disease()
@@ -170,4 +172,15 @@ PropertyList Disease::allPathologyProperties() const
         props += path.properties;
     }
     return props;
+}
+
+DiseaseHistory Disease::history() const
+{
+    Property prop = diseaseProperties.property(DiseasePropertyName::diseaseHistory());
+    return DiseaseHistory::fromXml(prop.value);
+}
+
+void Disease::setHistory(const DiseaseHistory& history)
+{
+    diseaseProperties.setProperty(DiseasePropertyName::diseaseHistory(), history.toXml());
 }

@@ -28,6 +28,8 @@
 
 // Local includes
 
+#include "databaseconstants.h"
+#include "diseasehistory.h"
 #include "xmlstreamutils.h"
 #include "xmltextintmapper.h"
 
@@ -138,10 +140,51 @@ const HistoryElementList& DiseaseHistory::entries() const
     return d->history;
 }
 
+HistoryElement* DiseaseHistory::operator[](int i)
+{
+    return d->history[i];
+}
+
+const HistoryElement* DiseaseHistory::operator[](int i) const
+{
+    return d->history[i];
+}
+
 DiseaseHistory& DiseaseHistory::operator<<(HistoryElement* e)
 {
     d->history << e;
     return *this;
+}
+
+QDate DiseaseHistory::latestDate() const
+{
+    if (isEmpty())
+    {
+        return QDate();
+    }
+    return d->history.latestByDate()->date;
+}
+
+void DiseaseHistory::remove(HistoryElement* e)
+{
+    if (!e)
+    {
+        return;
+    }
+    if (e->parent())
+    {
+        if (e->is<TherapyElement>())
+        {
+            TherapyElement* te = e->as<TherapyElement>();
+            Therapy* t = e->parent()->as<Therapy>();
+            t->elements.removeAll(te);
+            te->setParent(0);
+        }
+    }
+    else
+    {
+        d->history.removeAll(e);
+    }
 }
 
 TEXT_INT_MAPPER(Therapy, Type)
@@ -161,6 +204,7 @@ TEXT_INT_MAPPER(Finding, Type)
     Pair("mri", Finding::MRI),
     Pair("xray", Finding::XRay),
     Pair("sono", Finding::Sono),
+    Pair("pet-ct", Finding::PETCT),
     Pair("death", Finding::Death)
 };
 
@@ -171,7 +215,10 @@ TEXT_INT_MAPPER(Finding, Result)
     Pair("mr", Finding::MR),
     Pair("pr", Finding::PR),
     Pair("cr", Finding::CR),
-    Pair("ned", Finding::NED)
+    Pair("ned", Finding::NED),
+    Pair("initial", Finding::InitialFindingResult),
+    Pair("recurrence", Finding::Recurrence),
+    Pair("n-a", Finding::ResultNotApplicable)
 };
 
 TEXT_INT_MAPPER(Finding, Context)
@@ -221,7 +268,7 @@ QString DiseaseHistory::toXml() const
                     stream.writeAttributeChecked("substance", ctx->substance);
                     stream.writeAttributeChecked("dose", ctx->dose);
                     stream.writeAttributeChecked("absdose", ctx->absdose);
-                    stream.writeAttributeChecked("repeat", ctx->repeat);
+                    stream.writeAttributeChecked("schedule", ctx->schedule);
                     stream.writeEndElement();
                 }
                 else if (te->is<Radiotherapy>())
@@ -260,7 +307,7 @@ QString DiseaseHistory::toXml() const
             const DiseaseState* t = static_cast<const DiseaseState*>(e);
             stream.writeStartElement("diseasestate");
             stream.writeAttribute("state", DiseaseStateStateTextIntMapper::toString(t->state));
-            stream.writeAttribute("dateOfUpdate", t->dateOfUpdate);
+            stream.writeAttributeChecked("date", t->date);
             stream.writeEndElement(); // diseasestate
         }
     }
@@ -311,7 +358,7 @@ DiseaseHistory DiseaseHistory::fromXml(const QString& xml)
                     stream.readAttributeChecked("substance", ctx->substance);
                     stream.readAttributeChecked("dose", ctx->dose);
                     stream.readAttributeChecked("absdose", ctx->absdose);
-                    stream.readAttributeChecked("repeat", ctx->repeat);
+                    stream.readAttributeChecked("schedule", ctx->schedule);
                     stream.skipCurrentElement();
                     t->elements << ctx;
                 }
@@ -355,7 +402,7 @@ DiseaseHistory DiseaseHistory::fromXml(const QString& xml)
         {
             DiseaseState* t = new DiseaseState;
             stream.readAttributeCheckedEnum<DiseaseState::State, DiseaseStateStateTextIntMapper>("state", t->state);
-            stream.readAttributeChecked("dateOfUpdate", t->dateOfUpdate);
+            stream.readAttributeChecked("date", t->date);
             stream.skipCurrentElement();
 
             h << t;
@@ -376,8 +423,10 @@ DiseaseHistory DiseaseHistory::fromXml(const QString& xml)
     return h;
 }
 
-/*
-    static void test();
+// *
+
+#include "diseasehistorymodel.h"
+#include <QTreeView>
 
 void DiseaseHistory::test()
 {
@@ -387,6 +436,7 @@ void DiseaseHistory::test()
     f1->date = QDate(2012, 8, 1);
     f1->type = Finding::Clinical;
     f1->description = "pain";
+    qDebug() << "First finding" << f1 << f1->context << f1->date << f1->type << f1->description;
     h << f1;
     Finding* f2 = new Finding;
     f2->context = Finding::InitialDiagnosis;
@@ -402,12 +452,12 @@ void DiseaseHistory::test()
     Chemotherapy* ctx1 = new Chemotherapy;
     ctx1->substance = "cisplatin";
     ctx1->dose = 100;
-    ctx1->repeat = 21;
+    ctx1->schedule = "d1+8 q21d";
     t->elements << ctx1;
     Chemotherapy* ctx2 = new Chemotherapy;
     ctx2->substance = "paclitaxel";
     ctx2->dose = 175;
-    ctx2->repeat = 21;
+    ctx2->schedule = "d1 q21d";
     t->elements << ctx2;
     Finding* f3 = new Finding;
     f3->context = Finding::ResponseEvaluation;
@@ -428,14 +478,22 @@ void DiseaseHistory::test()
     DiseaseState* ds = new DiseaseState;
     ds->date = h.end();
     ds->state = DiseaseState::Deceased;
+    h << ds;
 
-    QString xml = h.toXml();
+    DiseaseHistoryModel* model = new DiseaseHistoryModel;
+    model->setHistory(h);
+    QTreeView* tv = new QTreeView;
+    tv->setModel(model);
+    tv->show();
+
+    /*QString xml = h.toXml();
 
     DiseaseHistory h2 = DiseaseHistory::fromXml(xml);
     QString xml2 = h2.toXml();
     qDebug() << "Differs" << bool(xml != xml2);
     qDebug() << xml;
     qDebug() << xml2;
+    */
 }
-*/
+//*/
 

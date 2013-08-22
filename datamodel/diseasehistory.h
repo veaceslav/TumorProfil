@@ -44,12 +44,22 @@ public:
     HistoryElementList& entries();
     const HistoryElementList& entries() const;
 
+    HistoryElement* operator[](int i);
+    const HistoryElement* operator[](int i) const;
+
     static DiseaseHistory fromXml(const QString& xml);
     QString toXml() const;
 
+    /// Removes an element from this history. Supports removal of child entries.
+    /// Note: Does not delete the object.
+    void remove(HistoryElement* e);
+
     DiseaseHistory& operator<<(HistoryElement*);
 
+    QDate latestDate() const;
+
     class Private;
+    static void test();
 
 private:
 

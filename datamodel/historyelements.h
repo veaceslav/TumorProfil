@@ -25,6 +25,7 @@
 // Qt includes
 
 #include <QDate>
+#include <QMetaType>
 #include <QString>
 #include <QStringList>
 
@@ -38,12 +39,24 @@ public:
 
     template <class T>
     bool is() const { return dynamic_cast<const T*>(this); }
+    template <class T>
+    const T* as() const { return static_cast<const T*>(this); }
+    template <class T>
+    T* as() { return static_cast<T*>(this); }
+
+    HistoryElement* parent() const;
+    void setParent(HistoryElement* parent);
+
+protected:
+
+    HistoryElement* m_parent;
 };
 
 template <class E>
 class GenericElementList : public QList<E*>
 {
 public:
+    GenericElementList(HistoryElement* parent = 0) : m_parent(parent) {}
     /**
       Allows to have automatic filtering like
       foreach (const Chemotherapy* ctx, list.filtered<Chemotherapy>())
@@ -82,7 +95,65 @@ public:
     FilteredList<T> filtered() const { return FilteredList<T>(*this); }
 
     template <class T>
-    const T* first() const { foreach (const T* t, filtered<T>()) { return t; }; return 0; }
+    const T* first() const { foreach (const T* t, filtered<T>()) { return t; } return 0; }
+
+    HistoryElement* parent() const { return m_parent; };
+
+    template <class T>
+    typename QList<E*>::const_iterator find(const T& functor, typename QList<E*>::const_iterator it) const
+    {
+        if (it == QList<E*>::end())
+        {
+            return it;
+        }
+        typename QList<E*>::const_iterator found = it;
+        for (++it; it != QList<E*>::end(); ++it)
+        {
+            if (functor(it, found))
+            {
+                found = it;
+            }
+        }
+        return found;
+    }
+
+    template <class Functor>
+    E* findPointer(const Functor& functor, typename QList<E*>::const_iterator it) const
+    {
+        typename QList<E*>::const_iterator result = find(functor, it);
+        if (result == QList<E*>::end())
+            return 0;
+        return *result;
+    }
+
+    template <class Functor> struct dateFunctor
+    {
+        bool operator() (const typename QList<E*>::const_iterator& x, const typename QList<E*>::const_iterator& y) const
+        {return Functor()((*x)->date, (*y)->date);}
+    };
+
+    /*template <class Functor functor>
+    struct dateFunctor2
+    {
+        bool operator() (const const_iterator& x, const const_iterator& y) const
+        {return functor(x->date, y->date);}
+    };*/
+
+
+    // sorts by date
+    E* latestByDate() const
+    {
+        return findPointer(dateFunctor<qGreater<QDate> >(), QList<E*>::begin());
+    }
+
+    HistoryElement* firstByDate() const
+    {
+        return findPointer(dateFunctor<qLess<QDate> >(), QList<E*>::begin());
+    }
+
+protected:
+
+    HistoryElement* m_parent;
 };
 
 class HistoryElementList : public GenericElementList<HistoryElement>
@@ -121,8 +192,10 @@ public:
     int dose;
     /// mg abs.
     int absdose;
-    /// repeat q days
-    int repeat;
+    /// schedule (days of administration, repeat)
+    QString schedule;
+
+    static QStringList substances();
 };
 
 class Radiotherapy : public TherapyElement
@@ -148,7 +221,11 @@ public:
 class TherapyElementList : public GenericElementList<TherapyElement>
 {
 public:
+    TherapyElementList(HistoryElement* parent);
     QStringList substances() const;
+    /// Convenience method: adjust the element's parent.
+    /// You must do that yourself if you use append, prepend, or insert.
+    TherapyElementList& operator<<(TherapyElement* elem);
 };
 
 class Therapy : public HistoryElement
@@ -172,6 +249,8 @@ public:
     Type type;
     QString description;
     TherapyElementList elements;
+
+    static QString uiLabel(Type type);
 };
 
 // ---------------------------
@@ -191,6 +270,7 @@ public:
         MRI,
         XRay,
         Sono,
+        PETCT,
         Death
     };
 
@@ -203,6 +283,9 @@ public:
         PartialResponse,
         CompleteResponse,
         NoEvidenceOfDisease,
+        InitialFindingResult,
+        Recurrence,
+        ResultNotApplicable,
 
         SD = StableDisease,
         PD = ProgressiveDisease,
@@ -246,8 +329,10 @@ public:
         LossOfContact
     };
 
-    QDate dateOfUpdate;
+    QDate dateOfUpdate() const { return date; }
     State state;
 };
+
+Q_DECLARE_METATYPE(HistoryElement*)
 
 #endif // HISTORYELEMENTS_H

@@ -22,6 +22,7 @@
 #include "historyelements.h"
 
 HistoryElement::HistoryElement()
+    : m_parent(0)
 {
 }
 
@@ -29,9 +30,54 @@ HistoryElement::~HistoryElement()
 {
 }
 
-Chemotherapy::Chemotherapy()
-    : dose(0), absdose(0), repeat(0)
+HistoryElement*HistoryElement:: parent() const
 {
+    return m_parent;
+}
+
+void HistoryElement::setParent(HistoryElement* parent)
+{
+    m_parent = parent;
+}
+
+Chemotherapy::Chemotherapy()
+    : dose(0), absdose(0)
+{
+}
+
+QStringList Chemotherapy::substances()
+{
+    QStringList list;
+    list << "Cisplatin"
+         << "Carboplatin"
+         << "Oxaliplatin"
+         << "Paclitaxel"
+         << "Docetaxel"
+         << "Irinotecan"
+         << "Topotecan"
+         << "Vincristin"
+         << "Vinorelbin"
+         << "Vinorelbin p.o."
+         << "5-FU"
+         << "Leucovorin"
+         << "Capecitabin"
+         << "Pemetrexed"
+         << "Bevacizumab"
+         << "Cetuximab"
+         << "Aflibercept"
+         << "Gemcitabin"
+         << "Etoposid"
+         << "Doxorubicin"
+         << "Epirubicin"
+         << "Ifosfamid"
+         << "Cyclophosphamid"
+         << "Abraxane"
+         << "Erlotinib"
+         << "Gefitinib"
+         << "Afatinib"
+         << "Regorafenib"
+         << "Trastuzumab";
+    return list;
 }
 
 Radiotherapy::Radiotherapy()
@@ -41,6 +87,11 @@ Radiotherapy::Radiotherapy()
 
 Toxicity::Toxicity()
     : grade(0)
+{
+}
+
+TherapyElementList::TherapyElementList(HistoryElement* parent)
+    : GenericElementList<TherapyElement>(parent)
 {
 }
 
@@ -62,13 +113,40 @@ QStringList TherapyElementList::substances() const
     return substances;
 }
 
+TherapyElementList& TherapyElementList::operator<<(TherapyElement* elem)
+{
+    elem->setParent(m_parent);
+    append(elem);
+    return *this;
+}
+
+
 Therapy::Therapy()
+    : elements(this)
 {
 }
 
 Therapy::~Therapy()
 {
     qDeleteAll(elements);
+}
+
+QString Therapy::uiLabel(Type type)
+{
+    switch (type)
+    {
+    case Therapy::CTx:
+        return QObject::tr("Chemotherapie");
+    case Therapy::RTx:
+        return QObject::tr("Radiotherapie");
+    case Therapy::RCTx:
+        return QObject::tr("Radiochemotherapie");
+    case Therapy::Surgery:
+        return QObject::tr("Operation");
+    case Therapy::Intervention:
+        return QObject::tr("Intervention");
+    }
+    return QString();
 }
 
 Finding::Finding()
