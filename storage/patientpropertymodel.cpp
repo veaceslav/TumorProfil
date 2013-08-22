@@ -53,8 +53,12 @@ public:
                   << PathologyPropertyInfo::IHC_pAKT
                   << PathologyPropertyInfo::IHC_pERK
                   << PathologyPropertyInfo::IHC_ALK
-                  << PathologyPropertyInfo::IHC_cMET
+                  << PathologyPropertyInfo::Comb_cMetActivation
+                  //<< PathologyPropertyInfo::IHC_HER2
+                  //<< PathologyPropertyInfo::IHC_HER2_DAKO
+                  << PathologyPropertyInfo::Fish_HER2
                   << PathologyPropertyInfo::Comb_HER2
+                  << PathologyPropertyInfo::IHC_cMET
                   << PathologyPropertyInfo::Fish_ALK
                   << PathologyPropertyInfo::Mut_KRAS_2
                   << PathologyPropertyInfo::Mut_EGFR_19_21
@@ -74,11 +78,12 @@ public:
                   << PathologyPropertyInfo::IHC_pAKT
                   << PathologyPropertyInfo::IHC_pERK
                   << PathologyPropertyInfo::IHC_pP70S6K
-                  << PathologyPropertyInfo::IHC_cMET
+                  << PathologyPropertyInfo::Comb_cMetActivation
                   << PathologyPropertyInfo::Mut_KRAS_2
                   << PathologyPropertyInfo::Mut_PIK3CA_10_21
                   << PathologyPropertyInfo::Mut_BRAF_15
-                  << PathologyPropertyInfo::Mut_KRAS_3;
+                  << PathologyPropertyInfo::Mut_KRAS_3
+                  << PathologyPropertyInfo::Mut_NRAS_2_4;
             break;
         case PatientPropertyModel::BreastCaProfile:
             props << PathologyPropertyInfo::IHC_PTEN
