@@ -133,7 +133,7 @@ ConfidenceInterval::Double ConfidenceInterval::binomP(Double N, Double p, Double
     }
     if (x1 < 0 || x1 > N || x2 < 0 || x2 > N || x1 >= x2)
     {
-        qDebug() << "Invalid parameters" << double(x1) << double(x2) << double(N);
+        //qDebug() << "Invalid parameters" << double(x1) << double(x2) << double(N);
     }
 
     if (p == 1)

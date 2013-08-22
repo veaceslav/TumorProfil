@@ -59,7 +59,16 @@ SOURCES += main.cpp\
     ui/columnselectiondialog.cpp \
     medical/combinedvalue.cpp \
     datamodel/historyelements.cpp \
-    datamodel/diseasehistory.cpp
+    datamodel/diseasehistory.cpp \
+    storage/databaseconstants.cpp \
+    ui/filtermainwindow.cpp \
+    ui/patientpropertymodelviewadapter.cpp \
+    storage/diseasehistorymodel.cpp \
+    ui/history/historyelementeditwidget.cpp \
+    ui/history/therapyelementeditwidget.cpp \
+    ui/history/historywindow.cpp \
+    ui/history/historypatientlistview.cpp \
+    ui/history/datevalidator.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -114,10 +123,20 @@ HEADERS  += mainwindow.h \
     datamodel/historyelements.h \
     datamodel/diseasehistory.h \
     util/xmltextintmapper.h \
-    util/xmlstreamutils.h
+    util/xmlstreamutils.h \
+    storage/databaseconstants.h \
+    ui/filtermainwindow.h \
+    ui/patientpropertymodelviewadapter.h \
+    storage/diseasehistorymodel.h \
+    ui/history/historyelementeditwidget.h \
+    ui/history/therapyelementeditwidget.h \
+    ui/history/historywindow.h \
+    ui/history/historypatientlistview.h \
+    ui/history/datevalidator.h
 
 INCLUDEPATH += datamodel/ \
     ui/ \
+    ui/history \
     storage/ \
     util/ \
     medical/ \
