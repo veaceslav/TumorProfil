@@ -241,6 +241,7 @@ QVariant ModelDataGenerator::fieldDatum()
     const PathologyPropertyInfo& info = infos.at(field);
     Property prop;
     QString combinedString;
+    QVariant combinedVariant;
     if (info.isCombined())
     {
         CombinedValue combinedValue(info);
@@ -249,6 +250,10 @@ QVariant ModelDataGenerator::fieldDatum()
         if (role == Qt::DisplayRole)
         {
             combinedString = combinedValue.toDisplayString();
+        }
+        else if (role == PatientModel::VariantDataRole)
+        {
+            combinedVariant = combinedValue.toCombinedVariant();
         }
     }
     else
@@ -266,6 +271,10 @@ QVariant ModelDataGenerator::fieldDatum()
     switch (role)
     {
     case PatientModel::VariantDataRole:
+        if (info.isCombined())
+        {
+            return combinedVariant;
+        }
         return typeInfo.toVariantData(prop);
     case PatientPropertyModel::PathologyPropertyRole:
         return QVariant::fromValue(prop);
