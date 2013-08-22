@@ -51,7 +51,8 @@ public:
         PTENLoss,
         NSCLCKRASMutation,
         NSCLCHer2Amplification,
-        ALKAmplification
+        ALKAmplification,
+        cMetOverexpression
     };
 
     PatientPropertyModelViewAdapter(QObject* parent = 0);

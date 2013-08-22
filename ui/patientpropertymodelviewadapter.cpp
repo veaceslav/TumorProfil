@@ -186,6 +186,8 @@ void PatientPropertyModelViewAdapter::Private::adjustModels()
                 = true;
         settings.pathologyProperties[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_KRAS_3).id]
                 = true;
+        settings.pathologyProperties[PathologyPropertyInfo::info(PathologyPropertyInfo::Mut_NRAS_2_4).id]
+                = true;
         filterModel->setFilterSettings(settings);
         break;
     }
@@ -208,6 +210,10 @@ void PatientPropertyModelViewAdapter::Private::adjustModels()
         filterModel->filterByPathologyProperty(
                     PathologyPropertyInfo::info(PathologyPropertyInfo::Fish_ALK).id, true);
         break;
+    case cMetOverexpression:
+        model->setProfile(PatientPropertyModel::AllTumorprofilProfile);
+        filterModel->filterByPathologyProperty(
+                    PathologyPropertyInfo::info(PathologyPropertyInfo::Comb_cMetActivation).id, true);
     case InvalidReport:
         break;
     }
