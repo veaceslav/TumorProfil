@@ -21,8 +21,6 @@
 
 #include <QDebug>
 
-#include "databaseconstants.h"
-#include "diseasehistory.h"
 #include "patient.h"
 
 Patient::Patient()
@@ -82,16 +80,4 @@ void Patient::setPatientData(const Patient& p)
     gender      = p.gender;
     dateOfBirth = p.dateOfBirth;
 }
-
-DiseaseHistory Patient::diseaseHistory() const
-{
-    Property prop = patientProperties.property(PatientPropertyName::diseaseHistory());
-    return DiseaseHistory::fromXml(prop.value);
-}
-
-void Patient::setDiseaseHistory(const DiseaseHistory& history)
-{
-    patientProperties.setProperty(PatientPropertyName::diseaseHistory(), history.toXml());
-}
-
 

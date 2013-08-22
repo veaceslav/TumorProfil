@@ -34,8 +34,6 @@
 #include "property.h"
 #include "disease.h"
 
-class DiseaseHistory;
-
 class Patient
 {
 public:
@@ -59,9 +57,6 @@ public:
     Disease& firstDisease();
     const Disease& firstDisease() const;
     bool hasPathology() const;
-
-    DiseaseHistory diseaseHistory() const;
-    void setDiseaseHistory(const DiseaseHistory& history);
 
     QString             firstName;
     QString             surname;
