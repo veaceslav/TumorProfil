@@ -85,9 +85,9 @@ public:
     void addProperty(const QString& prop, const QString& value, const QString& detail = QString());
 
     /**
-      Removes all occurrences of the given property.
+      Removes all matching properties.
       */
-    void removeProperty(const QString& prop);
+    void removeProperty(const QString& prop, const QString& value = QString(), const QString& detail = QString());
 };
 
 Q_DECLARE_METATYPE(Property)
