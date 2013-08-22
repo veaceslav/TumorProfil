@@ -53,13 +53,16 @@ public:
         IHC_ER,
         IHC_PR,
         IHC_cMET,
+        IHC_ROS1,
         Fish_ALK,
         Fish_HER2,
         Fish_FGFR1,
         Fish_PIK3CA,
         Fish_cMET,
+        Fish_ROS1,
         Mut_KRAS_2,
         Mut_KRAS_3,
+        Mut_NRAS_2_4,
         Mut_EGFR_19_21,
         Mut_EGFR_18_20,
         Mut_PIK3CA_10_21,
@@ -74,10 +77,11 @@ public:
         PCR_D2S123,
         Comb_HER2,
         Comb_HormoneReceptor,
-        Comb_TripleNegative, // Reminder: Adjust LastProperty
+        Comb_TripleNegative,
+        Comb_cMetActivation, // Reminder: Adjust LastProperty
 
         FirstProperty = IHC_PTEN,
-        LastProperty  = Comb_TripleNegative
+        LastProperty  = Comb_cMetActivation
     };
 
     enum ValueTypeCategory
@@ -160,7 +164,6 @@ public:
 class PathologyContextInfo
 {
 public:
-public:
 
     enum Context
     {
@@ -188,6 +191,31 @@ public:
 
     static PathologyContextInfo info(Context context);
     static PathologyContextInfo info(const QString& id);
+};
+
+class TrialContextInfo
+{
+public:
+
+    enum Trial
+    {
+        InvalidTrial,
+        AIO_TRK_0212, // adjust LastTrial!
+
+        FirstTrial = AIO_TRK_0212,
+        LastTrial  = AIO_TRK_0212
+    };
+    TrialContextInfo();
+    TrialContextInfo(Trial context, const QString& id, const QString& label);
+    TrialContextInfo(Trial context);
+    bool isValid() const { return !id.isNull(); }
+
+    Trial             trial;
+    QString           id;
+    QString           label;
+
+    static TrialContextInfo info(Trial context);
+    static TrialContextInfo info(const QString& id);
 };
 
 Q_DECLARE_METATYPE(PathologyPropertyInfo)

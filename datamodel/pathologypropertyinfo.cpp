@@ -108,6 +108,8 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
         return PathologyPropertyInfo(property, IHCClassical, "ihc/pr", QObject::tr("PR"));
     case IHC_cMET:
         return PathologyPropertyInfo(property, IHCHScore, "ihc/c-met", QObject::tr("cMet"));
+    case IHC_ROS1:
+        return PathologyPropertyInfo(property, IHCHScore, "ihc/ros1", QObject::tr("ROS1"));
     case Fish_ALK:
         return PathologyPropertyInfo(property, Fish, "fish/alk", QObject::tr("ALK-Translokation"), QObject::tr("Prozentsatz:"));
     case Fish_HER2:
@@ -124,6 +126,8 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
         return PathologyPropertyInfo(property, Mutation, "mut/egfr?exon=18,20", QObject::tr("EGFR Exon 18 & 20"));
     case Mut_KRAS_3:
         return PathologyPropertyInfo(property, Mutation, "mut/kras?exon=3", QObject::tr("KRAS Exon 3"));
+    case Mut_NRAS_2_4:
+        return PathologyPropertyInfo(property, Mutation, "mut/nras?exon=2-4", QObject::tr("NRAS Exon 2-4"));
     case Mut_BRAF_11:
         return PathologyPropertyInfo(property, Mutation, "mut/braf?exon=11", QObject::tr("BRAF Exon 11"));
     case Fish_FGFR1:
@@ -132,6 +136,8 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
         return PathologyPropertyInfo(property, Fish, "fish/pik3ca", QObject::tr("PIK3ca-Amplifikation"));
     case Fish_cMET:
         return PathologyPropertyInfo(property, Fish, "fish/c-met", QObject::tr("cMET-Amplifikation"));
+    case Fish_ROS1:
+        return PathologyPropertyInfo(property, Fish, "fish/ros1", QObject::tr("ROS1-Rearrangement"));
     case Mut_DDR2:
         return PathologyPropertyInfo(property, Mutation, "mut/ddr2?exon=15-18", QObject::tr("DDR2 Exon 15-18"));
     case Mut_PTEN:
@@ -160,6 +166,8 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
         return PathologyPropertyInfo(property, BooleanCombination, "combination/er_pr", QObject::tr("HR-Status"));
     case Comb_TripleNegative:
         return PathologyPropertyInfo(property, BooleanCombination, "combination/triplenegative", QObject::tr("Triple-neg."));
+    case Comb_cMetActivation:
+        return PathologyPropertyInfo(property, BooleanCombination, "combination/c-met", QObject::tr("cMet-Aktivierung"));
     case InvalidProperty:
         break;
     }
@@ -619,6 +627,8 @@ QPair<QString, QString> ValueTypeCategoryInfo::defaultDetailLabel() const
     return QPair<QString, QString>();
 }
 
+// -----------------
+
 PathologyContextInfo::PathologyContextInfo()
     : context(InvalidContext)
 {
@@ -669,3 +679,48 @@ PathologyContextInfo PathologyContextInfo::info(const QString& id)
     }
     return PathologyContextInfo();
 }
+
+
+// ------------
+
+TrialContextInfo::TrialContextInfo()
+    : trial(InvalidTrial)
+{
+}
+
+TrialContextInfo::TrialContextInfo(Trial trial,
+                      const QString& id, const QString& label)
+    : trial(trial), id(id), label(label)
+{
+}
+
+TrialContextInfo::TrialContextInfo(Trial trial)
+{
+    *this = info(trial);
+}
+
+TrialContextInfo TrialContextInfo::info(Trial trial)
+{
+    switch (trial)
+    {
+    case InvalidTrial:
+        break;
+    case AIO_TRK_0212:
+        return TrialContextInfo(trial, "aio/TRK-0212", "CisPem Split Studie");
+    }
+    return TrialContextInfo();
+}
+
+TrialContextInfo TrialContextInfo::info(const QString& id)
+{
+    for (int i = FirstTrial; i<= LastTrial; i++)
+    {
+        TrialContextInfo obj = info((Trial)i);
+        if (obj.id == id)
+        {
+            return obj;
+        }
+    }
+    return TrialContextInfo();
+}
+
