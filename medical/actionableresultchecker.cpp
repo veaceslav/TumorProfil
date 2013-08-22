@@ -78,7 +78,8 @@ void ActionableResultChecker::fillFields(const Disease &disease)
                    << PathologyPropertyInfo::Mut_PTEN
                    << PathologyPropertyInfo::Fish_HER2
                    << PathologyPropertyInfo::Fish_PIK3CA
-                   << PathologyPropertyInfo::Fish_cMET
+                   << PathologyPropertyInfo::Comb_cMetActivation
+                   << PathologyPropertyInfo::Fish_ROS1
                    << PathologyPropertyInfo::Fish_FGFR1;
     negativeFields << PathologyPropertyInfo::IHC_PTEN;
 
@@ -101,7 +102,8 @@ void ActionableResultChecker::fillFields(const Disease &disease)
         {
             positiveFields
                     << PathologyPropertyInfo::Mut_KRAS_2
-                    << PathologyPropertyInfo::Mut_KRAS_3;
+                    << PathologyPropertyInfo::Mut_KRAS_3
+                    << PathologyPropertyInfo::Mut_NRAS_2_4;
         }
         break;
     case Pathology::Breast:

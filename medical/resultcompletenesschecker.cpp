@@ -21,6 +21,10 @@
 
 #include "resultcompletenesschecker.h"
 
+// Qt includes
+
+#include <QDebug>
+
 #include "ihcscore.h"
 
 ResultCompletenessChecker::ResultCompletenessChecker(const Patient::Ptr& p)
@@ -79,8 +83,6 @@ ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isIHCCo
         case Pathology::PulmonaryAdenosquamous:
             requiredFields << PathologyPropertyInfo::IHC_cMET;
             break;
-        case Pathology::PulmonarySquamous:
-            requiredFields << PathologyPropertyInfo::Fish_PIK3CA;
         case Pathology::ColorectalAdeno:
             requiredFields << PathologyPropertyInfo::IHC_cMET;
             break;
@@ -201,6 +203,14 @@ QVariant checkCompleteness(const Disease& disease, PathologyPropertyInfo::Proper
 ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isMutComplete(QList<PathologyPropertyInfo>* missingProperties)
 {
     const Disease& disease = p->firstDisease();
+
+    QDate profileDate;
+    if (disease.hasProfilePathology())
+    {
+        const Pathology& p = disease.firstProfilePathology();
+        profileDate = p.date;
+    }
+
     QList<PathologyPropertyInfo> requiredFields;
     switch (disease.entity())
     {
@@ -226,6 +236,10 @@ ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isMutCo
         {
             checkCompleteness(disease, PathologyPropertyInfo::Mut_BRAF_15, complete, missingProperties);
             checkCompleteness(disease, PathologyPropertyInfo::Mut_KRAS_3, complete, missingProperties);
+            if (profileDate >= QDate(2013, 8, 1))
+            {
+                checkCompleteness(disease, PathologyPropertyInfo::Mut_NRAS_2_4, complete, missingProperties);
+            }
         }
         return complete ? Complete : Incomplete;
     }
@@ -246,6 +260,7 @@ ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isFishC
     const Disease& disease = p->firstDisease();
     bool checkHer2 = false;
     bool checkAlk = false;
+    bool checkPik3 = false;
     switch (disease.entity())
     {
     case Pathology::PulmonaryAdeno:
@@ -254,6 +269,9 @@ ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isFishC
         checkAlk = true;
     case Pathology::Breast:
         checkHer2 = true;
+        break;
+    case Pathology::PulmonarySquamous:
+        checkPik3 = true;
         break;
     default:
         break;
@@ -280,6 +298,10 @@ ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isFishC
         {
             checkCompleteness(disease, PathologyPropertyInfo::Fish_ALK, complete, missingProperties);
         }
+    }
+    if (checkPik3)
+    {
+        QVariant score = checkCompleteness(disease, PathologyPropertyInfo::Fish_PIK3CA, complete, 0);
     }
 
     return complete ? Complete : Incomplete;

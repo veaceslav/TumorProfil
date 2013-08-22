@@ -143,6 +143,44 @@ void CombinedValue::combine(const Disease& disease)
         }
         break;
     }
+    case PathologyPropertyInfo::Comb_cMetActivation:
+    {
+        PathologyPropertyInfo ihcInfo(PathologyPropertyInfo::IHC_cMET);
+        PathologyPropertyInfo fishInfo(PathologyPropertyInfo::Fish_cMET);
+
+        Property ihc = disease.pathologyProperty(ihcInfo.id);
+        Property fish = disease.pathologyProperty(fishInfo.id);
+
+        if (fish.isNull() && ihc.isNull())
+        {
+            return;
+        }
+
+        bool fishPositive = false, hscorePositive = false;
+        if (!fish.isNull())
+        {
+            ValueTypeCategoryInfo fishType(PathologyPropertyInfo::Fish_cMET);
+            fishPositive = fishType.toMedicalValue(fish).toBool();
+            //qDebug() << "fish" << fishPositive;
+        }
+        if (!ihc.isNull())
+        {
+            ValueTypeCategoryInfo ihcType(PathologyPropertyInfo::IHC_cMET);
+            //qDebug() << "hscore" << ihcType.toMedicalValue(ihc).value<HScore>().score().toInt() << ihcType.toMedicalValue(ihc).value<HScore>().percentages();
+            hscorePositive = (ihcType.toMedicalValue(ihc).value<HScore>().score().toInt() >= 150);
+        }
+
+        resultValue = fishPositive || hscorePositive;
+        if (hscorePositive)
+        {
+            determiningProperty = ihc;
+        }
+        else
+        {
+            determiningProperty = fish;
+        }
+        break;
+    }
     default:
         qDebug() << "Unsupported combined value" << info.id << info.property;
         break;
@@ -162,6 +200,25 @@ Property CombinedValue::result() const
 QVariant CombinedValue::toValue() const
 {
     return resultValue;
+}
+
+QVariant CombinedValue::toCombinedVariant() const
+{
+    /// Returns a variant appropriate for machine sorting
+    if (resultValue.isNull())
+        return QVariant();
+    int id = 0;
+    if (resultValue.toBool())
+    {
+        id |= 1 << 16;
+    }
+    PathologyPropertyInfo detPropInfo = PathologyPropertyInfo::info(determiningProperty.property);
+    ValueTypeCategoryInfo detPropType(detPropInfo);
+    id |= detPropInfo.property << 8;
+    QVariant propValue = detPropType.toValue(determiningProperty.value);
+    id |= (propValue.toInt() & 0xFF);
+    qDebug() << toDisplayString() << determiningProperty.property << determiningProperty.value << detPropType.category << propValue << id;
+    return id;
 }
 
 QString CombinedValue::toDisplayString() const
@@ -205,6 +262,21 @@ QString CombinedValue::toDisplayString() const
             else
             {
                 str += " (PR)";
+            }
+        }
+        return str;
+    }
+    case PathologyPropertyInfo::Comb_cMetActivation:
+    {
+        if (resultValue.toBool())
+        {
+            if (determiningProperty.property == PathologyPropertyInfo(PathologyPropertyInfo::IHC_cMET).id)
+            {
+                str += " (H-Score)";
+            }
+            else
+            {
+                str += " (FISH)";
             }
         }
         return str;

@@ -35,6 +35,7 @@ public:
     Property result() const;
     QString  toDisplayString() const;
     QVariant toValue() const;
+    QVariant toCombinedVariant() const;
     bool isValid() const;
 
 protected:
