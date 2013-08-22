@@ -38,6 +38,8 @@ public:
     explicit DiseaseTabWidget(QWidget *parent = 0);
     ~DiseaseTabWidget();
 
+    void setEditingEnabled(bool enabled);
+
 signals:
 
     void editingFinished();
@@ -52,7 +54,7 @@ protected slots:
     void slotEntitySelectionChanged(Pathology::Entity);
     void slotEntityChanged(Pathology::Entity);
     void slotInitialDiagnosisDateChanged(const QDate&);
-    void addPathologyTab(int context);
+    PathologyTab* addPathologyTab(int context);
 
 protected:
 
@@ -60,6 +62,7 @@ protected:
     void loadPathologyData();
     void changeEntity(Pathology::Entity);
     virtual void keyPressEvent(QKeyEvent* e);
+    void addTab(PathologyTab* tab);
 
 private:
 

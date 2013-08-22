@@ -24,6 +24,7 @@
 // Qt includes
 
 #include <QButtonGroup>
+#include <QCheckBox>
 #include <QDateEdit>
 #include <QDebug>
 #include <QFormLayout>
@@ -36,6 +37,7 @@
 
 // Local includes
 
+#include "databaseconstants.h"
 #include "entityselectionwidget.h"
 #include "patient.h"
 #include "pathologymetadatawidget.h"
@@ -116,6 +118,22 @@ class BestRxTab : public PathologyTab
     virtual QString tabLabel() const { return QObject::tr("BestRx"); }
 };
 
+class TrialParticipantTab : public PathologyTab
+{
+public:
+    TrialParticipantTab();
+    virtual PathologyContextInfo::Context context() const { return PathologyContextInfo::InvalidContext; }
+    virtual QString tabLabel() const { return QObject::tr("Studien"); }
+    virtual void switchEntity(Pathology::Entity entity) {}
+    virtual void save(const Patient::Ptr& p, Disease& disease, Pathology::Entity entity);
+    virtual bool load(const Patient::Ptr& p, const Disease& disease);
+
+protected:
+
+    QMap<TrialContextInfo::Trial, QCheckBox*> checkboxes;
+};
+
+
 namespace PathologyTabFactory
 {
 static PathologyTab* create(PathologyContextInfo::Context context)
@@ -148,6 +166,7 @@ public:
           initialDiagnosisEdit(0),
           otherPathologyGroup(0),
           otherButtonsLayout(0),
+          editingEnabled(true),
           hasValidPathology(false)
     {
     }
@@ -157,8 +176,10 @@ public:
     QDateEdit             *initialDiagnosisEdit;
     QButtonGroup          *otherPathologyGroup;
     QHBoxLayout           *otherButtonsLayout;
+    bool                   editingEnabled;
 
     QList<PathologyTab*>   tabs;
+    QList<PathologyTab*>   specialTabs;
 
     bool                   hasValidPathology;
 
@@ -208,10 +229,15 @@ DiseaseTabWidget::DiseaseTabWidget(QWidget *parent) :
     diseaseLayout->addRow(d->otherButtonsLayout);
 
     d->diseaseTab->setLayout(diseaseLayout);
-    addTab(d->diseaseTab, tr("Erkrankung"));
+    QTabWidget::addTab(d->diseaseTab, tr("Erkrankung"));
 
     // --- Tumorprofil tab ---
-    addPathologyTab(PathologyContextInfo::Tumorprofil);
+    d->specialTabs << addPathologyTab(PathologyContextInfo::Tumorprofil);
+
+    // --- Studien tab ---
+    PathologyTab* trialTab = new TrialParticipantTab;
+    addTab(trialTab);
+    d->specialTabs << trialTab;
 
     connect(d->entityWidget, SIGNAL(selectionChanged(Pathology::Entity)),
             this, SLOT(slotEntitySelectionChanged(Pathology::Entity)));
@@ -230,6 +256,13 @@ DiseaseTabWidget::~DiseaseTabWidget()
     delete d;
 }
 
+void DiseaseTabWidget::setEditingEnabled(bool enabled)
+{
+    d->editingEnabled = enabled;
+    d->initialDiagnosisEdit->setReadOnly(!d->editingEnabled);
+    d->entityWidget->setEnabled(enabled);
+}
+
 void DiseaseTabWidget::setPatient(const Patient::Ptr& p)
 {
     d->initialDiagnosisEdit->setDate(QDate::currentDate());
@@ -237,10 +270,9 @@ void DiseaseTabWidget::setPatient(const Patient::Ptr& p)
     d->hasValidPathology = false;
 
     // Clear other tabs + buttons
-    PathologyTab* tumorprofilTab = d->findTab(PathologyContextInfo::Tumorprofil);
     foreach (PathologyTab* tab, d->tabs)
     {
-        if (tab != tumorprofilTab)
+        if (!d->specialTabs.contains(tab))
         {
             delete tab;
         }
@@ -250,7 +282,7 @@ void DiseaseTabWidget::setPatient(const Patient::Ptr& p)
         }
     }
     d->tabs.clear();
-    d->tabs << tumorprofilTab;
+    d->tabs += d->specialTabs;
     foreach (QAbstractButton* button, d->otherPathologyGroup->buttons())
     {
         button->setEnabled(true);
@@ -276,7 +308,7 @@ void DiseaseTabWidget::setPatient(const Patient::Ptr& p)
     loadPathologyData();
 
     // Enable for convenience / fast-edit mode
-    //setCurrentWidget(d->tabs.first());
+    setCurrentWidget(d->tabs.first());
 
     // TODO: Set smoking history
 }
@@ -298,6 +330,14 @@ void DiseaseTabWidget::loadPathologyData()
         if (tab->load(d->currentPatient, disease))
         {
             d->hasValidPathology = true;
+        }
+    }
+    foreach (PathologyTab* tab, d->specialTabs)
+    {
+        // these are not covered above
+        if (tab->context() == PathologyContextInfo::InvalidContext)
+        {
+            tab->load(d->currentPatient, disease);
         }
     }
 
@@ -410,18 +450,19 @@ void DiseaseTabWidget::keyPressEvent(QKeyEvent* e)
     QWidget::keyPressEvent(e);
 }
 
-void DiseaseTabWidget::addPathologyTab(int context)
+PathologyTab* DiseaseTabWidget::addPathologyTab(int context)
 {
-    if (d->findTab((PathologyContextInfo::Context)context))
+    PathologyTab* tab;
+    if ( (tab = d->findTab((PathologyContextInfo::Context)context)) )
     {
-        return;
+        return tab;
     }
 
-    PathologyTab* tab = PathologyTabFactory::create((PathologyContextInfo::Context)context);
+    tab = PathologyTabFactory::create((PathologyContextInfo::Context)context);
 
     if (!tab)
     {
-        return;
+        return 0;
     }
 
     QAbstractButton* button = d->otherPathologyGroup->button(context);
@@ -430,10 +471,16 @@ void DiseaseTabWidget::addPathologyTab(int context)
         button->setEnabled(false);
     }
 
-    addTab(tab, tab->tabLabel());
-    d->tabs << tab;
+    addTab(tab);
     updatePathologyTabs();
     setCurrentWidget(tab);
+    return tab;
+}
+
+void DiseaseTabWidget::addTab(PathologyTab* tab)
+{
+    QTabWidget::addTab(tab, tab->tabLabel());
+    d->tabs << tab;
 }
 
 // -------
@@ -526,4 +573,54 @@ void PathologyTab::createMetadataWidget()
     boxlayout->addWidget(metadataWidget);
     box->setLayout(boxlayout);
     layout->insertRow(0, box);
+}
+
+TrialParticipantTab::TrialParticipantTab()
+{
+    enabled = true;
+
+    QGroupBox* box = new QGroupBox(tr("Teilnahme an"));
+    QVBoxLayout* boxlayout = new QVBoxLayout;
+    for (int t = TrialContextInfo::FirstTrial; t<= TrialContextInfo::LastTrial; ++t)
+    {
+        TrialContextInfo info((TrialContextInfo::Trial)t);
+        QCheckBox* cb = new QCheckBox(info.label);
+        checkboxes[info.trial] = cb;
+        boxlayout->addWidget(cb);
+    }
+    box->setLayout(boxlayout);
+    layout->insertRow(0, box);
+}
+
+void TrialParticipantTab::save(const Patient::Ptr& p, Disease&, Pathology::Entity)
+{
+    QMap<TrialContextInfo::Trial, QCheckBox*>::const_iterator it;
+    for (it = checkboxes.begin(); it != checkboxes.end(); ++it)
+    {
+        TrialContextInfo info(it.key());
+        if (it.value()->isChecked())
+        {
+            p->patientProperties.setProperty(PatientPropertyName::trialParticipation(),
+                                             info.id);
+        }
+        else
+        {
+            p->patientProperties.removeProperty(PatientPropertyName::trialParticipation(),
+                                                info.id);
+        }
+    }
+}
+
+bool TrialParticipantTab::load(const Patient::Ptr& p, const Disease& disease)
+{
+    QMap<TrialContextInfo::Trial, QCheckBox*>::const_iterator it;
+    for (it = checkboxes.begin(); it != checkboxes.end(); ++it)
+    {
+        TrialContextInfo info(it.key());
+        it.value()->setChecked(
+                    p->patientProperties.hasProperty(PatientPropertyName::trialParticipation(),
+                                                     info.id)
+                    );
+    }
+    return true;
 }
