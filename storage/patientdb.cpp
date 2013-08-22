@@ -46,6 +46,8 @@ public:
         {
         case PatientDB::PatientProperties:
             return "PatientProperties";
+        case PatientDB::DiseaseProperties:
+            return "DiseaseProperties";
         case PatientDB::PathologyProperties:
             return "PathologyProperties";
         }
@@ -58,6 +60,8 @@ public:
         {
         case PatientDB::PatientProperties:
             return "patientid";
+        case PatientDB::DiseaseProperties:
+            return "diseaseid";
         case PatientDB::PathologyProperties:
             return "pathologyid";
         }

@@ -336,12 +336,14 @@ void PatientManager::storeData(const Patient::Ptr& patient)
     DatabaseAccess().db()->removeProperties(PatientDB::PatientProperties, patient->id);
     foreach (const Property& property, patient->patientProperties)
     {
+        qDebug() << "Patient property" << property.property << property.value;
         DatabaseAccess().db()->addProperty(PatientDB::PatientProperties, patient->id,
                                            property.property, property.value, property.detail);
     }
 
     for (int i=0; i<patient->diseases.size(); ++i)
     {
+        qDebug() << "Storing disease";
         Disease& disease = patient->diseases[i];
         if (disease.id)
         {
@@ -350,6 +352,13 @@ void PatientManager::storeData(const Patient::Ptr& patient)
         else
         {
             disease.id = DatabaseAccess().db()->addDisease(patient->id, disease);
+        }
+
+        DatabaseAccess().db()->removeProperties(PatientDB::DiseaseProperties, disease.id);
+        foreach (const Property& property, disease.diseaseProperties)
+        {
+            DatabaseAccess().db()->addProperty(PatientDB::DiseaseProperties, disease.id,
+                                               property.property, property.value, property.detail);
         }
 
         for (int u=0; u<disease.pathologies.size(); ++u)
@@ -386,6 +395,7 @@ void PatientManager::loadData(const Patient::Ptr& p)
     for (int i=0; i<p->diseases.size(); ++i)
     {
         Disease& disease = p->diseases[i];
+        disease.diseaseProperties = DatabaseAccess().db()->properties(PatientDB::DiseaseProperties, disease.id);
         disease.pathologies = DatabaseAccess().db()->findPathologies(disease.id);
         for (int u=0; u<disease.pathologies.size(); ++u)
         {

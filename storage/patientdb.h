@@ -66,6 +66,7 @@ public:
     enum PropertyType
     {
         PatientProperties,
+        DiseaseProperties,
         PathologyProperties
     };
 

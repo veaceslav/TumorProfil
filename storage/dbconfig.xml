@@ -23,7 +23,7 @@
                 </statement>
                 <statement mode="plain">
                  CREATE TABLE PatientProperties
-                 (patientid INTEGER PRIMARY KEY,
+                 (patientid INTEGER,
                   property TEXT,
                   value TEXT,
                   detail TEXT);
@@ -36,6 +36,13 @@
                   initialDiagnosis DATETIME,
                   cTNM TEXT,
                   pTNM TEXT);
+                </statement>
+                <statement mode="plain">
+                 CREATE TABLE DiseaseProperties
+                 (diseaseid INTEGER,
+                  property TEXT,
+                  value TEXT,
+                  detail TEXT);
                 </statement>
 
                 <statement mode="plain">
