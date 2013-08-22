@@ -67,6 +67,11 @@ PatientDisplay::~PatientDisplay()
     delete d;
 }
 
+void PatientDisplay::setShowGender(bool show)
+{
+    d->gender->setVisible(show);
+}
+
 void PatientDisplay::setPatient(const Patient::Ptr& patient)
 {
     if (patient && patient->isValid())

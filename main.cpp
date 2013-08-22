@@ -22,6 +22,7 @@
 // Qt includes
 
 #include <QtGui/QApplication>
+#include <QDir>
 #include <QDebug>
 #include <QFileInfo>
 #include <QIcon>
@@ -62,6 +63,7 @@ int main(int argc, char *argv[])
         QIcon::setThemeName("silk");
     }
 
+    qDebug() << QDir::currentPath();
     QFileInfo info("tumorprofil.db");
     QString dbFile;
     if (info.exists())
@@ -90,5 +92,6 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.show();
 
+    //DiseaseHistory::test();
     return a.exec();
 }

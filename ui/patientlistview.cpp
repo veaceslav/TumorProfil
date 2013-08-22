@@ -87,11 +87,14 @@ class PatientListView::PatientListViewPriv
 {
 public:
     PatientListViewPriv()
+        : editingEnabled(true)
     {
     }
 
     PatientModel               *model;
     PatientListviewFilterModel *sortFilterModel;
+
+    bool                        editingEnabled;
 };
 
 PatientListView::PatientListView(QWidget *parent) :
@@ -141,8 +144,18 @@ void PatientListView::setFilterByTumorprofil(bool onlyTumorprofil)
     d->sortFilterModel->setFilterByTumorprofil(onlyTumorprofil);
 }
 
+void PatientListView::setEditingEnabled(bool enabled)
+{
+    d->editingEnabled = enabled;
+}
+
 void PatientListView::contextMenuEvent(QContextMenuEvent *event)
 {
+    if (!d->editingEnabled)
+    {
+        return;
+    }
+
     QModelIndex index = indexAt(event->pos());
     if (!index.isValid())
     {

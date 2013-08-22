@@ -44,6 +44,8 @@ public:
     QSortFilterProxyModel *filterModel() const;
     Patient::Ptr currentPatient() const;
 
+    void setEditingEnabled(bool enabled);
+
 signals:
 
     void activated(const Patient::Ptr& p);

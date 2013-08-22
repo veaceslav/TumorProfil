@@ -42,6 +42,7 @@
 // Local includes
 
 #include "diseasetabwidget.h"
+#include "historywindow.h"
 #include "patientdisplay.h"
 #include "patiententerform.h"
 #include "patientlistview.h"
@@ -82,6 +83,8 @@ class MainWindow::MainWindowPriv
 {
 public:
     MainWindowPriv()
+        : historyEnabled(true),
+          editingEnabled(true)
     {
     }
 
@@ -97,6 +100,9 @@ public:
 
     QToolBar         *toolBar;
     QStatusBar       *statusBar;
+
+    bool              historyEnabled;
+    bool              editingEnabled;
 
     Patient::Ptr      currentPatient;
 };
@@ -137,19 +143,32 @@ void MainWindow::setupToolbar()
     d->toolBar = addToolBar(tr("Aktionen"));
     d->toolBar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
-    d->toolBar->addAction(QIcon::fromTheme("add"),
-                          tr("Neuer Patient"),
-                          this, SLOT(enterNewPatient()));
+    QAction* addAction = d->toolBar->addAction(QIcon::fromTheme("add"),
+                                               tr("Neuer Patient"),
+                                               this, SLOT(enterNewPatient()));
 
-    d->toolBar->addAction(QIcon::fromTheme("cancel"),
-                          tr("Änderungen verwerfen"),
-                          this, SLOT(discardChanges()));
+    QAction* delAction = d->toolBar->addAction(QIcon::fromTheme("cancel"),
+                                               tr("Änderungen verwerfen"),
+                                               this, SLOT(discardChanges()));
+
+    if (!d->editingEnabled)
+    {
+        addAction->setEnabled(false);
+        delAction->setEnabled(false);
+    }
 
     d->toolBar->addSeparator();
 
     d->toolBar->addAction(QIcon::fromTheme("report"),
                           tr("Analyse"),
                           this, SLOT(showReport()));
+
+    if (d->historyEnabled)
+    {
+        d->toolBar->addAction(QIcon::fromTheme("calendar"),
+                              tr("Krankheitsverlauf"),
+                              this, SLOT(showHistory()));
+    }
 }
 
 void MainWindow::setupStatusBar()
@@ -188,6 +207,7 @@ void MainWindow::setupUI()
     d->workLayout        = new QStackedLayout;
     d->patientEnterForm  = new PatientEnterForm;
     d->tabWidget         = new DiseaseTabWidget;
+    d->tabWidget->setEditingEnabled(d->editingEnabled);
     d->workLayout->addWidget(d->patientEnterForm);
     d->workLayout->addWidget(d->tabWidget);
     d->workLayout->setCurrentWidget(d->patientEnterForm);
@@ -256,7 +276,7 @@ void MainWindow::setPatient(const Patient::Ptr& p)
 
 void MainWindow::save()
 {
-    if (!d->currentPatient)
+    if (!d->currentPatient || !d->editingEnabled)
     {
         return;
     }
@@ -300,6 +320,16 @@ void MainWindow::showReport()
             this, SLOT(raise()));
 
     report->showMaximized();
+}
+
+void MainWindow::showHistory()
+{
+    HistoryWindow* h = new HistoryWindow;
+    h->setAttribute(Qt::WA_DeleteOnClose);
+    h->setAttribute(Qt::WA_QuitOnClose, false);
+    connect(h, SIGNAL(activated(Patient::Ptr)),
+            this, SLOT(setPatient(Patient::Ptr)));
+    h->showMaximized();
 }
 
 void MainWindow::patientNameEdited(const Patient &p)

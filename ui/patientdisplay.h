@@ -37,6 +37,8 @@ public:
     explicit PatientDisplay(QWidget *parent = 0);
     ~PatientDisplay();
 
+    void setShowGender(bool show);
+
 public slots:
 
     void setPatient(const Patient::Ptr& patient);

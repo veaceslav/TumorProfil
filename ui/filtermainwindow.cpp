@@ -139,6 +139,7 @@ void FilterMainWindow::setupToolbar()
     byMutationMenu->addAction(tr("ALK-Amplifikation"), PatientPropertyModelViewAdapter::ALKAmplification, this);
     byMutationMenu->addAction(tr("NSCLC KRAS-Mutation"), PatientPropertyModelViewAdapter::NSCLCKRASMutation, this);
     byMutationMenu->addAction(tr("NSCLC Her2-Amplifikation"), PatientPropertyModelViewAdapter::NSCLCHer2Amplification, this);
+    byMutationMenu->addAction(tr("cMET-Überexpression"), PatientPropertyModelViewAdapter::cMetOverexpression, this);
     byMutationButton->setMenu(byMutationMenu);
 
     d->toolBar->addSeparator();

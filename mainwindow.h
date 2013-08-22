@@ -45,6 +45,7 @@ public slots:
     void save();
     void discardChanges();
     void showReport();
+    void showHistory();
 
 protected:
 
