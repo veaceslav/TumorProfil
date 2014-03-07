@@ -22,6 +22,7 @@
 #ifndef XMLSTREAMUTILS_H
 #define XMLSTREAMUTILS_H
 
+#include <QFlags>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
 
@@ -70,6 +71,22 @@ public:
             writeAttribute(qualifiedName, value);
         }
     }
+    template <typename Flag, class Mapper>
+    void writeFlagAttribute(Flag flag, QFlags<Flag> flags)
+    {
+        if (flags & flag)
+        {
+            QXmlStreamWriter::writeAttribute(Mapper::toString(flag), "true");
+        }
+    }
+    template <typename Flag, class Mapper>
+    void writeFlagAttributes(QFlags<Flag> flags, const QList<Flag>& possibleFlags)
+    {
+        foreach (Flag flag, possibleFlags)
+        {
+            writeFlagAttribute<Flag, Mapper>(flag, flags);
+        }
+    }
 };
 
 class XmlStreamReader : public QXmlStreamReader
@@ -110,6 +127,25 @@ public:
             value = d;
         }
     }
+
+    template <typename Flag, class Mapper>
+    void readFlagAttribute(Flag flag, QFlags<Flag>& flags)
+    {
+        if (attributes().value(Mapper::toString(flag)) == "true")
+        {
+            flags |= flag;
+        }
+    }
+
+    template <typename Flag, class Mapper>
+    void readFlagAttributes(QFlags<Flag>& flags, const QList<Flag>& possibleFlags)
+    {
+        foreach (Flag flag, possibleFlags)
+        {
+            readFlagAttribute<Flag, Mapper>(flag, flags);
+        }
+    }
+
 };
 
 #endif // XMLSTREAMUTILS_H
