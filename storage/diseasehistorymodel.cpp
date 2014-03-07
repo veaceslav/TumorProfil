@@ -179,7 +179,17 @@ QVariant DiseaseHistoryModel::data(const QModelIndex& index, int role) const
         case ColumnDate:
             if (t->begin().isValid()) return t->begin(); else return tr("<Datum fehlt>");
         case ColumnInfo:
-            if (t->end.isValid()) return t->end; else return tr("<Datum fehlt>");;
+            switch (t->type)
+            {
+            case Therapy::CTx:
+            case Therapy::RCTx:
+            case Therapy::RTx:
+                if (t->end.isValid()) return t->end; else return tr("<Datum fehlt>");
+            case Therapy::Surgery:
+            case Therapy::Intervention:
+                return t->description;
+                return QString();
+            }
         }
     }
     else if (e->is<Chemotherapy>())
@@ -262,6 +272,10 @@ QVariant DiseaseHistoryModel::data(const QModelIndex& index, int role) const
             break;
         case Finding::PETCT:
             modality = tr("PET-CT");
+            wantAnswer = true;
+            break;
+        case Finding::Scintigraphy:
+            modality = tr("Szintigraphie");
             wantAnswer = true;
             break;
         case Finding::Death:
