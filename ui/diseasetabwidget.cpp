@@ -64,6 +64,7 @@ public:
 
     virtual void save(const Patient::Ptr& p, Disease& disease, Pathology::Entity entity);
     virtual bool load(const Patient::Ptr& p, const Disease& disease);
+    virtual void reset();
 
     virtual PathologyContextInfo::Context context() const = 0;
     virtual QString tabLabel() const = 0;
@@ -127,6 +128,7 @@ public:
     virtual void switchEntity(Pathology::Entity entity) {}
     virtual void save(const Patient::Ptr& p, Disease& disease, Pathology::Entity entity);
     virtual bool load(const Patient::Ptr& p, const Disease& disease);
+    virtual void reset();
 
 protected:
 
@@ -276,9 +278,9 @@ void DiseaseTabWidget::setPatient(const Patient::Ptr& p)
         {
             delete tab;
         }
-        else if (tab->metadataWidget)
+        else
         {
-            tab->metadataWidget->reset();
+            tab->reset();
         }
     }
     d->tabs.clear();
@@ -565,6 +567,14 @@ void PathologyTab::save(const Patient::Ptr& p, Disease& disease, Pathology::Enti
     saveProperties(disease, context());
 }
 
+void PathologyTab::reset()
+{
+    if (metadataWidget)
+    {
+        metadataWidget->reset();
+    }
+}
+
 void PathologyTab::createMetadataWidget()
 {
     QGroupBox* box = new QGroupBox;
@@ -598,6 +608,7 @@ void TrialParticipantTab::save(const Patient::Ptr& p, Disease&, Pathology::Entit
     for (it = checkboxes.begin(); it != checkboxes.end(); ++it)
     {
         TrialContextInfo info(it.key());
+        qDebug() << "Set property" << info.id << (it.value()->isChecked());
         if (it.value()->isChecked())
         {
             p->patientProperties.setProperty(PatientPropertyName::trialParticipation(),
@@ -623,4 +634,13 @@ bool TrialParticipantTab::load(const Patient::Ptr& p, const Disease& disease)
                     );
     }
     return true;
+}
+
+void TrialParticipantTab::reset()
+{
+    QMap<TrialContextInfo::Trial, QCheckBox*>::const_iterator it;
+    for (it = checkboxes.begin(); it != checkboxes.end(); ++it)
+    {
+        it.value()->setChecked(false);
+    }
 }
