@@ -83,6 +83,7 @@ public:
                   << PathologyPropertyInfo::Mut_PIK3CA_10_21
                   << PathologyPropertyInfo::Mut_BRAF_15
                   << PathologyPropertyInfo::Mut_KRAS_3
+                  << PathologyPropertyInfo::Mut_KRAS_4
                   << PathologyPropertyInfo::Mut_NRAS_2_4;
             break;
         case PatientPropertyModel::BreastCaProfile:
@@ -114,6 +115,7 @@ public:
                   << PathologyPropertyInfo::Mut_BRAF_15
                   << PathologyPropertyInfo::Mut_DDR2
                   << PathologyPropertyInfo::Mut_KRAS_3
+                  << PathologyPropertyInfo::Mut_KRAS_4
                   << PathologyPropertyInfo::Fish_FGFR1;
             break;
         case PatientPropertyModel::EGFRProfile:
