@@ -52,8 +52,8 @@ PatientModel::PatientModel(QObject *parent) :
             this, SLOT(patientRemoved(Patient::Ptr)));
     connect(PatientManager::instance(), SIGNAL(patientAboutToBeRemoved(int,Patient::Ptr)),
             this, SLOT(patientAboutToBeRemoved(int,Patient::Ptr)));
-    connect(PatientManager::instance(), SIGNAL(patientDataChanged(Patient::Ptr)),
-            this, SLOT(patientDataChanged(Patient::Ptr)));
+    connect(PatientManager::instance(), SIGNAL(patientDataChanged(Patient::Ptr, int)),
+            this, SLOT(patientDataChanged(Patient::Ptr, int)));
 }
 
 static bool hasTumorprofil(const Patient::Ptr& p)
@@ -264,7 +264,7 @@ void PatientModel::patientAdded(int index, const Patient::Ptr& patient)
     endInsertRows();
 }
 
-void PatientModel::patientDataChanged(const Patient::Ptr& patient)
+void PatientModel::patientDataChanged(const Patient::Ptr& patient, int)
 {
     QModelIndex index = indexForPatient(patient);
     emit dataChanged(index, index);

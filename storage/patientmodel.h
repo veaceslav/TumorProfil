@@ -61,7 +61,7 @@ public:
 protected slots:
 
     void patientAdded(int index, const Patient::Ptr& patient);
-    void patientDataChanged(const Patient::Ptr& patient);
+    void patientDataChanged(const Patient::Ptr& patient, int);
     void patientAboutToBeRemoved(int index, const Patient::Ptr& patient);
     void patientRemoved(const Patient::Ptr& patient);
 
