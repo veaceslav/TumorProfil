@@ -52,7 +52,8 @@ public:
         NSCLCKRASMutation,
         NSCLCHer2Amplification,
         ALKAmplification,
-        cMetOverexpression
+        NSCLCcMetOverexpression,
+        CRCcMetOverexpression
     };
 
     PatientPropertyModelViewAdapter(QObject* parent = 0);
