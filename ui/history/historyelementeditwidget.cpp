@@ -24,6 +24,7 @@
 // Qt includes
 
 #include <QButtonGroup>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QDebug>
 #include <QFormLayout>
@@ -57,6 +58,9 @@ DateCommentWidget::DateCommentWidget()
     formLayout->addRow(tr("Ende"), endDateEdit);
     formLayout->addRow(tr("Kommentar"), commentLineEdit);
     setLayout(formLayout);
+
+    setDate(QDate());
+    setEndDate(QDate());
 
     connect(firstDateEdit, SIGNAL(textChanged(QString)), this, SIGNAL(changed()));
     connect(endDateEdit, SIGNAL(textChanged(QString)), this, SIGNAL(changed()));
@@ -199,7 +203,6 @@ HistoryElement* TherapyEditWidget::applyToElement() const
 {
     Therapy* t     = m_element->as<Therapy>();
     t->date        = dateCommentWidget->beginDate();
-    qDebug() << "begin date is" << t->date;
     t->description = dateCommentWidget->comment();
     t->end         = dateCommentWidget->endDate();
 
@@ -239,7 +242,6 @@ void TherapyEditWidget::setElement(HistoryElement* element)
         break;
     }
 
-    qDebug() << "Therapy has elements" << t->elements.size();
     foreach (TherapyElement* elem, t->elements)
     {
         addElementUI(elem);
@@ -329,6 +331,14 @@ static void addButton(int type, const QString& text, QButtonGroup* group,
     layout->addWidget(b, r, c);
 }
 
+static void addFlagButton(int type, const QString& text, QButtonGroup* group,
+                          QGridLayout* layout, int r, int c)
+{
+    QCheckBox* b = new QCheckBox(text);
+    group->addButton(b, type);
+    layout->addWidget(b, r, c);
+}
+
 static void clearButtonGroup(QButtonGroup* group)
 {
     if (group->checkedButton())
@@ -352,6 +362,17 @@ static void setCheckedSafe(QButtonGroup* group, int id)
         clearButtonGroup(group);
     }
 }
+
+template <typename Flags>
+static void setCheckedFlags(QButtonGroup* group, Flags flags)
+{
+    foreach (QAbstractButton* b, group->buttons())
+    {
+        b->setChecked(flags & group->id(b));
+    }
+}
+
+
 
 /*static void setCheckedSafe(QComboBox* box, int id)
 {
@@ -385,6 +406,20 @@ static E checkedValue(QComboBox* box, E defaultId)
     return defaultId;
 }
 
+template <typename E>
+static QFlags<E> checkedFlags(QButtonGroup* group)
+{
+    QFlags<E> flags;
+    foreach (QAbstractButton* b, group->buttons())
+    {
+        if (b->isChecked())
+        {
+            flags |= (E)group->id(b);
+        }
+    }
+    return flags;
+}
+
 FindingEditWidget::FindingEditWidget()
 {
     dateCommentWidget->setMode(DateCommentWidget::SingleDateMode);
@@ -400,8 +435,9 @@ FindingEditWidget::FindingEditWidget()
     addButton(Finding::Clinical, tr("Klinisch"), modalityGroup, modalityLayout, 1, 0);
     addButton(Finding::XRay, tr("Röntgen"), modalityGroup, modalityLayout, 1, 1);
     addButton(Finding::PETCT, tr("PET-CT"), modalityGroup, modalityLayout, 1, 2);
-    addButton(Finding::Histopathological, tr("Histo"), modalityGroup, modalityLayout, 2, 0);
-    addButton(Finding::Death, tr("Tod"), modalityGroup, modalityLayout, 2, 1);
+    addButton(Finding::Scintigraphy, tr("Szinti"), modalityGroup, modalityLayout, 2, 0);
+    addButton(Finding::Histopathological, tr("Histo"), modalityGroup, modalityLayout, 2, 1);
+    addButton(Finding::Death, tr("Tod"), modalityGroup, modalityLayout, 2, 2);
     modalityBox->setLayout(modalityLayout);
 
     QGroupBox* contextBox = new QGroupBox(tr("Im Rahmen von"));
@@ -429,9 +465,19 @@ FindingEditWidget::FindingEditWidget()
     addButton(Finding::ResultNotApplicable, tr("(kein Ergebnis)"), resultGroup, resultGroupLayout, 8, 0);
     resultBox->setLayout(resultGroupLayout);
 
+    QGroupBox* infoBox = new QGroupBox(tr("Zusätzliche Aspekte"));
+    infoGroup = new QButtonGroup;
+    infoGroup->setExclusive(false);
+    QGridLayout* infoLayout = new QGridLayout;
+    addFlagButton(Finding::LocalRecurrence, tr("Lokalrezidiv"), infoGroup, infoLayout, 0, 0);
+    addFlagButton(Finding::Metastasis, tr("Metastasierung"), infoGroup, infoLayout, 0, 1);
+    addFlagButton(Finding::CentralNervous, tr("ZNS"), infoGroup, infoLayout, 0, 2);
+    infoBox->setLayout(infoLayout);
+
     mainLayout->addWidget(modalityBox);
     mainLayout->addWidget(contextBox);
     mainLayout->addWidget(resultBox);
+    mainLayout->addWidget(infoBox);
 
     connect(modalityGroup, SIGNAL(buttonClicked(int)), this, SIGNAL(changed()));
     connect(contextGroup, SIGNAL(buttonClicked(int)), this, SIGNAL(changed()));
@@ -446,6 +492,7 @@ HistoryElement* FindingEditWidget::applyToElement() const
     f->type = checkedValue<Finding::Type>(modalityGroup, Finding::UndefinedType);
     f->context = checkedValue<Finding::Context>(contextGroup, Finding::UndefinedContext);
     f->result = checkedValue<Finding::Result>(resultGroup, Finding::UndefinedResult);
+    f->additionalInfos = checkedFlags<Finding::AdditionalInfo>(infoGroup);
     return HistoryElementEditWidget::applyToElement();
 }
 
@@ -461,6 +508,7 @@ void FindingEditWidget::setElement(HistoryElement* element)
     setCheckedSafe(modalityGroup, f->type);
     setCheckedSafe(contextGroup, f->context);
     setCheckedSafe(resultGroup, f->result);
+    setCheckedFlags(infoGroup, f->additionalInfos);
 }
 
 // ----

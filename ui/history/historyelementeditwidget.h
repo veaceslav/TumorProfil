@@ -169,6 +169,7 @@ private:
     QButtonGroup*       modalityGroup;
     QButtonGroup*       contextGroup;
     QButtonGroup*       resultGroup;
+    QButtonGroup*       infoGroup;
     QLineEdit*          commentLineEdit;
 };
 
