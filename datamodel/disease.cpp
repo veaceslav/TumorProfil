@@ -19,6 +19,8 @@
  *
  * ============================================================ */
 
+#include <QDebug>
+
 #include "databaseconstants.h"
 #include "disease.h"
 #include "diseasehistory.h"

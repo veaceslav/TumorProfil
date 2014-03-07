@@ -19,6 +19,7 @@
  *
  * ============================================================ */
 
+#include <QDebug>
 #include "property.h"
 
 Property::Property()
@@ -104,7 +105,7 @@ bool PropertyList::hasProperty(const QString& key,
 
 void PropertyList::setProperty(const QString& prop, const QString& value, const QString& detail)
 {
-    removeProperty(prop, value, detail);
+    removeProperty(prop);
     addProperty(prop, value, detail);
 }
 
