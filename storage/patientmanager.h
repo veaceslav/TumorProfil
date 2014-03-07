@@ -24,6 +24,7 @@
 
 // Qt includes
 
+#include <QFlags>
 #include <QObject>
 
 // Local includes
@@ -38,6 +39,18 @@ class PatientManager : public QObject
 
 public:
 
+    enum ChangeFlag
+    {
+        ChangedPathologyData     = 1 << 0,
+        ChangedDiseaseProperties = 1 << 1,
+        ChangedDiseaseMetadata   = 1 << 2,
+        ChangedPatientProperties = 1 << 3,
+        ChangedPatientMetadata   = 1 << 4,
+
+        ChangedDiseaseHistory    = ChangedDiseaseProperties
+    };
+    Q_DECLARE_FLAGS(ChangeFlags, ChangeFlag)
+
     static PatientManager* instance();
 
     bool initialize(const DatabaseParameters& params);
@@ -45,7 +58,7 @@ public:
     void readDatabase();
 
     Patient::Ptr addPatient(const Patient& values);
-    void updateData(const Patient::Ptr& patient);
+    void updateData(const Patient::Ptr& patient, ChangeFlags flags);
     void removePatient(const Patient::Ptr& patient);
 
     Patient::Ptr patient(int index) const;
@@ -61,10 +74,12 @@ public:
                                      const QDate& dob = QDate(),
                                      Patient::Gender gender = Patient::UnknownGender);
 
+    void historySecurityCopy(const Patient::Ptr& p, const QString& type, const QString& value);
+
 signals:
 
     void patientAdded(int index, const Patient::Ptr& patient);
-    void patientDataChanged(const Patient::Ptr& patient);
+    void patientDataChanged(const Patient::Ptr& patient, int flags);
     void patientAboutToBeRemoved(int index, const Patient::Ptr& patient);
     void patientRemoved(const Patient::Ptr& patient);
 
@@ -75,7 +90,7 @@ protected:
     void loadData(const Patient::Ptr& patient);
     Patient::Ptr createPatient(const Patient& values);
     void cleanUpPatient(int index);
-    void storeData(const Patient::Ptr& patient);
+    void storeData(const Patient::Ptr& patient, ChangeFlags flags);
 
 private:
 
@@ -86,5 +101,7 @@ private:
     PatientManagerPriv* const d;
 
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(PatientManager::ChangeFlags)
 
 #endif // PATIENTMANAGER_H

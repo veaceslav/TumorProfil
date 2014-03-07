@@ -23,6 +23,8 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <QDir>
+#include <QFileInfo>
 #include <QMessageBox>
 
 // Local includes
@@ -151,20 +153,20 @@ Patient::Ptr PatientManager::addPatient(const Patient& values)
     }
 
     Patient::Ptr p = createPatient(values);
-    storeData(p);
+    storeData(p, ChangedPatientMetadata);
     emit patientAdded(d->patients.size()-1, p);
     return p;
 }
 
-void PatientManager::updateData(const Patient::Ptr& patient)
+void PatientManager::updateData(const Patient::Ptr& patient, ChangeFlags flags)
 {
     if (!patient)
     {
         return;
     }
-    storeData(patient);
+    storeData(patient, flags);
     // we dont check for actual modification here
-    emit patientDataChanged(patient);
+    emit patientDataChanged(patient, flags);
 }
 
 Patient::Ptr PatientManager::createPatient(const Patient& values)
@@ -322,7 +324,7 @@ void PatientManager::cleanUpPatient(int index)
 }
 
 
-void PatientManager::storeData(const Patient::Ptr& patient)
+void PatientManager::storeData(const Patient::Ptr& patient, ChangeFlags flags)
 {
     if (!patient || !patient->id)
     {
@@ -332,52 +334,71 @@ void PatientManager::storeData(const Patient::Ptr& patient)
     DatabaseOperationGroup group;
     group.setMaximumTime(200);
 
-    DatabaseAccess().db()->updatePatient(*patient);
-    DatabaseAccess().db()->removeProperties(PatientDB::PatientProperties, patient->id);
-    foreach (const Property& property, patient->patientProperties)
+    if (flags & ChangedPatientMetadata)
     {
-        qDebug() << "Patient property" << property.property << property.value;
-        DatabaseAccess().db()->addProperty(PatientDB::PatientProperties, patient->id,
-                                           property.property, property.value, property.detail);
+        DatabaseAccess().db()->updatePatient(*patient);
+    }
+
+    if (flags & ChangedDiseaseProperties)
+    {
+        DatabaseAccess().db()->removeProperties(PatientDB::PatientProperties, patient->id);
+        foreach (const Property& property, patient->patientProperties)
+        {
+            //qDebug() << "Patient property" << property.property << property.value;
+            DatabaseAccess().db()->addProperty(PatientDB::PatientProperties, patient->id,
+                                               property.property, property.value, property.detail);
+        }
     }
 
     for (int i=0; i<patient->diseases.size(); ++i)
     {
-        qDebug() << "Storing disease";
+        //qDebug() << "Storing disease";
         Disease& disease = patient->diseases[i];
         if (disease.id)
         {
-            DatabaseAccess().db()->updateDisease(disease);
+            if (flags & ChangedDiseaseMetadata)
+            {
+                DatabaseAccess().db()->updateDisease(disease);
+            }
         }
         else
         {
             disease.id = DatabaseAccess().db()->addDisease(patient->id, disease);
         }
 
-        DatabaseAccess().db()->removeProperties(PatientDB::DiseaseProperties, disease.id);
-        foreach (const Property& property, disease.diseaseProperties)
+        if (flags & ChangedDiseaseProperties)
         {
-            DatabaseAccess().db()->addProperty(PatientDB::DiseaseProperties, disease.id,
-                                               property.property, property.value, property.detail);
+            //qDebug() << "Storing disease properties";
+            DatabaseAccess().db()->removeProperties(PatientDB::DiseaseProperties, disease.id);
+            foreach (const Property& property, disease.diseaseProperties)
+            {
+                //qDebug() << "Adding property" << property.property << property.value;
+                DatabaseAccess().db()->addProperty(PatientDB::DiseaseProperties, disease.id,
+                                                   property.property, property.value, property.detail);
+            }
         }
 
-        for (int u=0; u<disease.pathologies.size(); ++u)
-        {
-            Pathology& pathology = disease.pathologies[u];
-            if (pathology.id)
-            {
-                DatabaseAccess().db()->updatePathology(pathology);
-            }
-            else
-            {
-                pathology.id = DatabaseAccess().db()->addPathology(disease.id, pathology);
-            }
 
-            DatabaseAccess().db()->removeProperties(PatientDB::PathologyProperties, pathology.id);
-            foreach (const Property& property, pathology.properties)
+        if (flags & ChangedPathologyData)
+        {
+            for (int u=0; u<disease.pathologies.size(); ++u)
             {
-                DatabaseAccess().db()->addProperty(PatientDB::PathologyProperties, pathology.id,
-                                                   property.property, property.value, property.detail);
+                Pathology& pathology = disease.pathologies[u];
+                if (pathology.id)
+                {
+                    DatabaseAccess().db()->updatePathology(pathology);
+                }
+                else
+                {
+                    pathology.id = DatabaseAccess().db()->addPathology(disease.id, pathology);
+                }
+
+                DatabaseAccess().db()->removeProperties(PatientDB::PathologyProperties, pathology.id);
+                foreach (const Property& property, pathology.properties)
+                {
+                    DatabaseAccess().db()->addProperty(PatientDB::PathologyProperties, pathology.id,
+                                                       property.property, property.value, property.detail);
+                }
             }
         }
     }
@@ -405,3 +426,27 @@ void PatientManager::loadData(const Patient::Ptr& p)
     }
 }
 
+void PatientManager::historySecurityCopy(const Patient::Ptr& p, const QString& type, const QString& value)
+{
+    DatabaseParameters params = DatabaseAccess::parameters();
+    QFileInfo file(params.databaseName);
+    QDir dir = file.dir();
+    if (!dir.exists("Sicherung"))
+    {
+        dir.mkdir("Sicherung");
+    }
+    dir.cd("Sicherung");
+    QString fileName = p->surname + '-' + p->firstName + '-' + p->dateOfBirth.toString(Qt::ISODate)
+            + '-' + type + '-' + QDateTime::currentDateTime().toString(Qt::ISODate);
+    fileName.remove(":");
+    QString filePath = dir.filePath(fileName);
+    QFile f(filePath);
+    if (f.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        f.write(value.toUtf8());
+    }
+    else
+    {
+        qDebug() << "Failed to open" << filePath;
+    }
+}
