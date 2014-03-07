@@ -171,6 +171,7 @@ void TNM::addTNM(const QString& tnm, StageConflictBehavior behavior)
 
 void TNM::setTNM(const QString& tnm)
 {
+    m_TNMString = tnm;
     TNMParser parser(tnm);
     m_cTNM = parser.cTNM;
     m_pTNM = parser.pTNM;
@@ -278,4 +279,13 @@ TNMData TNM::merge(const TNMData& a, const TNMData&b, StageConflictBehavior beha
     result.R = mergeStage(a.R, b.R, behavior);
     result.V = mergeStage(a.V, b.V, behavior);
     return result;
+}
+
+QString TNM::toText() const
+{
+    if (!m_TNMString.isNull())
+    {
+        return m_TNMString;
+    }
+    return cTNM() + " " + pTNM();
 }

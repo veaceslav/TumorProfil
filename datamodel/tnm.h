@@ -112,8 +112,11 @@ public:
     static TNMData merge(const TNMData& a, const TNMData&b,
                          StageConflictBehavior behavior = OnConflictChooseLowerStage);
 
+    QString toText() const;
+
 public:
 
+    QString m_TNMString;
     TNMData m_cTNM;
     TNMData m_pTNM;
 };
