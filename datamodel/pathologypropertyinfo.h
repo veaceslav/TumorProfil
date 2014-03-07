@@ -62,6 +62,7 @@ public:
         Fish_ROS1,
         Mut_KRAS_2,
         Mut_KRAS_3,
+        Mut_KRAS_4,
         Mut_NRAS_2_4,
         Mut_EGFR_19_21,
         Mut_EGFR_18_20,

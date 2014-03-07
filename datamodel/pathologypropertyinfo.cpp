@@ -109,7 +109,7 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
     case IHC_cMET:
         return PathologyPropertyInfo(property, IHCHScore, "ihc/c-met", QObject::tr("cMet"));
     case IHC_ROS1:
-        return PathologyPropertyInfo(property, IHCHScore, "ihc/ros1", QObject::tr("ROS1"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/ros1", QObject::tr("ROS1"));
     case Fish_ALK:
         return PathologyPropertyInfo(property, Fish, "fish/alk", QObject::tr("ALK-Translokation"), QObject::tr("Prozentsatz:"));
     case Fish_HER2:
@@ -126,6 +126,8 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
         return PathologyPropertyInfo(property, Mutation, "mut/egfr?exon=18,20", QObject::tr("EGFR Exon 18 & 20"));
     case Mut_KRAS_3:
         return PathologyPropertyInfo(property, Mutation, "mut/kras?exon=3", QObject::tr("KRAS Exon 3"));
+    case Mut_KRAS_4:
+        return PathologyPropertyInfo(property, Mutation, "mut/kras?exon=4", QObject::tr("KRAS Exon 4"));
     case Mut_NRAS_2_4:
         return PathologyPropertyInfo(property, Mutation, "mut/nras?exon=2-4", QObject::tr("NRAS Exon 2-4"));
     case Mut_BRAF_11:
@@ -706,7 +708,7 @@ TrialContextInfo TrialContextInfo::info(Trial trial)
     case InvalidTrial:
         break;
     case AIO_TRK_0212:
-        return TrialContextInfo(trial, "aio/TRK-0212", "CisPem Split Studie");
+        return TrialContextInfo(trial, "aio/TRK-0212", "PemSplitCisp Studie");
     }
     return TrialContextInfo();
 }
