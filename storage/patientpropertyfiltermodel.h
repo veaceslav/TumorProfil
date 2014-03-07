@@ -49,6 +49,7 @@ public:
     QMap<QString, QVariant>   pathologyPropertiesAnd;
 
     QMap<QString, bool> pathologyContexts;
+    QMap<QString, bool> trialParticipation;
 
     QDate resultDateBegin;
     QDate resultDateEnd;
@@ -58,6 +59,7 @@ public:
     bool matchesPathologyProperties(Patient::Ptr p) const;
     bool matchesPathologyPropertiesAnd(Patient::Ptr p) const;
     bool matchesPathologyContexts(Patient::Ptr p) const;
+    bool matchesTrialParticipation(Patient::Ptr p) const;
     bool matchesDates(Patient::Ptr p) const;
 
 protected:
@@ -87,6 +89,7 @@ public:
     void filterByPathologyProperty(const QString& property, const QVariant& value);
     void filterByPathologyProperty(const QMap<QString, QVariant>& filter);
     void filterByPathologyContext(const QString& property, bool value = true);
+    void filterByTrialParticipation(const QString& property, bool value = true);
 
 protected:
 

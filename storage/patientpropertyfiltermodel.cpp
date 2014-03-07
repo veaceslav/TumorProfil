@@ -24,6 +24,7 @@
 #include <QDebug>
 
 #include "combinedvalue.h"
+#include "databaseconstants.h"
 #include "patientmodel.h"
 #include "pathologypropertyinfo.h"
 
@@ -94,6 +95,14 @@ void PatientPropertyFilterModel::filterByPathologyContext(const QString& propert
 {
     PatientPropertyFilterSettings settings;
     settings.pathologyContexts[property] = value;
+    setFilterSettings(settings);
+}
+
+void PatientPropertyFilterModel::filterByTrialParticipation(const QString& property, bool value)
+{
+    PatientPropertyFilterSettings settings = d->settings;
+    settings.trialParticipation.clear();
+    settings.trialParticipation[property] = value;
     setFilterSettings(settings);
 }
 
@@ -221,6 +230,18 @@ bool PatientPropertyFilterSettings::matchesPathologyContexts(Patient::Ptr p) con
     return false;
 }
 
+bool PatientPropertyFilterSettings::matchesTrialParticipation(Patient::Ptr p) const
+{
+    QMap<QString,bool>::const_iterator it;
+    for (it = trialParticipation.begin();
+         it != trialParticipation.end(); ++it)
+    {
+        return it.value() ==
+                    p->patientProperties.hasProperty(PatientPropertyName::trialParticipation(), it.key());
+    }
+    return false;
+}
+
 static bool hasMatchingResultDate(const Disease& disease, const QDate& date, int compareTarget,
                                   const QMap<QString, bool>& pathologyContexts)
 {
@@ -286,6 +307,7 @@ bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIn
     const bool filteringByPathology    = !d->settings.pathologyProperties.isEmpty();
     const bool filteringByPathologyAnd = !d->settings.pathologyPropertiesAnd.isEmpty();
     const bool filteringByContext      = !d->settings.pathologyContexts.isEmpty();
+    const bool filteringByTrial        = !d->settings.trialParticipation.isEmpty();
     const bool filteringByDate         = d->settings.resultDateBegin.isValid() ||
                                            d->settings.resultDateEnd.isValid();
 
@@ -304,6 +326,14 @@ bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIn
     if (filteringByContext)
     {
         if (!d->settings.matchesPathologyContexts(p))
+        {
+            return false;
+        }
+    }
+
+    if (filteringByTrial)
+    {
+        if (!d->settings.matchesTrialParticipation(p))
         {
             return false;
         }
