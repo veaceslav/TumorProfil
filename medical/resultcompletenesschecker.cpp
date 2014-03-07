@@ -238,6 +238,7 @@ ResultCompletenessChecker::CompletenessResult ResultCompletenessChecker::isMutCo
             checkCompleteness(disease, PathologyPropertyInfo::Mut_KRAS_3, complete, missingProperties);
             if (profileDate >= QDate(2013, 8, 1))
             {
+                checkCompleteness(disease, PathologyPropertyInfo::Mut_KRAS_4, complete, missingProperties);
                 checkCompleteness(disease, PathologyPropertyInfo::Mut_NRAS_2_4, complete, missingProperties);
             }
         }
