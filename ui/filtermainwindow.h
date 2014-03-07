@@ -45,6 +45,7 @@ protected slots:
 
     void entryActivated();
     void filterByContext();
+    void filterByTrial();
     void filterByDate();
     void clearDateFilter();
 

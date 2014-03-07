@@ -139,7 +139,8 @@ void FilterMainWindow::setupToolbar()
     byMutationMenu->addAction(tr("ALK-Amplifikation"), PatientPropertyModelViewAdapter::ALKAmplification, this);
     byMutationMenu->addAction(tr("NSCLC KRAS-Mutation"), PatientPropertyModelViewAdapter::NSCLCKRASMutation, this);
     byMutationMenu->addAction(tr("NSCLC Her2-Amplifikation"), PatientPropertyModelViewAdapter::NSCLCHer2Amplification, this);
-    byMutationMenu->addAction(tr("cMET-Überexpression"), PatientPropertyModelViewAdapter::cMetOverexpression, this);
+    byMutationMenu->addAction(tr("NSCLC cMET-Überexpression"), PatientPropertyModelViewAdapter::NSCLCcMetOverexpression, this);
+    byMutationMenu->addAction(tr("CRC cMET-Überexpression"), PatientPropertyModelViewAdapter::CRCcMetOverexpression, this);
     byMutationButton->setMenu(byMutationMenu);
 
     d->toolBar->addSeparator();
@@ -164,6 +165,9 @@ void FilterMainWindow::setupToolbar()
         byContextMenu->addAction(tr("BKM120-Screening"), PathologyContextInfo::ScreeningBKM120,
                                  this, SLOT(filterByContext()), true);
     d->contextFilterActions <<
+        byContextMenu->addAction(tr("PemSplitCisp-Studie"), TrialContextInfo::AIO_TRK_0212,
+                                 this, SLOT(filterByTrial()), true);
+    d->contextFilterActions <<
         byContextMenu->addAction(tr("(kein Filter)"), PathologyContextInfo::InvalidContext,
                                  this, SLOT(filterByContext()), false);
     byContextButton->setMenu(byContextMenu);
@@ -184,7 +188,7 @@ void FilterMainWindow::setupToolbar()
     byDateMenu->addAction(fromAction);
 
     d->toEdit = new QDateEdit;
-    d->toEdit->setDate(QDate(2014,1,1));
+    d->toEdit->setDate(QDate(2016,1,1));
     connect(d->toEdit, SIGNAL(dateChanged(QDate)), this, SLOT(filterByDate()));
     QWidgetAction* toAction = new QWidgetAction(this);
     toAction->setDefaultWidget(d->toEdit);
@@ -205,6 +209,7 @@ void FilterMainWindow::filterByContext()
     if (context == PathologyContextInfo::InvalidContext)
     {
         settings.pathologyContexts.clear();
+        settings.trialParticipation.clear();
         foreach (QAction* a, d->contextFilterActions)
         {
             a->setChecked(false);
@@ -221,6 +226,28 @@ void FilterMainWindow::filterByContext()
         {
             settings.pathologyContexts.remove(info.id);
         }
+    }
+    d->adapter->filterModel()->setFilterSettings(settings);
+}
+
+void FilterMainWindow::filterByTrial()
+{
+    QAction *action = qobject_cast<QAction*>(sender());
+    if (!action)
+    {
+        return;
+    }
+    PatientPropertyFilterSettings settings = d->adapter->filterModel()->filterSettings();
+    TrialContextInfo::Trial context = (TrialContextInfo::Trial)action->data().toInt();
+
+    TrialContextInfo info(context);
+    if (action->isChecked())
+    {
+        settings.trialParticipation[info.id] = true;
+    }
+    else
+    {
+        settings.trialParticipation.remove(info.id);
     }
     d->adapter->filterModel()->setFilterSettings(settings);
 }
