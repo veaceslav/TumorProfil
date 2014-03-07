@@ -189,7 +189,7 @@ int PatientDB::addDisease(int patientId, const Disease& dis)
     d->db->execSql("INSERT INTO Diseases (patientId, initialDiagnosis, cTNM, pTNM) "
                    "VALUES (?, ?, ?, ?)",
                    patientId, dis.initialDiagnosis.toString(Qt::ISODate),
-                   dis.initialTNM.cTNM(), dis.initialTNM.pTNM(), 0, &id);
+                   dis.initialTNM.toText(), QString(), 0, &id);
     return id.toInt();
 }
 
@@ -197,7 +197,7 @@ void PatientDB::updateDisease(const Disease& dis)
 {
     d->db->execSql("UPDATE Diseases SET initialDiagnosis=?, cTNM=?, pTNM=? WHERE id=?;",
                    dis.initialDiagnosis.toString(Qt::ISODate),
-                   dis.initialTNM.cTNM(), dis.initialTNM.pTNM(), dis.id);
+                   dis.initialTNM.toText(), QString(), dis.id);
 }
 
 QList<Disease> PatientDB::findDiseases(int patientId)
@@ -216,9 +216,9 @@ QList<Disease> PatientDB::findDiseases(int patientId)
         ++it;
         d.initialDiagnosis = QDate::fromString(it->toString(), Qt::ISODate);
         ++it;
-        d.initialTNM.addTNM(it->toString()); // cTNM string
+        d.initialTNM.setTNM(it->toString()); // cTNM string
         ++it;
-        d.initialTNM.addTNM(it->toString()); // pTNM string
+        d.initialTNM.addTNM(it->toString()); // ignore
         ++it;
 
         diseases << d;
