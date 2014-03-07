@@ -187,6 +187,16 @@ void DiseaseHistory::remove(HistoryElement* e)
     }
 }
 
+static bool lessThanByDate(const HistoryElement* a, const HistoryElement* b)
+{
+    return a->date < b->date;
+}
+
+void DiseaseHistory::sort()
+{
+    qSort(d->history.begin(), d->history.end(), lessThanByDate);
+}
+
 TEXT_INT_MAPPER(Therapy, Type)
 {
     Pair("ctx", Therapy::CTx),
@@ -205,6 +215,7 @@ TEXT_INT_MAPPER(Finding, Type)
     Pair("xray", Finding::XRay),
     Pair("sono", Finding::Sono),
     Pair("pet-ct", Finding::PETCT),
+    Pair("scintigraphy", Finding::Scintigraphy),
     Pair("death", Finding::Death)
 };
 
@@ -227,6 +238,13 @@ TEXT_INT_MAPPER(Finding, Context)
     Pair("initialDiagnosis", Finding::InitialDiagnosis),
     Pair("responseEvaluation", Finding::ResponseEvaluation),
     Pair("followUp", Finding::FollowUp),
+};
+
+TEXT_INT_MAPPER(Finding, AdditionalInfo)
+{
+    Pair("infoLocalRecurrence", Finding::LocalRecurrence),
+    Pair("infoMetastasis", Finding::Metastasis),
+    Pair("infoCentralNervös", Finding::CentralNervous),
 };
 
 TEXT_INT_MAPPER(DiseaseState, State)
@@ -300,6 +318,9 @@ QString DiseaseHistory::toXml() const
             stream.writeAttributeChecked("result", FindingResultTextIntMapper::toString(f->result));
             stream.writeAttributeChecked("date", f->date);
             stream.writeAttributeChecked("description", f->description);
+            stream.writeFlagAttributes<Finding::AdditionalInfo, FindingAdditionalInfoTextIntMapper>
+                    (f->additionalInfos, QList<Finding::AdditionalInfo>()
+                      << Finding::LocalRecurrence << Finding::Metastasis << Finding::CentralNervous);
             stream.writeEndElement(); // finding
         }
         else if (e->is<DiseaseState>())
@@ -351,7 +372,6 @@ DiseaseHistory DiseaseHistory::fromXml(const QString& xml)
 
             while (stream.readNextStartElement())
             {
-                qDebug() << stream.name();
                 if (stream.name() == "chemotherapy")
                 {
                     Chemotherapy* ctx = new Chemotherapy;
@@ -394,6 +414,9 @@ DiseaseHistory DiseaseHistory::fromXml(const QString& xml)
             stream.readAttributeCheckedEnum<Finding::Result, FindingResultTextIntMapper>("result", f->result);
             stream.readAttributeChecked("date", f->date);
             stream.readAttributeChecked("description", f->description);
+            stream.readFlagAttributes<Finding::AdditionalInfo, FindingAdditionalInfoTextIntMapper>
+                    (f->additionalInfos, QList<Finding::AdditionalInfo>()
+                      << Finding::LocalRecurrence << Finding::Metastasis << Finding::CentralNervous);
             stream.skipCurrentElement();
 
             h << f;

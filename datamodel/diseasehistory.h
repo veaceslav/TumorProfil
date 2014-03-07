@@ -47,6 +47,8 @@ public:
     HistoryElement* operator[](int i);
     const HistoryElement* operator[](int i) const;
 
+    void sort();
+
     static DiseaseHistory fromXml(const QString& xml);
     QString toXml() const;
 
