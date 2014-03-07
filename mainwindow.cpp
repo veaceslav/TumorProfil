@@ -281,7 +281,11 @@ void MainWindow::save()
         return;
     }
     d->tabWidget->save(d->currentPatient);
-    PatientManager::instance()->updateData(d->currentPatient);
+    PatientManager::instance()->updateData(d->currentPatient,
+                                           PatientManager::ChangedPathologyData |
+                                           PatientManager::ChangedDiseaseMetadata |
+                                           PatientManager::ChangedPatientProperties |
+                                           PatientManager::ChangedDiseaseProperties);
 }
 
 void MainWindow::newPatientEntered(const Patient& p)
