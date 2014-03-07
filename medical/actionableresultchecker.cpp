@@ -103,6 +103,7 @@ void ActionableResultChecker::fillFields(const Disease &disease)
             positiveFields
                     << PathologyPropertyInfo::Mut_KRAS_2
                     << PathologyPropertyInfo::Mut_KRAS_3
+                    << PathologyPropertyInfo::Mut_KRAS_4
                     << PathologyPropertyInfo::Mut_NRAS_2_4;
         }
         break;

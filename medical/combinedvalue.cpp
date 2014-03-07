@@ -22,6 +22,7 @@
 // Qt includes
 
 #include <QDebug>
+#include <QRegExp>
 
 // Local includes
 
@@ -36,6 +37,29 @@ CombinedValue::CombinedValue(const PathologyPropertyInfo& info)
 bool CombinedValue::isValid() const
 {
     return !resultValue.isNull();
+}
+
+static float textCENRatioToFloat(const QString& ratio)
+{
+    if (ratio.isEmpty())
+    {
+        return 0;
+    }
+    QString s(ratio);
+    s.remove(QRegExp("\\(.*\\)"));
+    s = s.trimmed();
+    if (s.startsWith('<'))
+    {
+        s.remove(0, 1);
+    }
+    bool ok = false;
+    float f = s.toFloat(&ok);
+    if (ok)
+    {
+        return f;
+    }
+    qDebug() << "Invalid FISH ratio" << ratio << "processed" << s;
+    return 0;
 }
 
 void CombinedValue::combine(const Disease& disease)
@@ -63,6 +87,19 @@ void CombinedValue::combine(const Disease& disease)
             ValueTypeCategoryInfo fishType(PathologyPropertyInfo::Fish_HER2);
             determiningProperty = fish;
             resultValue = fishType.toMedicalValue(fish);
+            if (!resultValue.toBool())
+            {
+                if (disease.entity() == Pathology::PulmonaryAdeno
+                        || disease.entity() == Pathology::PulmonaryAdenosquamous
+                        || disease.entity() == Pathology::PulmonaryBronchoalveloar)
+                {
+                    // here we regard Her2 as positive if Her2/CEN >= 2.0, not 2.2
+                    if (textCENRatioToFloat(fish.detail) >= 2.0)
+                    {
+                        resultValue = true;
+                    }
+                }
+            }
             break;
         }
         if (!ihc.isNull())
@@ -167,7 +204,7 @@ void CombinedValue::combine(const Disease& disease)
         {
             ValueTypeCategoryInfo ihcType(PathologyPropertyInfo::IHC_cMET);
             //qDebug() << "hscore" << ihcType.toMedicalValue(ihc).value<HScore>().score().toInt() << ihcType.toMedicalValue(ihc).value<HScore>().percentages();
-            hscorePositive = (ihcType.toMedicalValue(ihc).value<HScore>().score().toInt() >= 150);
+            hscorePositive = (ihcType.toMedicalValue(ihc).value<HScore>().score().toInt() >= 250);
         }
 
         resultValue = fishPositive || hscorePositive;
@@ -217,7 +254,6 @@ QVariant CombinedValue::toCombinedVariant() const
     id |= detPropInfo.property << 8;
     QVariant propValue = detPropType.toValue(determiningProperty.value);
     id |= (propValue.toInt() & 0xFF);
-    qDebug() << toDisplayString() << determiningProperty.property << determiningProperty.value << detPropType.category << propValue << id;
     return id;
 }
 
@@ -237,14 +273,17 @@ QString CombinedValue::toDisplayString() const
 
         if (determiningProperty.property == PathologyPropertyInfo(PathologyPropertyInfo::IHC_HER2_DAKO).id)
         {
-            str += " (IHC ";
+            str += " (IHC " + propStr + ")";
         }
         else
         {
+            float ratio = textCENRatioToFloat(determiningProperty.detail);
             str += " (FISH ";
+            str += resultValue.toBool() ? "pos" : "neg";
+            str += ", ";
+            str += QString::number(ratio, 'f', 2);
+            str += ")";
         }
-        str += propStr;
-        str += ")";
         return str;
     }
     case PathologyPropertyInfo::Comb_HormoneReceptor:
