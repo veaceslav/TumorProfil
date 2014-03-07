@@ -27,6 +27,7 @@
 #include <QFileInfo>
 #include <QIcon>
 #include <QMessageBox>
+#include <QRegExp>
 #include <QVariant>
 #include <QUrl>
 
@@ -39,6 +40,7 @@
 #include "mainwindow.h"
 #include "patientmanager.h"
 #include "diseasehistory.h"
+#include "reportwindow.h"
 
 /*
 void myMsgHandler(QtMsgType, const char * text)
@@ -88,6 +90,8 @@ int main(int argc, char *argv[])
 
     //CSVConverter::execute();
     //return 0;
+    //ReportWindow report;
+    //report.showMaximized();
 
     MainWindow w;
     w.show();

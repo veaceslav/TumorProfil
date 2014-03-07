@@ -68,7 +68,9 @@ SOURCES += main.cpp\
     ui/history/therapyelementeditwidget.cpp \
     ui/history/historywindow.cpp \
     ui/history/historypatientlistview.cpp \
-    ui/history/datevalidator.cpp
+    ui/history/datevalidator.cpp \
+    medical/history/historyiterator.cpp \
+    ui/history/visualhistorywidget.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -132,7 +134,9 @@ HEADERS  += mainwindow.h \
     ui/history/therapyelementeditwidget.h \
     ui/history/historywindow.h \
     ui/history/historypatientlistview.h \
-    ui/history/datevalidator.h
+    ui/history/datevalidator.h \
+    medical/history/historyiterator.h \
+    ui/history/visualhistorywidget.h
 
 INCLUDEPATH += datamodel/ \
     ui/ \

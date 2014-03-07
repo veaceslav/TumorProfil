@@ -219,7 +219,8 @@ void PatientListView::editPatient()
     }
 
     p->setPatientData(form->currentPatient());
-    PatientManager::instance()->updateData(p);
+    PatientManager::instance()->updateData(p,
+                                           PatientManager::ChangedPatientMetadata);
 }
 
 void PatientListView::deletePatient()
