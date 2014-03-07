@@ -25,6 +25,7 @@
 // Qt includes
 
 #include <QDate>
+#include <QFlags>
 #include <QMetaType>
 #include <QString>
 #include <QStringList>
@@ -76,7 +77,13 @@ public:
             bool operator!=( const const_iterator& o) const { return it != o.it; }
             const_iterator& operator++()
             {
-                do { ++it; } while (it != end && dynamic_cast<const T*>(*it));
+                ++it;
+                return advance();
+            }
+
+            const_iterator& advance()
+            {
+                while (it != end && !dynamic_cast<const T*>(*it)) { ++it; }
                 return *this;
             }
 
@@ -84,7 +91,7 @@ public:
             typename GenericElementList::const_iterator it, end;
         };
 
-        const_iterator begin() const { return const_iterator(list.begin(), list.end()); }
+        const_iterator begin() const { const_iterator b(list.begin(), list.end()); b.advance(); return b; }
         const_iterator end() const   { return const_iterator(list.end(), list.end()); }
 
     protected:
@@ -271,6 +278,7 @@ public:
         XRay,
         Sono,
         PETCT,
+        Scintigraphy,
         Death
     };
 
@@ -304,9 +312,19 @@ public:
         FollowUp
     };
 
+    enum AdditionalInfo
+    {
+        NoAdditionalInfo = 0,
+        LocalRecurrence  = 1 << 0,
+        Metastasis       = 1 << 1,
+        CentralNervous   = 1 << 2
+    };
+    Q_DECLARE_FLAGS(AdditionalInfos, AdditionalInfo)
+
     Type    type;
     Result  result;
     Context context;
+    AdditionalInfos additionalInfos;
     QString description;
 };
 
