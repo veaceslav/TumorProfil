@@ -101,6 +101,7 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
             m_objects << create(PathologyPropertyInfo::IHC_ALK);
             m_objects << create(PathologyPropertyInfo::IHC_pERK);
             m_objects << create(PathologyPropertyInfo::IHC_PTEN);
+            m_objects << create(PathologyPropertyInfo::IHC_ROS1);
             m_objects << create(PathologyPropertyInfo::IHC_HER2);
             m_objects << create(PathologyPropertyInfo::IHC_HER2_DAKO);
             m_objects << create(PathologyPropertyInfo::IHC_cMET);
@@ -156,6 +157,7 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
             m_objects << new QLabel(tr("Sequenzanalysen k-ras Exon 2 Wildtyp"));
             m_objects << create(PathologyPropertyInfo::Mut_BRAF_15);
             m_objects << create(PathologyPropertyInfo::Mut_KRAS_3);
+            m_objects << create(PathologyPropertyInfo::Mut_KRAS_4);
             m_objects << create(PathologyPropertyInfo::Mut_NRAS_2_4);
 
             m_objects << new QLabel(tr("Sonderuntersuchungen (V.a. HNPCC)"));
