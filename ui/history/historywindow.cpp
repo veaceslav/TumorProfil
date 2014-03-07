@@ -24,7 +24,10 @@
 // Qt includes
 
 #include <QAction>
+#include <QDateEdit>
+#include <QLineEdit>
 #include <QDebug>
+#include <QFormLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMenu>
@@ -44,6 +47,7 @@
 #include "historyelementeditwidget.h"
 #include "patientdisplay.h"
 #include "patientmanager.h"
+#include "visualhistorywidget.h"
 
 
 class HistoryElementSortModel : public QSortFilterProxyModel
@@ -108,10 +112,13 @@ public:
           clearButton(0),
           mainPanelLayout(0),
           editWidgetLayout(0),
+          visualHistoryWidget(0),
           patientDisplay(0),
           sortModel(0),
           historyView(0),
           addBar(0),
+          initialDiagnosisEdit(0),
+          tnmEdit(0),
           currentElement(0),
           currentWidget(0)
     {
@@ -124,10 +131,13 @@ public:
     QPushButton            *clearButton;
     QVBoxLayout            *mainPanelLayout;
     QVBoxLayout            *editWidgetLayout;
+    VisualHistoryWidget    *visualHistoryWidget;
     PatientDisplay         *patientDisplay;
     HistoryElementSortModel*sortModel;
     QTreeView              *historyView;
     QToolBar               *addBar;
+    QDateEdit              *initialDiagnosisEdit;
+    QLineEdit              *tnmEdit;
 
     Patient::Ptr              currentPatient;
     HistoryElement           *currentElement;
@@ -185,10 +195,19 @@ void HistoryWindow::applyData()
         {
             d->currentWidget->applyToElement();
         }
-        d->currentPatient->firstDisease().setHistory(d->historyModel->history());
-        qDebug() << "History of patient" << d->currentPatient->surname;
-        qDebug() << d->historyModel->history().toXml();
-        PatientManager::instance()->updateData(d->currentPatient);
+        Disease& disease = d->currentPatient->firstDisease();
+        DiseaseHistory history = d->historyModel->history();
+        history.sort();
+        disease.setHistory(history);
+        //qDebug() << "History of patient" << d->currentPatient->surname;
+        //qDebug() << d->currentPatient->firstDisease().history().toXml();
+        disease.initialDiagnosis = d->initialDiagnosisEdit->date();
+        disease.initialTNM.setTNM(d->tnmEdit->text());
+        PatientManager::instance()->updateData(d->currentPatient,
+                                               PatientManager::ChangedDiseaseHistory |
+                                               PatientManager::ChangedDiseaseMetadata);
+        PatientManager::instance()->historySecurityCopy(d->currentPatient, "history", d->currentPatient->firstDisease().history().toXml());
+
     }
 }
 
@@ -197,10 +216,16 @@ void HistoryWindow::setCurrentPatient(Patient::Ptr p)
     applyData();
     setCurrentElement(0);
     d->currentPatient = p;
+    d->initialDiagnosisEdit->setDate(QDate::currentDate());
 
     if (d->currentPatient)
     {
-        d->historyModel->setHistory(d->currentPatient->firstDisease().history());
+        const Disease& disease = d->currentPatient->firstDisease();
+        DiseaseHistory history = disease.history();
+        d->historyModel->setHistory(history);
+        d->initialDiagnosisEdit->setDate(disease.initialDiagnosis);
+        d->tnmEdit->setText(disease.initialTNM.toText());
+        d->visualHistoryWidget->setHistory(history);
     }
     d->patientDisplay->setPatient(d->currentPatient);
     d->addBar->setEnabled(d->currentPatient);
@@ -303,9 +328,23 @@ void HistoryWindow::setupView()
     d->mainPanelLayout = new QVBoxLayout;
     d->mainPanelLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
+    QScrollArea* visualHistoryWidgetScrollArea = new QScrollArea;
+    d->visualHistoryWidget = new VisualHistoryWidget;
+    visualHistoryWidgetScrollArea->setWidget(d->visualHistoryWidget);
+    visualHistoryWidgetScrollArea->setWidgetResizable(true);
+    visualHistoryWidgetScrollArea->setFrameStyle(QFrame::NoFrame);
+    d->mainPanelLayout->addWidget(visualHistoryWidgetScrollArea);
+
     d->patientDisplay = new PatientDisplay;
     d->patientDisplay->setShowGender(false);
-    d->mainPanelLayout->addWidget(d->patientDisplay);
+    d->mainPanelLayout->addWidget(d->patientDisplay, 1);
+
+    QFormLayout* idAndTnmLayout = new QFormLayout;
+    d->initialDiagnosisEdit = new QDateEdit;
+    idAndTnmLayout->addRow(tr("Erstdiagnose:"), d->initialDiagnosisEdit);
+    d->tnmEdit = new QLineEdit;
+    idAndTnmLayout->addRow(tr("TNM (initial):"), d->tnmEdit);
+    d->mainPanelLayout->addLayout(idAndTnmLayout);
 
     // Tool bar
     d->addBar = new QToolBar;
@@ -343,7 +382,7 @@ void HistoryWindow::setupView()
 
     d->editWidgetLayout = new QVBoxLayout;
     d->mainPanelLayout->addLayout(d->editWidgetLayout);
-    d->mainPanelLayout->addStretch();
+    d->mainPanelLayout->addStretch(1);
 
     mainPanel->setLayout(d->mainPanelLayout);
     QScrollArea* scrollArea = new QScrollArea;
@@ -365,7 +404,7 @@ void HistoryWindow::addChemotherapy()
 
 void HistoryWindow::addFinding()
 {
-    QDate date = currentHistory().latestDate().addDays(1);
+    QDate date = dateForNewElement();
     Finding* f = new Finding;
     f->date = date;
     d->historyModel->addElement(f);
@@ -374,7 +413,7 @@ void HistoryWindow::addFinding()
 
 void HistoryWindow::addDiseaseState()
 {
-    QDate date = currentHistory().latestDate().addDays(1);
+    QDate date = dateForNewElement();
     DiseaseState* s = new DiseaseState;
     s->date = date;
     d->historyModel->addElement(s);
@@ -386,12 +425,20 @@ void HistoryWindow::addTherapy(QAction* action)
     addTherapy((Therapy::Type)action->data().toInt());
 }
 
-void HistoryWindow::addTherapy(Therapy::Type type)
+QDate HistoryWindow::dateForNewElement() const
 {
     QDate date;
     if (d->currentElement)
     {
         date = d->currentElement->date;
+        if (d->currentElement->is<Therapy>())
+        {
+            QDate end = d->currentElement->as<Therapy>()->end;
+            if (end.isValid())
+            {
+                date = end;
+            }
+        }
     }
     if (!date.isValid())
     {
@@ -401,6 +448,12 @@ void HistoryWindow::addTherapy(Therapy::Type type)
     {
         date = QDate::currentDate();
     }
+    return date;
+}
+
+void HistoryWindow::addTherapy(Therapy::Type type)
+{
+    QDate date = dateForNewElement();
 
     Therapy* t = new Therapy;
     t->type = type;

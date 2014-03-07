@@ -68,6 +68,7 @@ protected slots:
 protected:
 
     virtual void closeEvent(QCloseEvent *);
+    QDate dateForNewElement() const;
 
 private:
 
