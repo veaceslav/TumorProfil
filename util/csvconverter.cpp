@@ -40,7 +40,8 @@ void CSVConverter::execute()
     CSVConverter converter;
     //converter.convertColon("C:\\Users\\wiesweg\\Documents\\CRCpts04042012.csv");
     //converter.convertBGJ389("C:\\Users\\wiesweg\\Documents\\Tumorprofil\\Screening BGJ389.csv");
-    converter.convertBestRx("C:\\Users\\wiesweg\\Documents\\Tumorprofil\\WTZ und F-Klinik BEST RX.csv");
+    //converter.convertBestRx("C:\\Users\\wiesweg\\Documents\\Tumorprofil\\WTZ und F-Klinik BEST RX.csv");
+    converter.readTNM("C:\\Users\\wiesweg\\Documents\\Tumorprofil TNM 06032014.csv");
 }
 
 CSVConverter::CSVConverter()
@@ -220,7 +221,10 @@ void CSVConverter::convertBestRx(const QString& filename)
             }
         }
 
-        PatientManager::instance()->updateData(p);
+        PatientManager::instance()->updateData(p,
+                                               PatientManager::ChangedPathologyData |
+                                               PatientManager::ChangedDiseaseMetadata |
+                                               PatientManager::ChangedPatientProperties);
     }
 }
 
@@ -329,7 +333,10 @@ void CSVConverter::convertBGJ389(const QString& filename)
         }
         p->diseases.first().pathologies << path;
 
-        PatientManager::instance()->updateData(p);
+        PatientManager::instance()->updateData(p,
+                                               PatientManager::ChangedPathologyData |
+                                               PatientManager::ChangedDiseaseMetadata |
+                                               PatientManager::ChangedPatientProperties);
     }
 }
 
@@ -359,5 +366,47 @@ void CSVConverter::convertColon(const QString& filename)
         {
             continue;
         }
+    }
+}
+
+void CSVConverter::readTNM(const QString& filename)
+{
+    CSVFile file;
+    if (!file.read(filename))
+    {
+        return;
+    }
+
+    while (!file.atEnd())
+    {
+        QList<QVariant> data = file.parseNextLine();
+        if (data.size() < 4 || data.first().toString().isEmpty())
+        {
+            qDebug() << "TNM Reader: Invalid line" << data;
+            continue;
+        }
+        Patient pat;
+        pat.surname = data[0].toString();
+        pat.firstName = data[1].toString();
+        pat.dateOfBirth = data[2].toDate();
+        pat.gender = Patient::UnknownGender;
+        QList<Patient::Ptr> ps = PatientManager::instance()->findPatients(pat);
+        if (ps.isEmpty())
+        {
+            qDebug() << "TNM Reader: Patient not found" << pat.surname << pat.firstName << pat.dateOfBirth;
+            continue;
+        }
+        Patient::Ptr p = ps.first();
+        if (p->diseases.isEmpty())
+        {
+            qDebug() << "TNM Reader: Patient"<< pat.surname << pat.firstName << pat.dateOfBirth << "has no disease";
+        }
+        if (p->diseases.size() > 1)
+        {
+            qDebug() << "TNM Reader: Patient"<< pat.surname << pat.firstName << pat.dateOfBirth << "has multiple diseases, taking first";
+        }
+        Disease& dis = p->firstDisease();
+        dis.initialTNM.setTNM(data[3].toString());
+        //PatientManager::instance()->updateData(p, PatientManager::ChangedDiseaseMetadata);
     }
 }
