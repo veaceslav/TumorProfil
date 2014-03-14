@@ -101,25 +101,6 @@ protected:
     State m_state;
 };
 
-class CurrentStateIterator : public HistoryIterator
-{
-public:
-    CurrentStateIterator();
-    CurrentStateIterator(const Disease& disease);
-
-    /** Returns the last found DiseaseState of a history.
-        Note: iterator finishes always atEnd()
-        */
-    DiseaseState::State state() const;
-
-    virtual bool isInterested(HistoryElement* element);
-    virtual bool visit(HistoryElement* element);
-protected:
-    virtual void restarting();
-
-    DiseaseState* lastState;
-};
-
 class OSIterator : public HistoryIterator
 {
 public:
@@ -173,6 +154,16 @@ protected:
     HistoryElement *m_definingElement;
     QDate        m_stateValidTo;
 };
+
+class CurrentStateIterator : public EffectiveStateIterator
+{
+public:
+    /** Runs through an finishes atEnd() */
+    CurrentStateIterator(const DiseaseHistory& history);
+
+    virtual bool visit(HistoryElement* element);
+};
+
 
 class TherapyGroup : public QList<Therapy*>
 {

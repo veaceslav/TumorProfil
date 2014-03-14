@@ -166,6 +166,27 @@ void HistoryIterator::iterate()
 
 // -------------------------------------------------------
 
+/*
+  // Code works, but is a bit simplistic
+class CurrentStateIterator : public HistoryIterator
+{
+public:
+    CurrentStateIterator();
+    CurrentStateIterator(const Disease& disease);
+
+    / ** Returns the last found DiseaseState of a history.
+        Note: iterator finishes always atEnd()
+        * /
+    DiseaseState::State state() const;
+
+    virtual bool isInterested(HistoryElement* element);
+    virtual bool visit(HistoryElement* element);
+protected:
+    virtual void restarting();
+
+    DiseaseState* lastState;
+};
+
 CurrentStateIterator::CurrentStateIterator() : lastState(0)
 {
 }
@@ -201,6 +222,8 @@ bool CurrentStateIterator::visit(HistoryElement* element)
     return false;
 }
 
+*/
+
 // --------------------------------------------------------
 
 OSIterator::OSIterator(const Disease& disease)
@@ -215,16 +238,19 @@ OSIterator::OSIterator(const Disease& disease)
 
 int OSIterator::days(Definition definition) const
 {
-    QDate begin;
+    QDate begin = initialDiagnosis;
     switch (definition)
     {
     case FromInitialDiagnosis:
-        begin = initialDiagnosis;
         break;
     case FromFirstTherapy:
         if (firstTherapy)
         {
             begin = firstTherapy->begin();
+        }
+        else
+        {
+            qDebug() << "OSIterator: no therapy recorded, using initial diagnosis";
         }
         break;
     }
@@ -352,15 +378,21 @@ bool EffectiveStateIterator::visit(HistoryElement* element)
         InitialDiagnosis,
         ResponseEvaluation,
         FollowUp*/
+        Finding* f = element->as<Finding>();
         if (m_effectiveState < DiseaseState::InitialDiagnosis)
         {
-            Finding* f = element->as<Finding>();
             if (f->context == Finding::InitialDiagnosis)
             {
                 m_effectiveState = DiseaseState::InitialDiagnosis;
                 m_definingElement = element;
                 return true;
             }
+        }
+        if (f->type == Finding::Death)
+        {
+            m_effectiveState  = DiseaseState::Deceased;
+            m_definingElement = f;
+            return true;
         }
     }
     else // if (element->is<Therapy>())
@@ -399,6 +431,22 @@ HistoryElement* EffectiveStateIterator::definingElement() const
 {
     return m_definingElement;
 }
+
+// --------------------------------------------------------
+
+CurrentStateIterator::CurrentStateIterator(const DiseaseHistory& history)
+{
+    set(history);
+    start();
+}
+
+bool CurrentStateIterator::visit(HistoryElement* element)
+{
+    EffectiveStateIterator::visit(element);
+    // always returning false makes it run through
+    return false;
+}
+
 
 // --------------------------------------------------------
 /*
