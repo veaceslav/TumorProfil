@@ -33,6 +33,7 @@
 
 // Local includes
 
+#include "analysisgenerator.h"
 #include "csvconverter.h"
 #include "databaseparameters.h"
 #include "ihcscore.h"
@@ -92,6 +93,12 @@ int main(int argc, char *argv[])
     //return 0;
     //ReportWindow report;
     //report.showMaximized();
+    /*TNM tnm("cT3 Nx M1b (PUL BRA)");
+    qDebug() << tnm.mstatus(TNM::AssumeM0IfMissing) << tnm.mstatus(TNM::AssumeMxIfMissing);
+    return 0;*/
+    /*AnalysisGenerator generator;
+    generator.her2();
+    return 0;*/
 
     MainWindow w;
     w.show();
