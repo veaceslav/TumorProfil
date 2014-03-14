@@ -35,12 +35,20 @@ public:
     CSVFile(const QChar& delimiter = ';');
 
     bool read(const QString& filePath);
-    bool write(const QString& filePath);
+    bool openForWriting(const QString& filePath);
+    void finishWriting();
     void writeToString(QString *string);
 
+    // Reading
     QList<QVariant> parseNextLine();
     bool atEnd() const;
 
+    // Writing
+    // write a line stepwise. Finish line by calling newLine
+    CSVFile& operator<<(const QVariant& record);
+    // finish the current line
+    void newLine();
+    // write a line in one go
     void writeNextLine(const QList<QVariant>& records);
 
 private:
@@ -50,6 +58,7 @@ private:
     QChar m_delimiter;
     QFile m_file;
     QTextStream m_stream;
+    QList<QVariant> m_buffer;
 };
 
 

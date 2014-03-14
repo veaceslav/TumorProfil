@@ -42,7 +42,7 @@ bool CSVFile::read(const QString& filePath)
     return true;
 }
 
-bool CSVFile::write(const QString& filePath)
+bool CSVFile::openForWriting(const QString& filePath)
 {
     m_file.setFileName(filePath);
     if (!m_file.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -52,6 +52,12 @@ bool CSVFile::write(const QString& filePath)
     }
     m_stream.setDevice(&m_file);
     return true;
+}
+
+void CSVFile::finishWriting()
+{
+    m_stream.flush();
+    m_file.close();
 }
 
 void CSVFile::writeToString(QString *string)
@@ -64,9 +70,21 @@ bool CSVFile::atEnd() const
     return m_stream.atEnd();
 }
 
+CSVFile& CSVFile::operator<<(const QVariant& record)
+{
+    m_buffer << record;
+    return *this;
+}
+
+void CSVFile::newLine()
+{
+    writeNextLine(m_buffer);
+    m_buffer.clear();
+}
+
 void CSVFile::writeNextLine(const QList<QVariant>& records)
 {
-    qDebug() << "Writing line with" << records.size();
+    //qDebug() << "Writing line with" << records.size();
     if (records.isEmpty())
     {
         return;
@@ -83,6 +101,9 @@ void CSVFile::writeNextLine(const QList<QVariant>& records)
         {
         case QVariant::Date:
             m_stream << v.toDate().toString("dd.MM.yyyy");
+            break;
+        case QVariant::Bool:
+            m_stream << v.toInt();
             break;
         case QVariant::String:
         default:
