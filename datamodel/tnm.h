@@ -63,6 +63,19 @@ public:
         OnConflictChooseX
     };
 
+    enum MStatus
+    {
+        M0 = 0,
+        M1 = 1,
+        Mx = 2 // M status information not available
+    };
+
+    enum MissingMInterpretation
+    {
+        AssumeM0IfMissing,
+        AssumeMxIfMissing
+    };
+
 public:
     TNM();
 
@@ -94,6 +107,7 @@ public:
     QString T() const;
     QString N() const;
     QString M() const;
+    MStatus mstatus(MissingMInterpretation mmi = AssumeM0IfMissing) const;
 
     QString cTNM() const;
     QString pTNM() const;

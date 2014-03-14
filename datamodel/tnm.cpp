@@ -45,14 +45,15 @@ public:
         : cTNM(TNMData::c), pTNM(TNMData::p)
     {
         QRegExp regexpT("([yarm]*)\\s*"
-                        "(c|p)?T([\\dabcis]{1,2})\\s*");
-        QRegExp regexpN("(c|p)?N([\\dabc]{1,2})\\s*"
+                        "(c|p)?T([\\dabcisx]{1,2})\\s*");
+        QRegExp regexpN("(c|p)?N([\\dabcx]{1,2})\\s*"
                         "((?:\\((?:sn|mi|i\\-|i\\+|mol\\-|mol\\+)\\))*)\\s*");
-        QRegExp regexpM("(c|p)?M([\\dabc]{1,2})\\s*"
+        QRegExp regexpM("(c|p)?M([\\dabcx]{1,2})\\s*"
                         "(?:\\(((?:PUL|OSS|HEP|BRA|LYM|MAR|PLE|PER|ADR|SKI|OTH|\\s+|\\,)+)\\))?\\s*");
         QRegExp regexpLGVR("([LGVR])(\\d)");
 
         int index;
+        bool hasT = false, hasN = false, hasM = false;
         QString s = tnmString;
         while ((index = regexpT.indexIn(s)) != -1)
         {
@@ -60,6 +61,7 @@ public:
             tnm.flags = regexpT.cap(1).toLower().toAscii();
             tnm.T = regexpT.cap(3).toLower();
             s.remove(index, regexpT.matchedLength());
+            hasT = true;
         }
         while ((index = regexpN.indexIn(s)) != -1)
         {
@@ -68,6 +70,7 @@ public:
             if (!regexpN.cap(3).isEmpty())
                 tnm.attributesN << regexpN.cap(3).toLower(); //TODO: split ()
             s.remove(index, regexpN.matchedLength());
+            hasN = true;
         }
         while ((index = regexpM.indexIn(s)) != -1)
         {
@@ -75,6 +78,13 @@ public:
             tnm.M = regexpM.cap(2).toLower();
             tnm.attributesM = regexpM.cap(3).split(QRegExp("[\\s\\;\\,]+"), QString::SkipEmptyParts);
             s.remove(index, regexpM.matchedLength());
+            hasM = true;
+        }
+        // some assume M0 if M is not given after T and N
+        if (hasT && hasN && !hasM)
+        {
+            cTNM.M = QString();
+            pTNM.M = QString();
         }
         while ((index = regexpLGVR.indexIn(s)) != -1)
         {
@@ -204,6 +214,10 @@ static QString validStage(const QString& c, const QString& p)
     {
         return c;
     }
+    if (p.isEmpty())
+    {
+        return c;
+    }
     return p;
 }
 
@@ -220,6 +234,39 @@ QString TNM::N() const
 QString TNM::M() const
 {
     return validStage(m_cTNM.M, m_pTNM.M);
+}
+
+TNM::MStatus TNM::mstatus(MissingMInterpretation mmi) const
+{
+    QString m = M();
+    if (m.isEmpty())
+    {
+        if (mmi == AssumeM0IfMissing)
+        {
+            return M0;
+        }
+        else
+        {
+            return Mx;
+        }
+    }
+    if (m.contains("1"))
+    {
+        return M1;
+    }
+    else if (m.contains("0"))
+    {
+        return M0;
+    }
+    else if (m.contains("x", Qt::CaseInsensitive))
+    {
+        return Mx;
+    }
+    else
+    {
+        qDebug() << "failed to parse M value" << m << "assuming MX";
+        return Mx;
+    }
 }
 
 template <typename String>
