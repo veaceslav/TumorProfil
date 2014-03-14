@@ -38,6 +38,11 @@ public:
     QVariant toCombinedVariant() const;
     bool isValid() const;
 
+    // contains some extra code beyond toMedicalValue
+    QVariant fishResult(const Disease& disease, const Property& prop);
+    // additionally retrieves the property
+    QVariant fishResult(const Disease& disease);
+
 protected:
 
     QVariant resultValue;

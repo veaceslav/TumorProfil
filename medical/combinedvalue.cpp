@@ -62,6 +62,67 @@ static float textCENRatioToFloat(const QString& ratio)
     return 0;
 }
 
+QVariant CombinedValue::fishResult(const Disease& disease)
+{
+    switch (info.property)
+    {
+    case PathologyPropertyInfo::Comb_HER2:
+    {
+        PathologyPropertyInfo fishInfo(PathologyPropertyInfo::Fish_HER2);
+        Property fish = disease.pathologyProperty(fishInfo.id);
+        return fishResult(disease, fish);
+    }
+    case PathologyPropertyInfo::Comb_cMetActivation:
+    {
+        PathologyPropertyInfo fishInfo(PathologyPropertyInfo::Fish_cMET);
+        Property fish = disease.pathologyProperty(fishInfo.id);
+        return fishResult(disease, fish);
+    }
+    default:
+        qDebug() << "CombinedValue::fishResult(): " << info.plainTextLabel() << "not supported";
+    }
+    return QVariant();
+}
+
+QVariant CombinedValue::fishResult(const Disease& disease, const Property& prop)
+{
+    if (prop.isNull())
+    {
+        return QVariant();
+    }
+    switch (info.property)
+    {
+    case PathologyPropertyInfo::Comb_HER2:
+    {
+        PathologyPropertyInfo fishInfo(PathologyPropertyInfo::Fish_HER2);
+        ValueTypeCategoryInfo fishType(fishInfo);
+        QVariant result = fishType.toMedicalValue(prop);
+        if (!result.toBool())
+        {
+            if (disease.entity() == Pathology::PulmonaryAdeno
+                    || disease.entity() == Pathology::PulmonaryAdenosquamous
+                    || disease.entity() == Pathology::PulmonaryBronchoalveloar)
+            {
+                // here we regard Her2 as positive if Her2/CEN >= 2.0, not 2.2
+                if (textCENRatioToFloat(prop.detail) >= 2.0)
+                {
+                    result = true;
+                }
+            }
+        }
+        return result;
+    }
+    case PathologyPropertyInfo::Comb_cMetActivation:
+    {
+        ValueTypeCategoryInfo fishType(PathologyPropertyInfo::Fish_cMET);
+        return fishType.toMedicalValue(prop).toBool();
+    }
+    default:
+        qDebug() << "CombinedValue::fishResult: " << info.plainTextLabel() << "not supported";
+    }
+    return QVariant();
+}
+
 void CombinedValue::combine(const Disease& disease)
 {
     resultValue = QVariant();
@@ -81,32 +142,17 @@ void CombinedValue::combine(const Disease& disease)
             return;
         }
 
-        // If we have FISH, it has precedence and decides yes/no
-        if (!fish.isNull())
+        bool fishPositive = fishResult(disease, fish).toBool();
+        bool ihcPositive  = (ihc.value.toInt() == 3);
+        if (fishPositive || ihcPositive)
         {
-            ValueTypeCategoryInfo fishType(PathologyPropertyInfo::Fish_HER2);
-            determiningProperty = fish;
-            resultValue = fishType.toMedicalValue(fish);
-            if (!resultValue.toBool())
-            {
-                if (disease.entity() == Pathology::PulmonaryAdeno
-                        || disease.entity() == Pathology::PulmonaryAdenosquamous
-                        || disease.entity() == Pathology::PulmonaryBronchoalveloar)
-                {
-                    // here we regard Her2 as positive if Her2/CEN >= 2.0, not 2.2
-                    if (textCENRatioToFloat(fish.detail) >= 2.0)
-                    {
-                        resultValue = true;
-                    }
-                }
-            }
-            break;
+            resultValue = true;
+            determiningProperty = fishPositive ? fish : ihc;
         }
-        if (!ihc.isNull())
+        else
         {
-            ValueTypeCategoryInfo ihcType(PathologyPropertyInfo::IHC_HER2_DAKO);
-            determiningProperty = ihc;
-            resultValue = (ihc.value.toInt() == 3);
+            resultValue = false;
+            determiningProperty = fish.isNull() ? ihc : fish;
         }
         break;
     }
@@ -196,8 +242,7 @@ void CombinedValue::combine(const Disease& disease)
         bool fishPositive = false, hscorePositive = false;
         if (!fish.isNull())
         {
-            ValueTypeCategoryInfo fishType(PathologyPropertyInfo::Fish_cMET);
-            fishPositive = fishType.toMedicalValue(fish).toBool();
+            fishPositive = fishResult(disease, fish).toBool();
             //qDebug() << "fish" << fishPositive;
         }
         if (!ihc.isNull())
