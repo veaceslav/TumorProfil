@@ -250,12 +250,21 @@ public:
         Intervention
     };
 
+    enum AdditionalInfo
+    {
+        NoAdditionalInfo    = 0,
+        BeginsTherapyBlock  = 1 << 0,
+        EndsTherapyBlock    = 1 << 1
+    };
+    Q_DECLARE_FLAGS(AdditionalInfos, AdditionalInfo)
+
     QDate begin() const { return date; }
     QDate end;
 
     Type type;
     QString description;
     TherapyElementList elements;
+    AdditionalInfos additionalInfos;
 
     static QString uiLabel(Type type);
 };

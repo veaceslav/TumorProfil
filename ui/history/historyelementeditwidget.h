@@ -152,6 +152,7 @@ private:
     QPushButton* moreCTxButton;
     QPushButton* moreRTxButton;
     QPushButton* moreToxButton;
+    QButtonGroup*infoGroup;
 };
 
 class FindingEditWidget : public HistoryElementEditWidget

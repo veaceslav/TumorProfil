@@ -206,6 +206,12 @@ TEXT_INT_MAPPER(Therapy, Type)
     Pair("intervention", Therapy::Intervention),
 };
 
+TEXT_INT_MAPPER(Therapy, AdditionalInfo)
+{
+    Pair("infoBeginsTherapyBlock", Therapy::BeginsTherapyBlock),
+    Pair("infoEndsTherapyBlock", Therapy::EndsTherapyBlock)
+};
+
 TEXT_INT_MAPPER(Finding, Type)
 {
     Pair("clinical", Finding::Clinical),
@@ -277,6 +283,9 @@ QString DiseaseHistory::toXml() const
             stream.writeAttribute("begin", t->date);
             stream.writeAttributeChecked("end", t->end);
             stream.writeAttributeChecked("description", t->description);
+            stream.writeFlagAttributes<Therapy::AdditionalInfo, TherapyAdditionalInfoTextIntMapper>
+                    (t->additionalInfos, QList<Therapy::AdditionalInfo>()
+                      << Therapy::BeginsTherapyBlock << Therapy::EndsTherapyBlock);
             foreach (TherapyElement* te, t->elements)
             {
                 if (te->is<Chemotherapy>())
@@ -369,6 +378,9 @@ DiseaseHistory DiseaseHistory::fromXml(const QString& xml)
             stream.readAttributeChecked("begin", t->date);
             stream.readAttributeChecked("end", t->end);
             stream.readAttributeChecked("description", t->description);
+            stream.readFlagAttributes<Therapy::AdditionalInfo, TherapyAdditionalInfoTextIntMapper>
+                    (t->additionalInfos, QList<Therapy::AdditionalInfo>()
+                      << Therapy::BeginsTherapyBlock << Therapy::EndsTherapyBlock);
 
             while (stream.readNextStartElement())
             {
@@ -443,6 +455,7 @@ DiseaseHistory DiseaseHistory::fromXml(const QString& xml)
         qDebug() << "An error occurred during parsing: " << stream.errorString();
     }
 
+    h.sort();
     return h;
 }
 

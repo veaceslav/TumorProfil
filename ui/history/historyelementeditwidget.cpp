@@ -42,6 +42,104 @@
 #include "datevalidator.h"
 #include "therapyelementeditwidget.h"
 
+
+static void addButton(int type, const QString& text, QButtonGroup* group,
+                      QGridLayout* layout, int r, int c)
+{
+    QRadioButton* b = new QRadioButton(text);
+    group->addButton(b, type);
+    layout->addWidget(b, r, c);
+}
+
+static void addFlagButton(int type, const QString& text, QButtonGroup* group,
+                          QGridLayout* layout, int r, int c)
+{
+    QCheckBox* b = new QCheckBox(text);
+    group->addButton(b, type);
+    layout->addWidget(b, r, c);
+}
+
+static void clearButtonGroup(QButtonGroup* group)
+{
+    if (group->checkedButton())
+    {
+        bool exclusive = group->exclusive();
+        group->setExclusive(false);
+        group->checkedButton()->setChecked(false);
+        group->setExclusive(exclusive);
+    }
+}
+
+static void setCheckedSafe(QButtonGroup* group, int id)
+{
+    QAbstractButton* button = group->button(id);
+    if (button)
+    {
+        button->setChecked(true);
+    }
+    else
+    {
+        clearButtonGroup(group);
+    }
+}
+
+template <typename Flags>
+static void setCheckedFlags(QButtonGroup* group, Flags flags)
+{
+    foreach (QAbstractButton* b, group->buttons())
+    {
+        b->setChecked(flags & group->id(b));
+    }
+}
+
+
+
+/*static void setCheckedSafe(QComboBox* box, int id)
+{
+    int index = box->findData(id);
+    box->setCurrentIndex(index);
+}*/
+
+template <typename E>
+static E checkedValue(QButtonGroup* group, E defaultId)
+{
+    int id = group->checkedId();
+    if (id == -1)
+    {
+        return defaultId;
+    }
+    return (E)id;
+}
+
+template <typename E>
+static E checkedValue(QComboBox* box, E defaultId)
+{
+    if (box->currentIndex() == -1)
+    {
+        return defaultId;
+    }
+    QVariant data = box->itemData(box->currentIndex());
+    if (data.isValid())
+    {
+        return (E)data.toInt();
+    }
+    return defaultId;
+}
+
+template <typename E>
+static QFlags<E> checkedFlags(QButtonGroup* group)
+{
+    QFlags<E> flags;
+    foreach (QAbstractButton* b, group->buttons())
+    {
+        if (b->isChecked())
+        {
+            flags |= (E)group->id(b);
+        }
+    }
+    return flags;
+}
+
 DateCommentWidget::DateCommentWidget()
 {
     formLayout = new QFormLayout;
@@ -197,6 +295,15 @@ TherapyEditWidget::TherapyEditWidget()
     connect(moreToxButton, SIGNAL(clicked()), this, SLOT(addToxicity()));
     buttonLayout->addWidget(moreToxButton);
     mainLayout->addLayout(buttonLayout);
+
+    QGroupBox* infoBox = new QGroupBox(tr("Zusätzliche Aspekte"));
+    infoGroup = new QButtonGroup;
+    infoGroup->setExclusive(false);
+    QGridLayout* infoLayout = new QGridLayout;
+    addFlagButton(Therapy::BeginsTherapyBlock, tr("Anfang Therapyblock"), infoGroup, infoLayout, 0, 0);
+    addFlagButton(Therapy::EndsTherapyBlock, tr("Ende Therapieblock"), infoGroup, infoLayout, 1, 0);
+    infoBox->setLayout(infoLayout);
+    mainLayout->addWidget(infoBox);
 }
 
 HistoryElement* TherapyEditWidget::applyToElement() const
@@ -205,6 +312,7 @@ HistoryElement* TherapyEditWidget::applyToElement() const
     t->date        = dateCommentWidget->beginDate();
     t->description = dateCommentWidget->comment();
     t->end         = dateCommentWidget->endDate();
+    t->additionalInfos = checkedFlags<Therapy::AdditionalInfo>(infoGroup);
 
     t->elements.clear();
     foreach (TherapyElementEditWidget* editWidget, elementWidgets)
@@ -221,6 +329,7 @@ void TherapyEditWidget::setElement(HistoryElement* element)
     dateCommentWidget->setBeginDate(t->date);
     dateCommentWidget->setEndDate(t->end);
     dateCommentWidget->setComment(t->description);
+    setCheckedFlags(infoGroup, t->additionalInfos);
 
     switch (t->type)
     {
@@ -323,102 +432,6 @@ void TherapyEditWidget::slotTherapyElementRemove()
 
 // ----
 
-static void addButton(int type, const QString& text, QButtonGroup* group,
-                      QGridLayout* layout, int r, int c)
-{
-    QRadioButton* b = new QRadioButton(text);
-    group->addButton(b, type);
-    layout->addWidget(b, r, c);
-}
-
-static void addFlagButton(int type, const QString& text, QButtonGroup* group,
-                          QGridLayout* layout, int r, int c)
-{
-    QCheckBox* b = new QCheckBox(text);
-    group->addButton(b, type);
-    layout->addWidget(b, r, c);
-}
-
-static void clearButtonGroup(QButtonGroup* group)
-{
-    if (group->checkedButton())
-    {
-        bool exclusive = group->exclusive();
-        group->setExclusive(false);
-        group->checkedButton()->setChecked(false);
-        group->setExclusive(exclusive);
-    }
-}
-
-static void setCheckedSafe(QButtonGroup* group, int id)
-{
-    QAbstractButton* button = group->button(id);
-    if (button)
-    {
-        button->setChecked(true);
-    }
-    else
-    {
-        clearButtonGroup(group);
-    }
-}
-
-template <typename Flags>
-static void setCheckedFlags(QButtonGroup* group, Flags flags)
-{
-    foreach (QAbstractButton* b, group->buttons())
-    {
-        b->setChecked(flags & group->id(b));
-    }
-}
-
-
-
-/*static void setCheckedSafe(QComboBox* box, int id)
-{
-    int index = box->findData(id);
-    box->setCurrentIndex(index);
-}*/
-
-template <typename E>
-static E checkedValue(QButtonGroup* group, E defaultId)
-{
-    int id = group->checkedId();
-    if (id == -1)
-    {
-        return defaultId;
-    }
-    return (E)id;
-}
-
-template <typename E>
-static E checkedValue(QComboBox* box, E defaultId)
-{
-    if (box->currentIndex() == -1)
-    {
-        return defaultId;
-    }
-    QVariant data = box->itemData(box->currentIndex());
-    if (data.isValid())
-    {
-        return (E)data.toInt();
-    }
-    return defaultId;
-}
-
-template <typename E>
-static QFlags<E> checkedFlags(QButtonGroup* group)
-{
-    QFlags<E> flags;
-    foreach (QAbstractButton* b, group->buttons())
-    {
-        if (b->isChecked())
-        {
-            flags |= (E)group->id(b);
-        }
-    }
-    return flags;
-}
 
 FindingEditWidget::FindingEditWidget()
 {
