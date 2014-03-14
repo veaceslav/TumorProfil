@@ -43,10 +43,13 @@
 // Local includes
 
 #include "historypatientlistview.h"
+#include "patientpropertymodelviewadapter.h"
 #include "diseasehistorymodel.h"
 #include "historyelementeditwidget.h"
+#include "history/historyiterator.h"
 #include "patientdisplay.h"
 #include "patientmanager.h"
+#include "patientpropertymodel.h"
 #include "visualhistorywidget.h"
 
 
@@ -101,6 +104,38 @@ public:
     }
 };
 
+class HistoryColorProvider : public RoleDataProvider
+{
+public:
+    virtual QVariant data(const PatientModel* model, const QModelIndex& index, const Patient::Ptr& p)
+    {
+        QHash<int,QVariant>::const_iterator it = hash.find(p->id);
+        if (it != hash.end())
+        {
+            return it.value();
+        }
+        const Disease& disease = p->firstDisease();
+        CurrentStateIterator cs(disease.history());
+        QColor c = VisualHistoryWidget::colorForState(cs.effectiveState());
+        if (c.isValid())
+        {
+            if (c == QColor(Qt::white))
+            {
+                c = Qt::lightGray;
+            }
+            c.setAlpha(100);
+            hash[p->id] = c;
+            return c;
+        }
+        else
+        {
+            hash[p->id] = QVariant();
+            return QVariant();
+        }
+    }
+    QHash<int,QVariant> hash;
+};
+
 class HistoryWindow::Private
 {
 public:
@@ -119,6 +154,7 @@ public:
           addBar(0),
           initialDiagnosisEdit(0),
           tnmEdit(0),
+          colorProvider(0),
           currentElement(0),
           currentWidget(0)
     {
@@ -138,6 +174,7 @@ public:
     QToolBar               *addBar;
     QDateEdit              *initialDiagnosisEdit;
     QLineEdit              *tnmEdit;
+    HistoryColorProvider   *colorProvider;
 
     Patient::Ptr              currentPatient;
     HistoryElement           *currentElement;
@@ -159,6 +196,7 @@ HistoryWindow::HistoryWindow(QWidget *parent)
 HistoryWindow::~HistoryWindow()
 {
     setCurrentPatient(Patient::Ptr());
+    delete d->colorProvider;
     delete d;
 }
 
@@ -208,6 +246,7 @@ void HistoryWindow::applyData()
                                                PatientManager::ChangedDiseaseMetadata);
         PatientManager::instance()->historySecurityCopy(d->currentPatient, "history", d->currentPatient->firstDisease().history().toXml());
 
+        d->colorProvider->hash.remove(d->currentPatient->id);
     }
 }
 
@@ -307,6 +346,8 @@ void HistoryWindow::setupView()
     // Patient list view
     d->patientView = new HistoryPatientListView;
     d->patientView->setAdapter(adapter());
+    d->colorProvider = new HistoryColorProvider;
+    adapter()->model()->installRoleDataProvider(Qt::BackgroundRole, d->colorProvider);
     connect(d->patientView, SIGNAL(activated(Patient::Ptr)), this, SLOT(setCurrentPatient(Patient::Ptr)));
     connect(d->patientView, SIGNAL(activated(Patient::Ptr)), this, SIGNAL(activated(Patient::Ptr)));
 

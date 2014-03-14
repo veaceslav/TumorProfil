@@ -37,6 +37,9 @@ public:
 
     virtual QSize sizeHint() const;
     
+    static QColor colorForState(DiseaseState::State state);
+    static QColor colorForResult(Finding::Result result);
+
 signals:
     
 public slots:

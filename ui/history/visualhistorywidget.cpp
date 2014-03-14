@@ -56,55 +56,55 @@ public:
         float days = qAbs(begin.daysTo(end));
         return qRound(days * pixelsPerYear / 365.0);
     }
-
-    static QColor colorForState(DiseaseState::State state)
-    {
-        switch (state)
-        {
-        case DiseaseState::InitialDiagnosis:
-            return Qt::cyan;
-        case DiseaseState::Therapy:
-            return Qt::darkYellow;
-        case DiseaseState::BestSupportiveCare:
-            return Qt::darkBlue;
-        case DiseaseState::FollowUp:
-            return Qt::white;
-        case DiseaseState::Deceased:
-            return Qt::black;
-        case DiseaseState::LossOfContact:
-            return Qt::blue;
-        case DiseaseState::UnknownState:
-            break;
-        }
-        return QColor();
-    }
-
-    static QColor colorForResult(Finding::Result result)
-    {
-        switch (result)
-        {
-        case Finding::UndefinedResult:
-        case Finding::ResultNotApplicable:
-            break;
-        case Finding::StableDisease:
-            return Qt::darkYellow;
-        case Finding::ProgressiveDisease:
-            return Qt::red;
-        case Finding::MinorResponse:
-        case Finding::PartialResponse:
-            return Qt::green;
-        case Finding::CompleteResponse:
-            return QColor(Qt::green).lighter();
-        case Finding::NoEvidenceOfDisease:
-            return Qt::white;
-        case Finding::InitialFindingResult:
-            return Qt::cyan;
-        case Finding::Recurrence:
-            return Qt::magenta;
-        }
-        return QColor();
-    }
 };
+
+QColor VisualHistoryWidget::colorForState(DiseaseState::State state)
+{
+    switch (state)
+    {
+    case DiseaseState::InitialDiagnosis:
+        return Qt::cyan;
+    case DiseaseState::Therapy:
+        return Qt::darkYellow;
+    case DiseaseState::BestSupportiveCare:
+        return Qt::darkBlue;
+    case DiseaseState::FollowUp:
+        return Qt::white;
+    case DiseaseState::Deceased:
+        return Qt::black;
+    case DiseaseState::LossOfContact:
+        return Qt::blue;
+    case DiseaseState::UnknownState:
+        break;
+    }
+    return QColor();
+}
+
+QColor VisualHistoryWidget::colorForResult(Finding::Result result)
+{
+    switch (result)
+    {
+    case Finding::UndefinedResult:
+    case Finding::ResultNotApplicable:
+        break;
+    case Finding::StableDisease:
+        return Qt::darkYellow;
+    case Finding::ProgressiveDisease:
+        return Qt::red;
+    case Finding::MinorResponse:
+    case Finding::PartialResponse:
+        return Qt::green;
+    case Finding::CompleteResponse:
+        return QColor(Qt::green).lighter();
+    case Finding::NoEvidenceOfDisease:
+        return Qt::white;
+    case Finding::InitialFindingResult:
+        return Qt::cyan;
+    case Finding::Recurrence:
+        return Qt::magenta;
+    }
+    return QColor();
+}
 
 VisualHistoryWidget::VisualHistoryWidget(QWidget *parent) :
     QWidget(parent),
@@ -228,7 +228,7 @@ public:
         qDebug() << "State" << stateToText(lastState)<< "from" << lastDate << "to" << endDate << "currentDate" << currentDate << "pixels" << pixels ;
         if (lastState != DiseaseState::UnknownState)
         {
-            QColor c = d->colorForState(lastState);
+            QColor c = VisualHistoryWidget::colorForState(lastState);
             p->setBrush(c);
             p->setPen(Qt::NoPen);
             QRect r;
@@ -358,7 +358,7 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *event)
         }
         QDate begin = d->history.begin();
         int findingX = d->durationToPixels(begin, f->date) + margin;
-        QColor c = d->colorForResult(f->result);
+        QColor c = colorForResult(f->result);
         p.setBrush(c);
         p.setPen(QPen(c, 0));
         p.drawChord(findingX-radius, currentY-radius, 2*radius, 2*radius, 0, 16*360);

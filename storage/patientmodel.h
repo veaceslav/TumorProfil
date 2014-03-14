@@ -30,6 +30,13 @@
 
 #include "patient.h"
 
+class PatientModel;
+class RoleDataProvider
+{
+public:
+    virtual QVariant data(const PatientModel* model, const QModelIndex& index, const Patient::Ptr& p) = 0;
+};
+
 class PatientModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -58,6 +65,9 @@ public:
 
     static Patient::Ptr retrievePatient(const QModelIndex& index);
 
+    // install a provider for given role. Ownership is not taken.
+    void installRoleDataProvider(Qt::ItemDataRole role, RoleDataProvider* provider);
+
 protected slots:
 
     void patientAdded(int index, const Patient::Ptr& patient);
@@ -69,6 +79,7 @@ protected:
 
     QModelIndex createIndexForRow(int row, int column) const;
 
+    QMap<int, RoleDataProvider*> m_roleDataProviders;
 };
 
 #endif // PATIENTMODEL_H

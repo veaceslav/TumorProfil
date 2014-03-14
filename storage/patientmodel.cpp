@@ -61,6 +61,11 @@ static bool hasTumorprofil(const Patient::Ptr& p)
     return p->hasDisease() && p->firstDisease().hasPathology(PathologyContextInfo::Tumorprofil);
 }
 
+void PatientModel::installRoleDataProvider(Qt::ItemDataRole role, RoleDataProvider* provider)
+{
+    m_roleDataProviders[role] = provider;
+}
+
 QVariant PatientModel::data(const QModelIndex& index, int role) const
 {
     if (!index.isValid())
@@ -149,6 +154,11 @@ QVariant PatientModel::data(const QModelIndex& index, int role) const
         return QVariant::fromValue(p);
     case HasTumorprofilRole:
         return hasTumorprofil(p);
+    }
+    RoleDataProvider* provider = m_roleDataProviders.value(role);
+    if (provider)
+    {
+        return provider->data(this, index, p);
     }
     return QVariant();
 }
