@@ -24,6 +24,7 @@
 // Qt includes
 
 #include <QAction>
+#include <QCheckBox>
 #include <QDateEdit>
 #include <QLineEdit>
 #include <QDebug>
@@ -37,6 +38,7 @@
 #include <QToolButton>
 #include <QSortFilterProxyModel>
 #include <QSplitter>
+#include <QListWidget>
 #include <QTreeView>
 #include <QVBoxLayout>
 
@@ -52,6 +54,44 @@
 #include "patientpropertymodel.h"
 #include "visualhistorywidget.h"
 
+class HistoryWindowProofReadOutput : public HistoryProofreader
+{
+public:
+    HistoryWindowProofReadOutput(QListWidget* lw) : list(lw)
+    {
+    }
+
+    void problem(const HistoryElement *element, const QString &problem)
+    {
+        QListWidgetItem* item = new QListWidgetItem(problem);
+        item->setData(Qt::UserRole, QVariant::fromValue<HistoryElement*>((HistoryElement*)element));
+        list->addItem(item);
+    }
+
+    void reset()
+    {
+        list->clear();
+    }
+
+    void elementWasRemoved(const HistoryElement *element)
+    {
+        for (int i=0; i<list->count(); )
+        {
+            if (list->item(i)->data(Qt::UserRole).value<HistoryElement*>() == element)
+            {
+                delete list->takeItem(i);
+            }
+            else
+            {
+                i++;
+            }
+        }
+    }
+
+protected:
+
+    QListWidget* list;
+};
 
 class HistoryElementSortModel : public QSortFilterProxyModel
 {
@@ -154,7 +194,11 @@ public:
           addBar(0),
           initialDiagnosisEdit(0),
           tnmEdit(0),
+          lastDocumentation(0),
+          lastDocumentationDate(0),
+          proofOutput(0),
           colorProvider(0),
+          proofReader(0),
           currentElement(0),
           currentWidget(0)
     {
@@ -174,7 +218,11 @@ public:
     QToolBar               *addBar;
     QDateEdit              *initialDiagnosisEdit;
     QLineEdit              *tnmEdit;
+    QCheckBox              *lastDocumentation;
+    QDateEdit              *lastDocumentationDate;
+    QListWidget            *proofOutput;
     HistoryColorProvider   *colorProvider;
+    HistoryWindowProofReadOutput* proofReader;
 
     Patient::Ptr              currentPatient;
     HistoryElement           *currentElement;
@@ -233,20 +281,67 @@ void HistoryWindow::applyData()
         {
             d->currentWidget->applyToElement();
         }
+        bool changed = false;
+
         Disease& disease = d->currentPatient->firstDisease();
         DiseaseHistory history = d->historyModel->history();
+        DiseaseHistory previousHistory = disease.history();
         history.sort();
-        disease.setHistory(history);
+
+        // update history properties
+        QDate lastDoc = history.lastDocumentation();
+        if (d->lastDocumentation->isChecked())
+        {
+            if (lastDoc != d->lastDocumentationDate->date())
+            {
+                changed = true;
+                history.setLastDocumentation(d->lastDocumentationDate->date());
+            }
+        }
+        else
+        {
+            if (lastDoc.isValid())
+            {
+                changed = true;
+                history.setLastDocumentation(QDate());
+            }
+        }
+
+        if (changed || history != previousHistory)
+        {
+            /*qDebug() << "history changed from";
+            qDebug() << previousHistory.toXml();
+            qDebug() << "to new history";
+            qDebug() << history.toXml();*/
+            disease.setHistory(history);
+            changed = true;
+        }
         //qDebug() << "History of patient" << d->currentPatient->surname;
         //qDebug() << d->currentPatient->firstDisease().history().toXml();
-        disease.initialDiagnosis = d->initialDiagnosisEdit->date();
-        disease.initialTNM.setTNM(d->tnmEdit->text());
-        PatientManager::instance()->updateData(d->currentPatient,
-                                               PatientManager::ChangedDiseaseHistory |
-                                               PatientManager::ChangedDiseaseMetadata);
-        PatientManager::instance()->historySecurityCopy(d->currentPatient, "history", d->currentPatient->firstDisease().history().toXml());
+        if (disease.initialDiagnosis != d->initialDiagnosisEdit->date())
+        {
+            disease.initialDiagnosis = d->initialDiagnosisEdit->date();
+            changed = true;
+        }
+        if (disease.initialTNM.toText() != d->tnmEdit->text())
+        {
+            disease.initialTNM.setTNM(d->tnmEdit->text());
+            changed = true;
+        }
 
-        d->colorProvider->hash.remove(d->currentPatient->id);
+        if (changed)
+        {
+            PatientManager::instance()->updateData(d->currentPatient,
+                                                   PatientManager::ChangedDiseaseHistory |
+                                                   PatientManager::ChangedDiseaseMetadata);
+            PatientManager::instance()->historySecurityCopy(d->currentPatient, "history", d->currentPatient->firstDisease().history().toXml());
+
+            d->colorProvider->hash.remove(d->currentPatient->id);
+        }
+        else
+        {
+            //qDebug() << "Data unchanged, skipping DB write operation";
+        }
     }
 }
 
@@ -256,6 +351,7 @@ void HistoryWindow::setCurrentPatient(Patient::Ptr p)
     setCurrentElement(0);
     d->currentPatient = p;
     d->initialDiagnosisEdit->setDate(QDate::currentDate());
+    d->proofReader->reset();
 
     if (d->currentPatient)
     {
@@ -265,6 +361,9 @@ void HistoryWindow::setCurrentPatient(Patient::Ptr p)
         d->initialDiagnosisEdit->setDate(disease.initialDiagnosis);
         d->tnmEdit->setText(disease.initialTNM.toText());
         d->visualHistoryWidget->setHistory(history);
+        QDate lastDoc = history.lastDocumentation();
+        d->lastDocumentation->setChecked(lastDoc.isValid());
+        d->lastDocumentationDate->setDate(lastDoc.isValid() ? lastDoc : QDate::currentDate());
     }
     d->patientDisplay->setPatient(d->currentPatient);
     d->addBar->setEnabled(d->currentPatient);
@@ -277,7 +376,7 @@ void HistoryWindow::historyElementActivated(const QModelIndex& index)
     {
         elem = elem->parent();
     }
-    qDebug() << "history element activated" << elem;
+    //qDebug() << "history element activated" << elem;
     setCurrentElement(elem);
 }
 
@@ -325,6 +424,7 @@ void HistoryWindow::clearCurrentElement()
     if (d->currentElement)
     {
         d->historyModel->takeElement(d->currentElement);
+        d->proofReader->elementWasRemoved(d->currentElement);
         delete d->currentElement;
         d->currentElement = 0;
         delete d->currentWidget;
@@ -348,8 +448,8 @@ void HistoryWindow::setupView()
     d->patientView->setAdapter(adapter());
     d->colorProvider = new HistoryColorProvider;
     adapter()->model()->installRoleDataProvider(Qt::BackgroundRole, d->colorProvider);
-    connect(d->patientView, SIGNAL(activated(Patient::Ptr)), this, SLOT(setCurrentPatient(Patient::Ptr)));
-    connect(d->patientView, SIGNAL(activated(Patient::Ptr)), this, SIGNAL(activated(Patient::Ptr)));
+    connect(d->patientView, SIGNAL(clicked(Patient::Ptr)), this, SLOT(setCurrentPatient(Patient::Ptr)));
+    connect(d->patientView, SIGNAL(clicked(Patient::Ptr)), this, SIGNAL(activated(Patient::Ptr)));
 
     // History Tree View
     QWidget* secondWidget = new QWidget;
@@ -360,9 +460,14 @@ void HistoryWindow::setupView()
     d->sortModel->setSourceModel(d->historyModel);
     d->historyView->setModel(d->sortModel);
     d->sortModel->sort(0);
-    connect(d->historyView, SIGNAL(activated(QModelIndex)), this, SLOT(historyElementActivated(QModelIndex)));
+    connect(d->historyView, SIGNAL(clicked(QModelIndex)), this, SLOT(historyElementActivated(QModelIndex)));
     secondWidgetLayout->addWidget(d->historyView, 1);
     secondWidget->setLayout(secondWidgetLayout);
+
+    d->proofOutput = new QListWidget;
+    d->proofReader = new HistoryWindowProofReadOutput(d->proofOutput);
+    connect(d->proofOutput, SIGNAL(itemClicked(QListWidgetItem*)),
+            this, SLOT(proofItemClicked(QListWidgetItem*)));
 
     // Main (editing) panel
     QWidget* mainPanel = new QWidget;
@@ -371,6 +476,7 @@ void HistoryWindow::setupView()
 
     QScrollArea* visualHistoryWidgetScrollArea = new QScrollArea;
     d->visualHistoryWidget = new VisualHistoryWidget;
+    d->visualHistoryWidget->setProofReader(d->proofReader);
     visualHistoryWidgetScrollArea->setWidget(d->visualHistoryWidget);
     visualHistoryWidgetScrollArea->setWidgetResizable(true);
     visualHistoryWidgetScrollArea->setFrameStyle(QFrame::NoFrame);
@@ -378,7 +484,7 @@ void HistoryWindow::setupView()
 
     d->patientDisplay = new PatientDisplay;
     d->patientDisplay->setShowGender(false);
-    d->mainPanelLayout->addWidget(d->patientDisplay, 1);
+    d->mainPanelLayout->addWidget(d->patientDisplay);
 
     QFormLayout* idAndTnmLayout = new QFormLayout;
     d->initialDiagnosisEdit = new QDateEdit;
@@ -386,6 +492,11 @@ void HistoryWindow::setupView()
     d->tnmEdit = new QLineEdit;
     idAndTnmLayout->addRow(tr("TNM (initial):"), d->tnmEdit);
     d->mainPanelLayout->addLayout(idAndTnmLayout);
+    d->lastDocumentation = new QCheckBox(tr("Letzte Doku"));
+    d->lastDocumentationDate = new QDateEdit;
+    d->lastDocumentationDate->setEnabled(false);
+    connect(d->lastDocumentation, SIGNAL(toggled(bool)), d->lastDocumentationDate, SLOT(setEnabled(bool)));
+    idAndTnmLayout->addRow(d->lastDocumentation, d->lastDocumentationDate);
 
     // Tool bar
     d->addBar = new QToolBar;
@@ -425,8 +536,11 @@ void HistoryWindow::setupView()
     d->mainPanelLayout->addLayout(d->editWidgetLayout);
     d->mainPanelLayout->addStretch(1);
 
+    d->mainPanelLayout->addWidget(d->proofOutput);
+
     mainPanel->setLayout(d->mainPanelLayout);
     QScrollArea* scrollArea = new QScrollArea;
+    scrollArea->setWidgetResizable(true);
     scrollArea->setWidget(mainPanel);
 
     d->viewSplitter->addWidget(d->patientView);
@@ -524,28 +638,32 @@ void HistoryWindow::addTherapy(Therapy::Type type)
     }
     d->historyModel->addElement(t);
     setCurrentElement(t);
+    d->visualHistoryWidget->update();
 }
 
 void HistoryWindow::currentElementChanged()
 {
-    qDebug() << "Current element changed";
+    //qDebug() << "Current element changed";
     if (!d->currentWidget || !d->currentElement)
     {
         return;
     }
     d->currentWidget->applyToElement();
     d->historyModel->elementChanged(d->currentElement);
+    d->visualHistoryWidget->update();
 }
 
 void HistoryWindow::currentElementAddTherapyElement(TherapyElement* te)
 {
     d->historyModel->addElement(d->currentElement, te);
+    d->visualHistoryWidget->update();
 }
 
 void HistoryWindow::currentElementTherapyElementChanged(TherapyElement* te)
 {
-    qDebug() << "Current therapy element changed";
+    //qDebug() << "Current therapy element changed";
     d->historyModel->elementChanged(te);
+    d->visualHistoryWidget->update();
 }
 
 void HistoryWindow::currentElementTherapyElementRemove(TherapyElement* te)
@@ -558,5 +676,19 @@ void HistoryWindow::currentElementTherapyElementRemove(TherapyElement* te)
     }
     d->historyModel->takeElement(te);
     tew->removeElementUI(te);
+    d->proofReader->elementWasRemoved(te);
     delete te;
+    d->visualHistoryWidget->update();
+}
+
+void HistoryWindow::proofItemClicked(QListWidgetItem *item)
+{
+    HistoryElement* e = item->data(Qt::UserRole).value<HistoryElement*>();
+    if (!e)
+    {
+        return;
+    }
+    QModelIndex index = d->sortModel->mapFromSource(d->historyModel->index(e));
+    d->patientView->setCurrentIndex(index);
+    historyElementActivated(index);
 }

@@ -31,6 +31,7 @@
 #include "historyelements.h"
 
 class QModelIndex;
+class QListWidgetItem;
 
 class HistoryWindow : public FilterMainWindow
 {
@@ -64,6 +65,7 @@ protected slots:
     void currentElementAddTherapyElement(TherapyElement* te);
     void currentElementTherapyElementChanged(TherapyElement* te);
     void currentElementTherapyElementRemove(TherapyElement* te);
+    void proofItemClicked(QListWidgetItem* item);
 
 protected:
 
