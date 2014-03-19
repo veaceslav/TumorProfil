@@ -42,7 +42,8 @@ class VisualHistoryWidget::VisualHistoryWidgetPriv
 public:
     VisualHistoryWidgetPriv()
         : pixelsPerYear(100),
-          height(60)
+          height(60),
+          proofreader(0)
     {
     }
 
@@ -50,11 +51,24 @@ public:
     int pixelsPerYear;
     int height;
     QList<QPair<QRect, HistoryElement*> > toolTipElements;
+    HistoryProofreader* proofreader;
 
     int durationToPixels(const QDate& begin, const QDate& end) const
     {
         float days = qAbs(begin.daysTo(end));
         return qRound(days * pixelsPerYear / 365.0);
+    }
+
+    void reportProblem(const HistoryElement* e, const QString& problem)
+    {
+        if (proofreader)
+        {
+            proofreader->problem(e, problem);
+        }
+        else
+        {
+            qDebug() << problem;
+        }
     }
 };
 
@@ -138,6 +152,11 @@ void VisualHistoryWidget::setPixelsPerYear(int pixelsPerYear)
     }
 }
 
+void VisualHistoryWidget::setProofReader(HistoryProofreader* pr)
+{
+    d->proofreader = pr;
+}
+
 class StateColorDrawer
 {
 public:
@@ -187,6 +206,12 @@ public:
     }
 
 
+    void endVisit(const DiseaseHistory& history)
+    {
+        QDate endDate = qMax(qMax(history.end(), lastDate), lastLimitDate);
+        visit(DiseaseState::UnknownState, 0, endDate);
+    }
+
     // Cave: This is "retrospective", we end the paint operation for the previous state
     // only when we know the beginning of the next state
     void visit(DiseaseState::State currentState, HistoryElement* definingElement,
@@ -197,7 +222,11 @@ public:
         QDate nextLimitDate = limitDate;
         if (lastDate > currentDate)
         {
-            qDebug() << "true conflict between states at" << currentDate << "and last state at" << lastDate;
+            d->reportProblem(definingElement,
+                             QString("true conflict between states at")
+                             + currentDate.toString()
+                             + "and last state at"
+                             + lastDate.toString());
         }
         if (lastLimitDate.isValid())
         {
@@ -212,20 +241,28 @@ public:
                 }
                 else
                 {
-                    qDebug() <<"conflict between states at" << currentDate << "last state valid to" << lastLimitDate
-                             << "skipping its last part, please check";
+                    d->reportProblem(definingElement,
+                                     "conflict between states at"
+                                     + currentDate.toString()
+                                     + "last state valid to"
+                                     + lastLimitDate.toString()
+                                     + "skipping its last part, please check");
                     // keep end date at current date
                 }
             }
             else if (lastLimitDate < currentDate.addDays(-1))
             {
-                qDebug() << "blind dates between end of last state" << lastLimitDate << "and new state at" << currentDate;
+                d->reportProblem(definingElement,
+                                 "blind dates between end of last state"
+                                 + lastLimitDate.toString()
+                                 + "and new state at"
+                                 + currentDate.toString());
                 endDate = lastLimitDate;
             }
         }
 
         int pixels = d->durationToPixels(lastDate, endDate);
-        qDebug() << "State" << stateToText(lastState)<< "from" << lastDate << "to" << endDate << "currentDate" << currentDate << "pixels" << pixels ;
+        //qDebug() << "State" << stateToText(lastState)<< "from" << lastDate << "to" << endDate << "currentDate" << currentDate << "pixels" << pixels ;
         if (lastState != DiseaseState::UnknownState)
         {
             QColor c = VisualHistoryWidget::colorForState(lastState);
@@ -274,6 +311,10 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *event)
     //qDebug() << "Painting history with" << d->history.entries().size() << "elements";
 
     d->toolTipElements.clear();
+    if (d->proofreader)
+    {
+        d->proofreader->reset();
+    }
     if (d->history.isEmpty())
     {
         return;
@@ -289,15 +330,17 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *event)
 
     // Effective DiseaseState
     StateColorDrawer stateDrawer(&p, d, d->history.begin(), margin, currentY, statusHeight);
-    for (EffectiveStateIterator effectiveState(d->history);
-         effectiveState.next() == HistoryIterator::Match; )
+    EffectiveStateIterator effectiveState(d->history);
+    effectiveState.setProofreader(d->proofreader);
+    qDebug() << "last doc of history" << d->history.lastDocumentation();
+    for (; effectiveState.next() == HistoryIterator::Match; )
     {
         stateDrawer.visit(effectiveState.effectiveState(),
                           effectiveState.definingElement(),
                           effectiveState.definingElement()->date,
                           effectiveState.stateValidTo());
     }
-    stateDrawer.visit(DiseaseState::UnknownState, 0, d->history.end());
+    stateDrawer.endVisit(d->history);
     currentY += statusHeight;
 
     currentY += margin;
@@ -306,6 +349,7 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *event)
     const int linesVerticalLimiterHeight = 6;
 
     NewTreatmentLineIterator treatmentLinesIterator;
+    treatmentLinesIterator.setProofreader(d->proofreader);
     treatmentLinesIterator.set(d->history);
     treatmentLinesIterator.iterateToEnd();
     //qDebug() << "Have" << treatmentLinesIterator.therapies().size() << "therapies";
@@ -316,7 +360,7 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *event)
     foreach (const TherapyGroup& group, treatmentLinesIterator.therapies())
     {
         linesX += d->durationToPixels(lastEndDate, group.beginDate());
-        int pixels = d->durationToPixels(group.beginDate(), group.endDate());
+        int pixels = d->durationToPixels(group.beginDate(), group.effectiveEndDate());
         //qDebug() << "Group" << group.substances() <<group.beginDate() << group.endDate() << "pixels" << pixels;
         int limiterMargin = (linesHeight - linesVerticalLimiterHeight) / 2;
         p.drawLine(linesX, currentY + limiterMargin,

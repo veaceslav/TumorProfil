@@ -27,6 +27,7 @@
 // Local includes
 
 #include "diseasehistory.h"
+#include "history/historyiterator.h"
 
 class VisualHistoryWidget : public QWidget
 {
@@ -36,6 +37,8 @@ public:
     ~VisualHistoryWidget();
 
     virtual QSize sizeHint() const;
+
+    void setProofReader(HistoryProofreader* pr);
     
     static QColor colorForState(DiseaseState::State state);
     static QColor colorForResult(Finding::Result result);
