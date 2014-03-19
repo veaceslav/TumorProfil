@@ -38,10 +38,12 @@ public:
 signals:
     
     void activated(const Patient::Ptr& p);
+    void clicked(const Patient::Ptr& p);
 
 protected slots:
 
     void indexActivated(const QModelIndex& index);
+    void indexClicked(const QModelIndex& index);
 
 private:
 

@@ -46,6 +46,8 @@ HistoryPatientListView::HistoryPatientListView(QWidget *parent) :
 
     connect(this, SIGNAL(activated(QModelIndex)),
             this, SLOT(indexActivated(QModelIndex)));
+    connect(this, SIGNAL(clicked(QModelIndex)),
+            this, SLOT(indexClicked(QModelIndex)));
 }
 
 void HistoryPatientListView::setAdapter(PatientPropertyModelViewAdapter* adapter)
@@ -66,6 +68,15 @@ void HistoryPatientListView::indexActivated(const QModelIndex& index)
     if (p)
     {
         emit activated(p);
+    }
+}
+
+void HistoryPatientListView::indexClicked(const QModelIndex& index)
+{
+    Patient::Ptr p = PatientModel::retrievePatient(index);
+    if (p)
+    {
+        emit clicked(p);
     }
 }
 

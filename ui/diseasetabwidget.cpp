@@ -608,7 +608,7 @@ void TrialParticipantTab::save(const Patient::Ptr& p, Disease&, Pathology::Entit
     for (it = checkboxes.begin(); it != checkboxes.end(); ++it)
     {
         TrialContextInfo info(it.key());
-        qDebug() << "Set property" << info.id << (it.value()->isChecked());
+        //qDebug() << "Set property" << info.id << (it.value()->isChecked());
         if (it.value()->isChecked())
         {
             p->patientProperties.setProperty(PatientPropertyName::trialParticipation(),

@@ -300,7 +300,7 @@ TherapyEditWidget::TherapyEditWidget()
     infoGroup = new QButtonGroup;
     infoGroup->setExclusive(false);
     QGridLayout* infoLayout = new QGridLayout;
-    addFlagButton(Therapy::BeginsTherapyBlock, tr("Anfang Therapyblock"), infoGroup, infoLayout, 0, 0);
+    addFlagButton(Therapy::BeginsTherapyBlock, tr("Anfang Therapieblock"), infoGroup, infoLayout, 0, 0);
     addFlagButton(Therapy::EndsTherapyBlock, tr("Ende Therapieblock"), infoGroup, infoLayout, 1, 0);
     infoBox->setLayout(infoLayout);
     mainLayout->addWidget(infoBox);
