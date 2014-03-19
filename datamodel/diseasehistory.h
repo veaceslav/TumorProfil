@@ -25,6 +25,7 @@
 #include <QSharedDataPointer>
 
 #include "historyelements.h"
+#include "property.h"
 
 class DiseaseHistory
 {
@@ -34,6 +35,8 @@ public:
     ~DiseaseHistory();
 
     DiseaseHistory& operator=(const DiseaseHistory& other);
+    bool operator==(const DiseaseHistory& other) const;
+    bool operator!=(const DiseaseHistory& other) const { return !operator==(other); }
 
     bool isEmpty() const;
     int  size() const;
@@ -46,6 +49,11 @@ public:
 
     HistoryElement* operator[](int i);
     const HistoryElement* operator[](int i) const;
+
+    PropertyList& properties();
+    const PropertyList& properties() const;
+    void setLastDocumentation(const QDate& date);
+    QDate lastDocumentation() const;
 
     void sort();
 

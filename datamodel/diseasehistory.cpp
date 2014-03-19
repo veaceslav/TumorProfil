@@ -46,6 +46,7 @@ public:
     }
 
     HistoryElementList history;
+    PropertyList properties;
 };
 
 // -----------------------------------------------------------------------------------------------
@@ -140,6 +141,11 @@ const HistoryElementList& DiseaseHistory::entries() const
     return d->history;
 }
 
+bool DiseaseHistory::operator==(const DiseaseHistory& other) const
+{
+    return other.toXml() == toXml();
+}
+
 HistoryElement* DiseaseHistory::operator[](int i)
 {
     return d->history[i];
@@ -187,14 +193,58 @@ void DiseaseHistory::remove(HistoryElement* e)
     }
 }
 
-static bool lessThanByDate(const HistoryElement* a, const HistoryElement* b)
+PropertyList& DiseaseHistory::properties()
 {
-    return a->date < b->date;
+    return d->properties;
+}
+
+const PropertyList& DiseaseHistory::properties() const
+{
+    return d->properties;
+}
+
+void DiseaseHistory::setLastDocumentation(const QDate& date)
+{
+    if (!date.isValid())
+    {
+        d->properties.removeProperty("lastDocumentation");
+    }
+    else
+    {
+        d->properties.setProperty("lastDocumentation", date.toString(Qt::ISODate));
+    }
+}
+
+QDate DiseaseHistory::lastDocumentation() const
+{
+    Property prop = d->properties.property("lastDocumentation");
+    if (prop.isNull())
+    {
+        return QDate();
+    }
+    return QDate::fromString(prop.value, Qt::ISODate);
+}
+
+static int historyElementTypeOrder(const HistoryElement* a)
+{
+    return a->is<Finding>() ? 1
+         : a->is<Therapy>() ? 2
+         : a->is<Finding>() ? 3
+         : 4;
+}
+
+static bool lessThanForHistoryElements(const HistoryElement* a, const HistoryElement* b)
+{
+    if (a->date != b->date)
+    {
+        return a->date < b->date;
+    }
+    return historyElementTypeOrder(a) < historyElementTypeOrder(b);
 }
 
 void DiseaseHistory::sort()
 {
-    qSort(d->history.begin(), d->history.end(), lessThanByDate);
+    qStableSort(d->history.begin(), d->history.end(), lessThanForHistoryElements);
 }
 
 TEXT_INT_MAPPER(Therapy, Type)
@@ -272,6 +322,21 @@ QString DiseaseHistory::toXml() const
     stream.writeStartDocument();
     stream.writeStartElement("history");
     stream.writeAttribute("version", QString::number(1));
+
+    foreach (const Property& prop, d->properties)
+    {
+        stream.writeStartElement("property");
+        stream.writeAttribute("name", prop.property);
+        if (!prop.value.isEmpty())
+        {
+            stream.writeAttribute("value", prop.value);
+        }
+        if (!prop.detail.isEmpty())
+        {
+            stream.writeAttribute("detail", prop.detail);
+        }
+        stream.writeEndElement();
+    }
 
     foreach (const HistoryElement* e, d->history)
     {
@@ -441,6 +506,15 @@ DiseaseHistory DiseaseHistory::fromXml(const QString& xml)
             stream.skipCurrentElement();
 
             h << t;
+        }
+        else if (stream.name() == "property")
+        {
+            Property prop;
+            stream.readAttributeChecked("name", prop.property);
+            stream.readAttributeChecked("value", prop.value);
+            stream.readAttributeChecked("detail", prop.detail);
+            stream.skipCurrentElement();
+            h.properties() << prop;
         }
         else
         {
