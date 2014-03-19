@@ -25,6 +25,12 @@
 #include "diseasehistory.h"
 #include "disease.h"
 
+class HistoryProofreader
+{
+public:
+    virtual void problem(const HistoryElement* element, const QString& problem) = 0;
+    virtual void reset() {}
+};
 
 class HistoryIterator
 {
@@ -79,6 +85,8 @@ public:
       */
     virtual bool visit(HistoryElement* element) = 0;
 
+    void setProofreader(HistoryProofreader* pr);
+
 protected:
 
     /** Called when a new history is set on the iterator.
@@ -96,9 +104,13 @@ protected:
         */
     void iterate();
 
+    // reports via proofreader if there is a proofreader, else through qDebug
+    void reportProblem(const HistoryElement* e, const QString& problem) const;
+
     DiseaseHistory m_history;
     HistoryElementList::const_iterator m_current;
     State m_state;
+    HistoryProofreader* m_proofreader;
 };
 
 class OSIterator : public HistoryIterator
@@ -152,7 +164,7 @@ protected:
 
     DiseaseState::State m_effectiveState;
     HistoryElement *m_definingElement;
-    QDate        m_stateValidTo;
+    Therapy*        m_therapyForValidTo;
 };
 
 class CurrentStateIterator : public EffectiveStateIterator
@@ -173,8 +185,17 @@ public:
     bool isContinuation(const Therapy* t) const;
 
     QDate beginDate() const;
+    // can be null
     QDate endDate() const;
+    // cannot be null
+    QDate effectiveEndDate() const;
     QSet<QString> substances() const;
+    bool hasChemotherapy() const;
+
+protected:
+
+    friend class NewTreatmentLineIterator;
+    QDate m_effectiveEndDate;
 };
 
 class NewTreatmentLineIterator : public HistoryIterator
@@ -198,6 +219,7 @@ protected:
     virtual void reinitialized();
 
     bool m_seenProgression;
+    bool m_isInTherapyBlock;
 
     void debugOutput(const Therapy* t, const QString& problem) const;
 
