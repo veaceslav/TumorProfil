@@ -55,7 +55,7 @@ void AnalysisGenerator::her2()
     PatientPropertyModelViewAdapter models;
     models.setReportType(PatientPropertyModelViewAdapter::PulmonaryAdenoIHCMut);
 
-    m_file.openForWriting("C:\\Users\\wiesweg\\Documents\\Tumorprofil\\HER2-Auswertung 14032014.csv");
+    m_file.openForWriting("C:\\Users\\wiesweg\\Documents\\Tumorprofil\\HER2-Auswertung 03042014.csv");
 
     // Header
     m_file << "Nachname"; // 1
@@ -78,6 +78,9 @@ void AnalysisGenerator::her2()
     m_file << "pAKT"; // 18
     m_file << "OS"; // 19
     m_file << "OSerreicht"; // 20
+    m_file << "TTF"; // 21
+    m_file << "TTFerreicht"; // 22
+    m_file << "Anz Therapielinien"; // 23
     m_file.newLine();
 
     const int size = models.filterModel()->rowCount();
@@ -153,6 +156,55 @@ void AnalysisGenerator::her2()
         OSIterator it(disease);
         m_file << it.days(OSIterator::FromFirstTherapy); // 19
         m_file << (int)it.endpointReached(); // 20
+
+        NewTreatmentLineIterator treatmentLinesIterator;
+        treatmentLinesIterator.set(history);
+        treatmentLinesIterator.iterateToEnd();
+        QDate lastEndDate = history.begin();
+        int treatmentLinesCount = 0;
+        int treatmentLinesCountCTx = 0;
+        QDate firstLineDate, secondLineDate;
+        foreach (const TherapyGroup& group, treatmentLinesIterator.therapies())
+        {
+            treatmentLinesCount++;
+            if (group.hasChemotherapy())
+            {
+                treatmentLinesCountCTx++;
+            }
+            if (group.effectiveEndDate() <= lastEndDate && lastEndDate != history.begin())
+            {
+                continue;
+            }
+            switch (treatmentLinesCount)
+            {
+            case 1:
+                firstLineDate = group.beginDate();
+                break;
+            case 2:
+                secondLineDate = group.beginDate();
+                break;
+            }
+
+            lastEndDate = group.effectiveEndDate();
+        }
+        if (secondLineDate.isValid())
+        {
+            m_file << firstLineDate.daysTo(secondLineDate); // 21
+            m_file << 1;
+        }
+        else if (firstLineDate.isValid())
+        {
+            CurrentStateIterator csit(history);
+            m_file << firstLineDate.daysTo(csit.effectiveHistoryEnd()); // 21
+            m_file << 0; // 22
+        }
+        else
+        {
+            m_file << QVariant(); // 21
+            m_file << 0;     // 22
+        }
+        m_file << treatmentLinesCountCTx; // 23
+
 
         m_file.newLine();
     }
