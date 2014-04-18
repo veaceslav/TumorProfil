@@ -42,6 +42,7 @@
 #include "patientmanager.h"
 #include "diseasehistory.h"
 #include "reportwindow.h"
+#include "historyvalidator.h"
 
 /*
 void myMsgHandler(QtMsgType, const char * text)
@@ -96,8 +97,11 @@ int main(int argc, char *argv[])
     /*TNM tnm("cT3 Nx M1b (PUL BRA)");
     qDebug() << tnm.mstatus(TNM::AssumeM0IfMissing) << tnm.mstatus(TNM::AssumeMxIfMissing);
     return 0;*/
-    /*AnalysisGenerator generator;
+    AnalysisGenerator generator;
     generator.her2();
+    return 0;
+    /*HistoryValidator validator;
+    validator.validatePAC();
     return 0;*/
 
     MainWindow w;

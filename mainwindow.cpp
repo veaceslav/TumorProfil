@@ -331,8 +331,8 @@ void MainWindow::showHistory()
     HistoryWindow* h = new HistoryWindow;
     h->setAttribute(Qt::WA_DeleteOnClose);
     h->setAttribute(Qt::WA_QuitOnClose, false);
-    connect(h, SIGNAL(activated(Patient::Ptr)),
-            this, SLOT(setPatient(Patient::Ptr)));
+    /*connect(h, SIGNAL(activated(Patient::Ptr)),
+            this, SLOT(setPatient(Patient::Ptr)));*/
     h->showMaximized();
 }
 
