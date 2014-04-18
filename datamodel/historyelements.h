@@ -353,7 +353,8 @@ public:
         BestSupportiveCare,
         FollowUp,
         Deceased,
-        LossOfContact
+        LossOfContact,
+        WatchAndWait
     };
 
     QDate dateOfUpdate() const { return date; }

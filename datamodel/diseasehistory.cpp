@@ -310,7 +310,8 @@ TEXT_INT_MAPPER(DiseaseState, State)
     Pair("bestSupportiveCare", DiseaseState::BestSupportiveCare),
     Pair("followUp", DiseaseState::FollowUp),
     Pair("deceased", DiseaseState::Deceased),
-    Pair("lossOfContact", DiseaseState::LossOfContact)
+    Pair("lossOfContact", DiseaseState::LossOfContact),
+    Pair("watchAndWait", DiseaseState::WatchAndWait)
 };
 
 QString DiseaseHistory::toXml() const

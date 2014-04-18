@@ -76,7 +76,9 @@ QStringList Chemotherapy::substances()
          << "Gefitinib"
          << "Afatinib"
          << "Regorafenib"
-         << "Trastuzumab";
+         << "Trastuzumab"
+         << "Mitomycin C"
+         << "Panitumumab";
     return list;
 }
 
