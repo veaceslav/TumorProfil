@@ -287,19 +287,24 @@ int OSIterator::days(Definition definition) const
     }
     else if (lastElement)
     {
-        end = lastElement->date;
-        if (lastElement->is<Therapy>())
+        QList<QDate> latestDates;
+
+        latestDates << lastElement->date;
+
+        NewTreatmentLineIterator ntli;
+        ntli.set(m_history);
+        ntli.setProofreader(m_proofreader);
+        ntli.iterateToEnd();
+        if (!ntli.therapies().isEmpty())
         {
-            Therapy* t = lastElement->as<Therapy>();
-            if (!t->end.isValid())
-            {
-                QDate lastDoc = m_history.lastDocumentation();
-                if (lastDoc.isValid() && lastDoc > end)
-                {
-                    end = lastDoc;
-                }
-            }
+            latestDates << ntli.therapies().last().effectiveEndDate();
         }
+        if (m_history.lastDocumentation().isValid())
+        {
+            latestDates << m_history.lastDocumentation();
+        }
+        qSort(latestDates);
+        end = latestDates.last();
     }
     else
     {
@@ -367,6 +372,63 @@ void OSIterator::restarting()
 
 // --------------------------------------------------------
 
+ProgressionIterator::ProgressionIterator(ProgressionCategory category)
+    : category(category)
+{
+}
+
+Finding* ProgressionIterator::progression() const
+{
+    if (hasMatch())
+    {
+        return currentElement()->as<Finding>();
+    }
+    return 0;
+}
+
+bool ProgressionIterator::isInterested(HistoryElement* element)
+{
+    return element->is<Finding>();
+}
+
+bool ProgressionIterator::visit(HistoryElement* element)
+{
+    Finding* f = element->as<Finding>();
+    switch (f->result)
+    {
+    case Finding::UndefinedResult:
+    case Finding::ResultNotApplicable:
+    case Finding::MinorResponse:
+    case Finding::PartialResponse:
+    case Finding::CompleteResponse:
+    case Finding::NoEvidenceOfDisease:
+    case Finding::InitialFindingResult:
+    case Finding::StableDisease:
+        return false;
+    case Finding::ProgressiveDisease:
+    case Finding::Recurrence:
+        switch (category)
+        {
+        case AnyProgression:
+            return true;
+        case ExcludeCNS:
+            if (f->result == Finding::ProgressiveDisease && f->additionalInfos & Finding::CentralNervous)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        case OnlyRecurrence:
+            return f->result == Finding::Recurrence;
+        }
+    }
+    return false;
+}
+
+// --------------------------------------------------------
+
 EffectiveStateIterator::EffectiveStateIterator(const DiseaseHistory& history)
     : m_effectiveState(DiseaseState::UnknownState),
       m_definingElement(0),
@@ -396,9 +458,6 @@ QDate EffectiveStateIterator::stateValidTo() const
         {
             return m_therapyForValidTo->end;
         }
-        qDebug() << "Therapy without end from" << m_therapyForValidTo->date
-                 << "last doc is" << m_history.lastDocumentation()
-                 << "history end" << m_history.end();
         QDate lastDoc = m_history.lastDocumentation();
         if (lastDoc.isValid())
         {
@@ -460,6 +519,10 @@ bool EffectiveStateIterator::visit(HistoryElement* element)
         m_effectiveState = DiseaseState::Therapy;
         m_definingElement = element;
         m_therapyForValidTo = t;
+        if (t->end.isValid() && t->end < t->begin())
+        {
+            reportProblem(t, "Ende vor Anfang!");
+        }
         return true;
     }
     return false;
@@ -504,6 +567,30 @@ bool CurrentStateIterator::visit(HistoryElement* element)
     // always returning false makes it run through
     return false;
 }
+
+QDate CurrentStateIterator::effectiveHistoryEnd() const
+{
+    QDate endDate = m_history.end();
+    if (m_definingElement)
+    {
+        endDate = qMax(m_history.end(), m_definingElement->date);
+        if (stateValidTo().isValid())
+        {
+            endDate = qMax(endDate, stateValidTo());
+        }
+    }
+    switch (effectiveState())
+    {
+    case DiseaseState::BestSupportiveCare:
+    case DiseaseState::WatchAndWait:
+    case DiseaseState::FollowUp:
+        endDate = qMax(endDate, m_history.lastDocumentation());
+    default:
+        break;
+    }
+    return endDate;
+}
+
 
 
 // --------------------------------------------------------
@@ -611,9 +698,28 @@ QDate TherapyGroup::endDate() const
     QDate end;
     foreach (const Therapy*t, *this)
     {
-        if (end.isNull() || t->end > end)
+        if (t->end.isValid())
         {
-            end = t->end;
+            if (end.isNull() || t->end > end)
+            {
+                end = t->end;
+            }
+        }
+        // if a later CTx has no end date = ongoing, remove previous end date
+        else
+        {
+            if (t->type == Therapy::CTx || t->type == Therapy::RCTx)
+            {
+                return QDate();
+            }
+            // dont forget single-date therapies (but which is not allowed for chemotherapies, where it means ongoing)
+            else
+            {
+                if (end.isNull() || t->begin() > end)
+                {
+                    end = t->begin();
+                }
+            }
         }
     }
     return end;
@@ -627,7 +733,7 @@ QDate TherapyGroup::effectiveEndDate() const
     {
         return end;
     }
-    // return effective end (based on last documentation
+    // return effective end (based on last documentation)
     if (m_effectiveEndDate.isValid())
     {
         return m_effectiveEndDate;
@@ -674,7 +780,7 @@ bool NewTreatmentLineIterator::visit(HistoryElement* element)
         int daysDistance = 0;
         if (!m_therapies.isEmpty())
         {
-            daysDistance = m_therapies.last().endDate().daysTo(t->begin());
+            daysDistance = m_therapies.last().effectiveEndDate().daysTo(t->begin());
         }
         const int daysNewLineLimit = 90;
         if (t->type == Therapy::CTx)
@@ -684,20 +790,24 @@ bool NewTreatmentLineIterator::visit(HistoryElement* element)
             {
                 isContinued = m_therapies.last().isContinuation(t);
             }
-            //qDebug() << "Therapie" << t->elements.substances() << t->begin() << t->end
-              //       << "Fortführung" << isContinued << "PD" << m_seenProgression
-                 //    << "Abstand" << daysDistance;
+            /*qDebug() << "Therapie" << t->elements.substances() << t->begin() << t->end
+                     << "Fortführung" << isContinued << "PD" << m_seenProgression
+                     << "Abstand" << daysDistance << "in Block" << m_isInTherapyBlock;*/
 
             if (m_isInTherapyBlock)
             {
                 includeTherapy = true;
             }
-            if (m_seenProgression)
+            else if (m_seenProgression)
             {
                 if (isContinued)
                 {
                     debugOutput(t, "Kein Substanzwechsel trotz Progress");
                 }
+                isNewLine = true;
+            }
+            else if (t->additionalInfos & Therapy::BeginsTherapyBlock)
+            {
                 isNewLine = true;
             }
             else
@@ -726,13 +836,58 @@ bool NewTreatmentLineIterator::visit(HistoryElement* element)
         }
         else if (t->type == Therapy::RCTx || t->type == Therapy::RTx)
         {
-            if (m_seenProgression || daysDistance > daysNewLineLimit)
+            if (m_isInTherapyBlock)
+            {
+                includeTherapy = true;
+            }
+            else if (m_seenProgression || daysDistance > daysNewLineLimit)
+            {
+                isNewLine = true;
+            }
+            else if (t->additionalInfos & Therapy::BeginsTherapyBlock)
             {
                 isNewLine = true;
             }
             else
             {
-                includeTherapy = true;
+                if (m_therapies.isEmpty())
+                {
+                    isNewLine = true;
+                }
+                else
+                {
+                    includeTherapy = true;
+                }
+            }
+        }
+        else
+        {
+            // ignore unless within a block or a surgery
+            if (m_isInTherapyBlock)
+            {
+                if (m_therapies.isEmpty())
+                {
+                    isNewLine = true;
+                }
+                else
+                {
+                    includeTherapy = true;
+                }
+            }
+            else if (t->additionalInfos & Therapy::BeginsTherapyBlock)
+            {
+                isNewLine = true;
+            }
+            else if (t->type == Therapy::Surgery)
+            {
+                if (daysDistance > daysNewLineLimit || m_seenProgression || m_therapies.isEmpty())
+                {
+                    isNewLine = true;
+                }
+                else
+                {
+                    includeTherapy = true;
+                }
             }
         }
         // ignore other
@@ -742,7 +897,8 @@ bool NewTreatmentLineIterator::visit(HistoryElement* element)
         {
             m_isInTherapyBlock = true;
         }
-        else if (t->additionalInfos & Therapy::EndsTherapyBlock)
+        // without else; this is important if both are checked
+        if (t->additionalInfos & Therapy::EndsTherapyBlock)
         {
             m_isInTherapyBlock = false;
         }
@@ -752,11 +908,9 @@ bool NewTreatmentLineIterator::visit(HistoryElement* element)
             TherapyGroup group;
             group << t;
             m_therapies << group;
-            //qDebug() << "New Line" << t->elements.substances() << m_therapies.size()
-                     //<< (m_therapies.isEmpty()? QString("leer") : QString::number(m_therapies.last().size()));
+            //qDebug() << "New Line" << t->elements.substances();
             m_newLineTherapy = t;
             m_seenProgression = false;
-            return true;
         }
         else if (includeTherapy)
         {
@@ -766,17 +920,21 @@ bool NewTreatmentLineIterator::visit(HistoryElement* element)
                 m_therapies << TherapyGroup();
             }
             m_therapies.last() << t;
+            //qDebug() << "Including" << t->elements.substances() << "has CTx" << m_therapies.last().substances()
+              //          << m_therapies.last().effectiveEndDate();
         }
 
         // adjust effective date each time
-        if ((isNewLine || includeTherapy) && !m_therapies.isEmpty())
+        if (isNewLine || includeTherapy)
         {
-            if (m_therapies.last().endDate().isNull()
-                    && m_therapies.last().hasChemotherapy()
-                    && m_history.lastDocumentation().isValid())
-            {
-                therapies().last().m_effectiveEndDate = m_history.lastDocumentation();
-            }
+            // checks if there are CTxs, CTx has no end date, and last doc date is valid
+            adjustEffectiveEndDate(m_history.lastDocumentation());
+        }
+
+        // this line comes here to allow to adjust effective date before
+        if (isNewLine)
+        {
+            return true;
         }
     }
     else if (element->is<Finding>())
@@ -787,8 +945,38 @@ bool NewTreatmentLineIterator::visit(HistoryElement* element)
         {
             m_seenProgression = true;
         }
+        if (f->type == Finding::Death)
+        {
+            adjustEffectiveEndDate(f->date);
+        }
+    }
+    else //if (element->is<DiseaseState>())
+    {
+        DiseaseState* s = element->as<DiseaseState>();
+        if (s->state == DiseaseState::Deceased)
+        {
+            adjustEffectiveEndDate(s->date);
+        }
     }
     return false;
+}
+
+void NewTreatmentLineIterator::adjustEffectiveEndDate(const QDate& endDate)
+{
+    if (m_therapies.isEmpty())
+    {
+        return;
+    }
+    TherapyGroup& t = m_therapies.last();
+    /*qDebug() << "Adjusting effective date" << t.substances() << t.endDate().isNull()  << t.endDate() <<
+                 t.hasChemotherapy()
+                << m_history.lastDocumentation().isValid() << m_history.lastDocumentation();*/
+    if (t.endDate().isNull()
+            && t.hasChemotherapy()
+            && endDate.isValid())
+    {
+        t.m_effectiveEndDate = endDate;
+    }
 }
 
 Therapy* NewTreatmentLineIterator::currentTherapy() const

@@ -143,6 +143,25 @@ protected:
     HistoryElement* endpointElement;
 };
 
+class ProgressionIterator : public HistoryIterator
+{
+public:
+    enum ProgressionCategory
+    {
+        AnyProgression,
+        ExcludeCNS,
+        OnlyRecurrence
+    };
+    ProgressionIterator(ProgressionCategory category = AnyProgression);
+
+    Finding* progression() const;
+
+protected:
+    virtual bool isInterested(HistoryElement* element);
+    virtual bool visit(HistoryElement* element);
+    ProgressionCategory category;
+};
+
 class EffectiveStateIterator : public HistoryIterator
 {
 public:
@@ -172,6 +191,7 @@ class CurrentStateIterator : public EffectiveStateIterator
 public:
     /** Runs through an finishes atEnd() */
     CurrentStateIterator(const DiseaseHistory& history);
+    QDate effectiveHistoryEnd() const;
 
     virtual bool visit(HistoryElement* element);
 };
@@ -222,6 +242,7 @@ protected:
     bool m_isInTherapyBlock;
 
     void debugOutput(const Therapy* t, const QString& problem) const;
+    void adjustEffectiveEndDate(const QDate& endDate);
 
     QList<TherapyGroup> m_therapies;
     Therapy* m_newLineTherapy;
