@@ -41,7 +41,7 @@ class VisualHistoryWidget::VisualHistoryWidgetPriv
     friend class StateColorDrawer;
 public:
     VisualHistoryWidgetPriv()
-        : pixelsPerYear(100),
+        : pixelsPerYear(200),
           height(60),
           proofreader(0)
     {
@@ -84,11 +84,14 @@ QColor VisualHistoryWidget::colorForState(DiseaseState::State state)
         return Qt::darkBlue;
     case DiseaseState::FollowUp:
         return Qt::white;
+    case DiseaseState::WatchAndWait:
+        return Qt::lightGray;
     case DiseaseState::Deceased:
         return Qt::black;
     case DiseaseState::LossOfContact:
         return Qt::blue;
     case DiseaseState::UnknownState:
+        return Qt::red;
         break;
     }
     return QColor();
@@ -99,8 +102,9 @@ QColor VisualHistoryWidget::colorForResult(Finding::Result result)
     switch (result)
     {
     case Finding::UndefinedResult:
-    case Finding::ResultNotApplicable:
         break;
+    case Finding::ResultNotApplicable:
+        return Qt::lightGray;
     case Finding::StableDisease:
         return Qt::darkYellow;
     case Finding::ProgressiveDisease:
@@ -152,6 +156,13 @@ void VisualHistoryWidget::setPixelsPerYear(int pixelsPerYear)
     }
 }
 
+void VisualHistoryWidget::updateLastDocumentation(const QDate& date)
+{
+    DiseaseHistory history = d->history;
+    history.setLastDocumentation(date);
+    setHistory(history);
+}
+
 void VisualHistoryWidget::setProofReader(HistoryProofreader* pr)
 {
     d->proofreader = pr;
@@ -194,6 +205,8 @@ public:
         return "Therapie";
     case DiseaseState::BestSupportiveCare:
         return "Best Supportive Care";
+    case DiseaseState::WatchAndWait:
+        return "Verlaufskontrolle";
     case DiseaseState::FollowUp:
         return "Nachsorge";
     case DiseaseState::Deceased:
@@ -208,8 +221,21 @@ public:
 
     void endVisit(const DiseaseHistory& history)
     {
-        QDate endDate = qMax(qMax(history.end(), lastDate), lastLimitDate);
-        visit(DiseaseState::UnknownState, 0, endDate);
+        /*QDate endDate = qMax(history.end(), lastDate);
+        endDate = qMax(endDate, lastLimitDate);
+        switch (lastState)
+        {
+        case DiseaseState::BestSupportiveCare:
+        case DiseaseState::WatchAndWait:
+        case DiseaseState::FollowUp:
+            endDate = qMax(endDate, history.lastDocumentation());
+        default:
+            break;
+        }*/
+        CurrentStateIterator it(history);
+
+        qDebug() << "endVisit" << it.effectiveHistoryEnd();
+        visit(DiseaseState::UnknownState, 0, it.effectiveHistoryEnd());
     }
 
     // Cave: This is "retrospective", we end the paint operation for the previous state
@@ -223,9 +249,9 @@ public:
         if (lastDate > currentDate)
         {
             d->reportProblem(definingElement,
-                             QString("true conflict between states at")
+                             QString("true conflict between states at ")
                              + currentDate.toString()
-                             + "and last state at"
+                             + " and last state at "
                              + lastDate.toString());
         }
         if (lastLimitDate.isValid())
@@ -242,11 +268,11 @@ public:
                 else
                 {
                     d->reportProblem(definingElement,
-                                     "conflict between states at"
+                                     "conflict between states at "
                                      + currentDate.toString()
-                                     + "last state valid to"
+                                     + " last state valid to "
                                      + lastLimitDate.toString()
-                                     + "skipping its last part, please check");
+                                     + " skipping its last part, please check");
                     // keep end date at current date
                 }
             }
@@ -332,7 +358,6 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *event)
     StateColorDrawer stateDrawer(&p, d, d->history.begin(), margin, currentY, statusHeight);
     EffectiveStateIterator effectiveState(d->history);
     effectiveState.setProofreader(d->proofreader);
-    qDebug() << "last doc of history" << d->history.lastDocumentation();
     for (; effectiveState.next() == HistoryIterator::Match; )
     {
         stateDrawer.visit(effectiveState.effectiveState(),
@@ -357,16 +382,34 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *event)
     QPen linesPen(Qt::black, 1.5);
     p.setPen(linesPen);
     QDate lastEndDate = d->history.begin();
+    int count = 1;
     foreach (const TherapyGroup& group, treatmentLinesIterator.therapies())
     {
+        if (group.effectiveEndDate() <= lastEndDate && lastEndDate != d->history.begin())
+        {
+            qDebug() << "Group" << group.substances() << group.beginDate() << group.endDate()
+                     << "is contained in previous group";
+            continue;
+        }
         linesX += d->durationToPixels(lastEndDate, group.beginDate());
-        int pixels = d->durationToPixels(group.beginDate(), group.effectiveEndDate());
+        int pixels = d->durationToPixels(qMax(lastEndDate, group.beginDate()), group.effectiveEndDate());
         //qDebug() << "Group" << group.substances() <<group.beginDate() << group.endDate() << "pixels" << pixels;
         int limiterMargin = (linesHeight - linesVerticalLimiterHeight) / 2;
+        // TTF line
+        if (count == 2)
+        {
+            p.setPen(Qt::green);
+            p.drawLine(linesX, currentY-10, linesX, currentY+linesHeight+10);
+            p.setPen(linesPen);
+        }
+
+        // begin vertical line
         p.drawLine(linesX, currentY + limiterMargin,
                    linesX, currentY + limiterMargin + linesVerticalLimiterHeight);
+        // end vertical line
         p.drawLine(linesX + pixels, currentY + limiterMargin,
                    linesX + pixels, currentY + limiterMargin + linesVerticalLimiterHeight);
+        // horizontal line
         int mainLineY = currentY + linesHeight/2;
         p.drawLine(linesX, mainLineY, linesX + pixels, mainLineY);
         foreach (HistoryElement* e, group)
@@ -375,7 +418,8 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *event)
         }
 
         linesX += pixels;
-        lastEndDate = group.endDate();
+        lastEndDate = group.effectiveEndDate();
+        count++;
     }
     currentY += linesHeight;
     p.setPen(normalPen);
@@ -388,7 +432,6 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *event)
         switch (f->type)
         {
         case Finding::UndefinedType:
-        case Finding::Histopathological:
         case Finding::Death:
             continue;
         case Finding::Clinical:
@@ -398,6 +441,7 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *event)
         case Finding::Sono:
         case Finding::PETCT:
         case Finding::Scintigraphy:
+        case Finding::Histopathological:
             break;
         }
         QDate begin = d->history.begin();

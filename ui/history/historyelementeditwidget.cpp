@@ -538,10 +538,11 @@ DiseaseStateEditWidget::DiseaseStateEditWidget()
     addButton(DiseaseState::InitialDiagnosis, tr("Erstdiagnose"), statusGroup, statusLayout, 0, 0);
     addButton(DiseaseState::Therapy, tr("Therapie"), statusGroup, statusLayout, 1, 0);
     addButton(DiseaseState::BestSupportiveCare, tr("Best supportive care"), statusGroup, statusLayout, 2, 0);
-    addButton(DiseaseState::FollowUp, tr("Nachsorge"), statusGroup, statusLayout, 3, 0);
-    addButton(DiseaseState::Deceased, tr("Verstorben"), statusGroup, statusLayout, 4, 0);
-    addButton(DiseaseState::LossOfContact, tr("Kontakt abgebrochen"), statusGroup, statusLayout, 5, 0);
-    addButton(DiseaseState::UnknownState, tr("Status unbekannt"), statusGroup, statusLayout, 6, 0);
+    addButton(DiseaseState::WatchAndWait, tr("Verlaufskontrolle"), statusGroup, statusLayout, 3, 0);
+    addButton(DiseaseState::FollowUp, tr("Nachsorge"), statusGroup, statusLayout, 4, 0);
+    addButton(DiseaseState::Deceased, tr("Verstorben"), statusGroup, statusLayout, 5, 0);
+    addButton(DiseaseState::LossOfContact, tr("Kontakt abgebrochen"), statusGroup, statusLayout, 6, 0);
+    addButton(DiseaseState::UnknownState, tr("Status unbekannt"), statusGroup, statusLayout, 7, 0);
     statusBox->setLayout(statusLayout);
 
     mainLayout->addWidget(statusBox);

@@ -66,10 +66,14 @@ protected slots:
     void currentElementTherapyElementChanged(TherapyElement* te);
     void currentElementTherapyElementRemove(TherapyElement* te);
     void proofItemClicked(QListWidgetItem* item);
+    void slotHistoryAboutToChange();
+    void slotHistoryChanged();
+    void slotLastDocumentationDateChanged();
 
 protected:
 
     virtual void closeEvent(QCloseEvent *);
+    virtual void keyPressEvent(QKeyEvent *);
     QDate dateForNewElement() const;
 
 private:

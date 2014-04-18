@@ -39,11 +39,15 @@ signals:
     
     void activated(const Patient::Ptr& p);
     void clicked(const Patient::Ptr& p);
+    void currentChanged(const Patient::Ptr& p);
 
 protected slots:
 
     void indexActivated(const QModelIndex& index);
     void indexClicked(const QModelIndex& index);
+
+protected:
+    virtual void currentChanged(const QModelIndex &current, const QModelIndex &previous);
 
 private:
 

@@ -52,7 +52,7 @@
 **  sorry for comment in german                                             *
 *****************************************************************************/
 
-#include "DateValidator.h"
+#include "datevalidator.h"
 #include <QDebug>
 #include <qlineedit.h>
 #include <qpushbutton.h>

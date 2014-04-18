@@ -30,6 +30,7 @@
 #include <QDebug>
 #include <QFormLayout>
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QMenu>
 #include <QPushButton>
@@ -448,8 +449,8 @@ void HistoryWindow::setupView()
     d->patientView->setAdapter(adapter());
     d->colorProvider = new HistoryColorProvider;
     adapter()->model()->installRoleDataProvider(Qt::BackgroundRole, d->colorProvider);
-    connect(d->patientView, SIGNAL(clicked(Patient::Ptr)), this, SLOT(setCurrentPatient(Patient::Ptr)));
-    connect(d->patientView, SIGNAL(clicked(Patient::Ptr)), this, SIGNAL(activated(Patient::Ptr)));
+    connect(d->patientView, SIGNAL(currentChanged(Patient::Ptr)), this, SLOT(setCurrentPatient(Patient::Ptr)));
+    connect(d->patientView, SIGNAL(currentChanged(Patient::Ptr)), this, SIGNAL(activated(Patient::Ptr)));
 
     // History Tree View
     QWidget* secondWidget = new QWidget;
@@ -463,6 +464,11 @@ void HistoryWindow::setupView()
     connect(d->historyView, SIGNAL(clicked(QModelIndex)), this, SLOT(historyElementActivated(QModelIndex)));
     secondWidgetLayout->addWidget(d->historyView, 1);
     secondWidget->setLayout(secondWidgetLayout);
+    connect(d->historyModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(slotHistoryChanged()));
+    connect(d->historyModel, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)), this, SLOT(slotHistoryAboutToChange()));
+    connect(d->historyModel, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT(slotHistoryChanged()));
+    connect(d->historyModel, SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)), this, SLOT(slotHistoryAboutToChange()));
+    connect(d->historyModel, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(slotHistoryChanged()));
 
     d->proofOutput = new QListWidget;
     d->proofReader = new HistoryWindowProofReadOutput(d->proofOutput);
@@ -496,6 +502,8 @@ void HistoryWindow::setupView()
     d->lastDocumentationDate = new QDateEdit;
     d->lastDocumentationDate->setEnabled(false);
     connect(d->lastDocumentation, SIGNAL(toggled(bool)), d->lastDocumentationDate, SLOT(setEnabled(bool)));
+    connect(d->lastDocumentation, SIGNAL(toggled(bool)), this, SLOT(slotLastDocumentationDateChanged()));
+    connect(d->lastDocumentationDate, SIGNAL(dateChanged(QDate)), this, SLOT(slotLastDocumentationDateChanged()));
     idAndTnmLayout->addRow(d->lastDocumentation, d->lastDocumentationDate);
 
     // Tool bar
@@ -638,7 +646,6 @@ void HistoryWindow::addTherapy(Therapy::Type type)
     }
     d->historyModel->addElement(t);
     setCurrentElement(t);
-    d->visualHistoryWidget->update();
 }
 
 void HistoryWindow::currentElementChanged()
@@ -650,20 +657,17 @@ void HistoryWindow::currentElementChanged()
     }
     d->currentWidget->applyToElement();
     d->historyModel->elementChanged(d->currentElement);
-    d->visualHistoryWidget->update();
 }
 
 void HistoryWindow::currentElementAddTherapyElement(TherapyElement* te)
 {
     d->historyModel->addElement(d->currentElement, te);
-    d->visualHistoryWidget->update();
 }
 
 void HistoryWindow::currentElementTherapyElementChanged(TherapyElement* te)
 {
     //qDebug() << "Current therapy element changed";
     d->historyModel->elementChanged(te);
-    d->visualHistoryWidget->update();
 }
 
 void HistoryWindow::currentElementTherapyElementRemove(TherapyElement* te)
@@ -678,7 +682,6 @@ void HistoryWindow::currentElementTherapyElementRemove(TherapyElement* te)
     tew->removeElementUI(te);
     d->proofReader->elementWasRemoved(te);
     delete te;
-    d->visualHistoryWidget->update();
 }
 
 void HistoryWindow::proofItemClicked(QListWidgetItem *item)
@@ -691,4 +694,40 @@ void HistoryWindow::proofItemClicked(QListWidgetItem *item)
     QModelIndex index = d->sortModel->mapFromSource(d->historyModel->index(e));
     d->patientView->setCurrentIndex(index);
     historyElementActivated(index);
+}
+
+void HistoryWindow::slotHistoryAboutToChange()
+{
+    d->visualHistoryWidget->setHistory(DiseaseHistory());
+}
+
+void HistoryWindow::slotHistoryChanged()
+{
+    d->visualHistoryWidget->setHistory(d->historyModel->history());
+}
+
+void HistoryWindow::slotLastDocumentationDateChanged()
+{
+    d->visualHistoryWidget->updateLastDocumentation(
+                d->lastDocumentation->isChecked() ? d->lastDocumentationDate->date() : QDate());
+}
+
+void HistoryWindow::keyPressEvent(QKeyEvent *e)
+{
+    if (e->key() == Qt::Key_F10)
+    {
+        QModelIndex next = d->patientView->indexBelow(d->patientView->currentIndex());
+        if (next.isValid())
+        {
+            d->patientView->setCurrentIndex(next);
+        }
+    }
+    if (e->key() == Qt::Key_F9)
+    {
+        QModelIndex prev = d->patientView->indexAbove(d->patientView->currentIndex());
+        if (prev.isValid())
+        {
+            d->patientView->setCurrentIndex(prev);
+        }
+    }
 }

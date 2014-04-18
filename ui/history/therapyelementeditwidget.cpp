@@ -115,7 +115,7 @@ CTxEditWidget::CTxEditWidget(QWidget* parent)
     QIntValidator* intValidator = new QIntValidator;
     doseNumber->setValidator(intValidator);
     relAbsGroup = new QButtonGroup(this);
-    QRadioButton* mgm2 = new QRadioButton(tr("mg/m²"));
+    QRadioButton* mgm2 = new QRadioButton(tr("mg/m² o. kg"));
     QRadioButton* mgabs = new QRadioButton(tr("mg abs."));
     relAbsGroup->addButton(mgm2, Relative);
     relAbsGroup->addButton(mgabs, Absolute);

@@ -80,3 +80,12 @@ void HistoryPatientListView::indexClicked(const QModelIndex& index)
     }
 }
 
+void HistoryPatientListView::currentChanged(const QModelIndex &current, const QModelIndex &)
+{
+    Patient::Ptr p = PatientModel::retrievePatient(current);
+    if (p)
+    {
+        emit currentChanged(p);
+    }
+}
+

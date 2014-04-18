@@ -38,7 +38,7 @@
 #include "pathologypropertyinfo.h"
 #include "patientpropertymodel.h"
 #include "patientpropertyfiltermodel.h"
-#include "PatientPropertyModelViewAdapter.h"
+#include "patientpropertymodelviewadapter.h"
 
 class FilterMainWindow::FilterMainWindowPriv
 {

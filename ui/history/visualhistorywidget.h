@@ -39,6 +39,7 @@ public:
     virtual QSize sizeHint() const;
 
     void setProofReader(HistoryProofreader* pr);
+    void updateLastDocumentation(const QDate& date);
     
     static QColor colorForState(DiseaseState::State state);
     static QColor colorForResult(Finding::Result result);
