@@ -34,6 +34,7 @@ class PatientModel;
 class RoleDataProvider
 {
 public:
+    virtual ~RoleDataProvider() {}
     virtual QVariant data(const PatientModel* model, const QModelIndex& index, const Patient::Ptr& p) = 0;
 };
 

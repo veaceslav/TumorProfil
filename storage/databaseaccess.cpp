@@ -21,7 +21,7 @@
  *
  * ============================================================ */
 
-#include "DatabaseAccess.h"
+#include "databaseaccess.h"
 
 // Qt includes
 

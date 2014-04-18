@@ -358,6 +358,8 @@ QVariant DiseaseHistoryModel::data(const QModelIndex& index, int role) const
                 return tr("Status: Verstorben");
             case DiseaseState::LossOfContact:
                 return tr("Status: Kontakt abgebrochen");
+            case DiseaseState::WatchAndWait:
+                return tr("Status: Verlaufskontrolle");
             default:
                 return tr("<Krankheitsstatus>");
             }
