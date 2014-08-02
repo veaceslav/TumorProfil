@@ -364,6 +364,10 @@ static bool matches(AggregatedDatumInfo::Field field, const DataAggregation::Fie
 QVariant DataAggregator::aggregate(const AggregatedDatumInfo& datumInfo,
                                    const QVariantList& values) const
 {
+    if (values.isEmpty())
+    {
+        return QVariant();
+    }
     const int total = values.size();
 
     switch (datumInfo.field)
