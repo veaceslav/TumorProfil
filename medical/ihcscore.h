@@ -65,6 +65,8 @@ public:
 
     QVariant score() const;
     bool isPositive(PathologyPropertyInfo::Property field) const;
+    // Converts the percentage, possibly an interval, to a single ratio (interval information lost)
+    float positiveRatio() const;
 
 protected:
 

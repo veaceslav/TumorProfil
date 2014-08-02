@@ -202,6 +202,20 @@ void IHCScore::parseCells(const QString &detail)
     }
 }
 
+float IHCScore::positiveRatio() const
+{
+    float percentage;
+    if (percentagePositiveCells.lower() != percentagePositiveCells.upper())
+    {
+        percentage = float(percentagePositiveCells.lower() + percentagePositiveCells.upper()) / 2;
+    }
+    else
+    {
+        percentage = percentagePositiveCells.lower();
+    }
+    return qBound(0.f, percentage / 100, 100.f);
+}
+
 static int threeToOne(int strong, int medium, int weak)
 {
     int i = 0;
