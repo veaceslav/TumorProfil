@@ -93,12 +93,16 @@ public:
             {
             case 'L':
                 pTNM.L = value;
+                break;
             case 'G':
                 pTNM.G = value;
+                break;
             case 'V':
                 pTNM.V = value;
+                break;
             case 'R':
                 pTNM.R = value;
+                break;
             }
             s.remove(index, regexpLGVR.matchedLength());
         }
@@ -234,6 +238,28 @@ QString TNM::N() const
 QString TNM::M() const
 {
     return validStage(m_cTNM.M, m_pTNM.M);
+}
+
+QVariant TNM::Tnumber() const
+{
+    QString t = T();
+    t.remove(QRegExp("\\D"));
+    if (t.isEmpty() || t == "x")
+    {
+        return QVariant();
+    }
+    return t.toInt();
+}
+
+QVariant TNM::Nnumber() const
+{
+    QString n = N();
+    n.remove(QRegExp("\\D"));
+    if (n.isEmpty() || n == "x")
+    {
+        return QVariant();
+    }
+    return n.toInt();
 }
 
 TNM::MStatus TNM::mstatus(MissingMInterpretation mmi) const

@@ -108,6 +108,9 @@ public:
     QString N() const;
     QString M() const;
     MStatus mstatus(MissingMInterpretation mmi = AssumeM0IfMissing) const;
+    // Return a null variant for x, and an integer variant for 0,1,...
+    QVariant Tnumber() const;
+    QVariant Nnumber() const;
 
     QString cTNM() const;
     QString pTNM() const;
