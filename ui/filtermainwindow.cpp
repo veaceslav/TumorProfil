@@ -168,6 +168,9 @@ void FilterMainWindow::setupToolbar()
         byContextMenu->addAction(tr("PemSplitCisp-Studie"), TrialContextInfo::AIO_TRK_0212,
                                  this, SLOT(filterByTrial()), true);
     d->contextFilterActions <<
+        byContextMenu->addAction(tr("Nur lokale Patienten"), PatientPropertyFilterSettings::LocalCenterOrigin,
+                                 this, SLOT(filterByCriteria()), true);
+    d->contextFilterActions <<
         byContextMenu->addAction(tr("(kein Filter)"), PathologyContextInfo::InvalidContext,
                                  this, SLOT(filterByContext()), false);
     byContextButton->setMenu(byContextMenu);
@@ -210,6 +213,7 @@ void FilterMainWindow::filterByContext()
     {
         settings.pathologyContexts.clear();
         settings.trialParticipation.clear();
+        settings.criteria.clear();
         foreach (QAction* a, d->contextFilterActions)
         {
             a->setChecked(false);
@@ -265,6 +269,26 @@ void FilterMainWindow::clearDateFilter()
     PatientPropertyFilterSettings settings = d->adapter->filterModel()->filterSettings();
     settings.resultDateBegin = QDate();
     settings.resultDateEnd = QDate();
+    d->adapter->filterModel()->setFilterSettings(settings);
+}
+
+void FilterMainWindow::filterByCriteria()
+{
+    QAction *action = qobject_cast<QAction*>(sender());
+    if (!action)
+    {
+        return;
+    }
+    PatientPropertyFilterSettings settings = d->adapter->filterModel()->filterSettings();
+    PatientPropertyFilterSettings::Criteria c = (PatientPropertyFilterSettings::Criteria)action->data().toInt();
+    if (action->isChecked())
+    {
+        settings.criteria[c] = true;
+    }
+    else
+    {
+        settings.criteria.remove(c);
+    }
     d->adapter->filterModel()->setFilterSettings(settings);
 }
 

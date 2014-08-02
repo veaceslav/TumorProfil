@@ -294,6 +294,32 @@ bool PatientPropertyFilterSettings::matchesDates(Patient::Ptr p) const
     return true;
 }
 
+bool PatientPropertyFilterSettings::matchesCriteria(Patient::Ptr p) const
+{
+    QMap<Criteria,bool>::const_iterator it;
+    for (it = criteria.begin(); it != criteria.end(); ++it)
+    {
+        qDebug() << "Criteria" << it.key() << p->surname << p->surname.startsWith("Dktk", Qt::CaseInsensitive) << p->firstName.trimmed().isEmpty();
+        switch (it.key())
+        {
+        case LocalCenterOrigin:
+        {
+            bool isFromLocalCenter = true;
+            if (p->surname.startsWith("Dktk", Qt::CaseInsensitive) && p->firstName.trimmed().isEmpty())
+            {
+                qDebug() << "not from local center" << p->surname;
+                isFromLocalCenter = false;
+            }
+            if (isFromLocalCenter != it.value())
+            {
+                return false;
+            }
+        }
+        }
+    }
+    return true;
+}
+
 bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
 {
     QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
@@ -310,14 +336,15 @@ bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIn
     const bool filteringByTrial        = !d->settings.trialParticipation.isEmpty();
     const bool filteringByDate         = d->settings.resultDateBegin.isValid() ||
                                            d->settings.resultDateEnd.isValid();
+    const bool filteringByCriteria     = !d->settings.criteria.isEmpty();
 
-    if (!filteringByEntity && !filteringByPathology && !filteringByContext)
+    if (!filteringByEntity && !filteringByPathology && !filteringByPathologyAnd && !filteringByContext && !filteringByTrial && !filteringByDate && !filteringByCriteria)
     {
         return true;
     }
     else
     {
-        if (!p->hasPathology())
+        if (!p->hasPathology() && (filteringByPathology || filteringByPathologyAnd || filteringByContext || filteringByDate))
         {
             return false;
         }
@@ -334,6 +361,14 @@ bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIn
     if (filteringByTrial)
     {
         if (!d->settings.matchesTrialParticipation(p))
+        {
+            return false;
+        }
+    }
+
+    if (filteringByCriteria)
+    {
+        if (!d->settings.matchesCriteria(p))
         {
             return false;
         }

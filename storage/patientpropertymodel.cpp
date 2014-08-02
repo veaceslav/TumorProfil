@@ -53,6 +53,7 @@ public:
                   << PathologyPropertyInfo::IHC_pAKT
                   << PathologyPropertyInfo::IHC_pERK
                   << PathologyPropertyInfo::IHC_ALK
+                  << PathologyPropertyInfo::IHC_ROS1
                   << PathologyPropertyInfo::Comb_cMetActivation
                   //<< PathologyPropertyInfo::IHC_HER2
                   //<< PathologyPropertyInfo::IHC_HER2_DAKO
@@ -60,6 +61,7 @@ public:
                   << PathologyPropertyInfo::Comb_HER2
                   << PathologyPropertyInfo::IHC_cMET
                   << PathologyPropertyInfo::Fish_ALK
+                  << PathologyPropertyInfo::Fish_ROS1
                   << PathologyPropertyInfo::Mut_KRAS_2
                   << PathologyPropertyInfo::Mut_EGFR_19_21
                   << PathologyPropertyInfo::Mut_PIK3CA_10_21
@@ -71,7 +73,8 @@ public:
                   << PathologyPropertyInfo::IHC_pERK
                   << PathologyPropertyInfo::Mut_PIK3CA_10_21
                   << PathologyPropertyInfo::Mut_DDR2
-                  << PathologyPropertyInfo::Fish_FGFR1;
+                  << PathologyPropertyInfo::Fish_FGFR1
+                  << PathologyPropertyInfo::Fish_PIK3CA;
             break;
         case PatientPropertyModel::CRCProfile:
             props << PathologyPropertyInfo::IHC_PTEN

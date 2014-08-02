@@ -51,9 +51,18 @@ public:
     QMap<QString, bool> pathologyContexts;
     QMap<QString, bool> trialParticipation;
 
+    enum Criteria
+    {
+        LocalCenterOrigin = 1
+    };
+
+    QMap<Criteria, bool> criteria;
+
     QDate resultDateBegin;
     QDate resultDateEnd;
     bool  dateAppliesCombinedWithContext;
+
+    bool localCenterOnly;
 
     bool matchesEntities(Patient::Ptr p) const;
     bool matchesPathologyProperties(Patient::Ptr p) const;
@@ -61,6 +70,7 @@ public:
     bool matchesPathologyContexts(Patient::Ptr p) const;
     bool matchesTrialParticipation(Patient::Ptr p) const;
     bool matchesDates(Patient::Ptr p) const;
+    bool matchesCriteria(Patient::Ptr p) const;
 
 protected:
 
