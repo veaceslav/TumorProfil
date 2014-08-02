@@ -26,6 +26,7 @@
 #include "combinedvalue.h"
 #include "diseasehistory.h"
 #include "history/historyiterator.h"
+#include "ihcscore.h"
 #include "patientmanager.h"
 #include "patientmodel.h"
 #include "patientpropertyfiltermodel.h"
@@ -50,12 +51,45 @@ QVariant AnalysisGenerator::writePathologyProperty(const Disease& disease, Patho
     return value;
 }
 
+void AnalysisGenerator::writeIHCPropertySplit(const Disease& disease, PathologyPropertyInfo::Property id)
+{
+    PathologyPropertyInfo info(id);
+    Property prop = disease.pathologyProperty(info.id);
+    ValueTypeCategoryInfo typeInfo(info.valueType);
+    IHCScore score = typeInfo.toIHCScore(prop);
+    if (prop.isNull() || !score.isValid())
+    {
+        m_file << QVariant();
+        m_file << QVariant();
+        return;
+    }
+    m_file << score.colorIntensity;
+    m_file << score.positiveRatio();
+}
+
+void AnalysisGenerator::writeIHCIsPositive(const Disease& disease, PathologyPropertyInfo::Property id)
+{
+    PathologyPropertyInfo info(id);
+    Property prop = disease.pathologyProperty(info.id);
+    ValueTypeCategoryInfo typeInfo(info.valueType);
+    IHCScore score = typeInfo.toIHCScore(prop);
+    if (prop.isNull() || !score.isValid())
+    {
+        m_file << QVariant();
+        return;
+    }
+    m_file << score.isPositive(info.property);
+}
+
 void AnalysisGenerator::her2()
 {
     PatientPropertyModelViewAdapter models;
     models.setReportType(PatientPropertyModelViewAdapter::PulmonaryAdenoIHCMut);
 
-    m_file.openForWriting("C:\\Users\\wiesweg\\Documents\\Tumorprofil\\HER2-Auswertung 03042014.csv");
+    //m_file.openForWriting("C:\\Users\\wiesweg\\Documents\\Tumorprofil\\HER2-Auswertung 03042014.csv");
+    m_file.openForWriting("/home/marcel/Dokumente/Tumorprofil/HER2-Auswertung 15052014.csv");
+
+    const int reportedLines = 5;
 
     // Header
     m_file << "Nachname"; // 1
@@ -78,15 +112,34 @@ void AnalysisGenerator::her2()
     m_file << "pAKT"; // 18
     m_file << "OS"; // 19
     m_file << "OSerreicht"; // 20
-    m_file << "TTF"; // 21
-    m_file << "TTFerreicht"; // 22
-    m_file << "Anz Therapielinien"; // 23
+    m_file << "Anz Therapielinien"; // 21
+    for (int i=0; i<reportedLines; i++) // 22-31
+    {
+        m_file << QString("TTF") + QString::number(i+1);
+        m_file << QString("TTF") + QString::number(i+1) + QString("erreicht");
+    }
+    m_file << "PatientenID"; // 32
+    m_file << "pERK_intens"; // 33
+    m_file << "pERK_zahl"; // 34
+    m_file << "pAKT_intens";  // 35
+    m_file << "pAKT_zahl"; // 36
+    m_file << "PTEN"; // 37
+    m_file << "PTEN_pos"; // 38
+    m_file << "T";
+    m_file << "N";
+    m_file << "R";
+    m_file << "G";
+    m_file << "AlterBeiDiagnose";
+    m_file << "TNMString";
     m_file.newLine();
+
+    QMap<QDate, Patient::Ptr> birthdates;
 
     const int size = models.filterModel()->rowCount();
     for (int i=0; i<size; i++)
     {
         Patient::Ptr p = PatientModel::retrievePatient(models.filterModel()->index(i, 0));
+        m_currentPatient = p;
         const Disease& disease = p->firstDisease();
         const DiseaseHistory& history = disease.history();
 
@@ -105,6 +158,12 @@ void AnalysisGenerator::her2()
         m_file << p->firstName; // 2
         m_file << p->dateOfBirth; // 3
 
+        if (birthdates.contains(p->dateOfBirth))
+        {
+            qDebug() << "BIRTHDATES NOT UNIQUE" << p->firstName << p->surname << birthdates.value(p->dateOfBirth)->firstName << birthdates.value(p->dateOfBirth)->surname << p->dateOfBirth;
+        }
+        birthdates.insert(p->dateOfBirth, p);
+
         /// initial M status
         TNM::MStatus m = disease.initialTNM.mstatus();
         if (m == TNM::Mx)
@@ -115,7 +174,7 @@ void AnalysisGenerator::her2()
         {
             qDebug() << "Real Mx status for" << p->surname << p->firstName << disease.initialTNM.toText();
         }
-        m_file << int(m); // 4
+        m_file << (m == TNM::Mx ? QVariant() : QVariant(int(m))); // 4
 
         /// HER2 status
         CombinedValue her2comb(PathologyPropertyInfo::Comb_HER2);
@@ -154,6 +213,7 @@ void AnalysisGenerator::her2()
 
         /// OS
         OSIterator it(disease);
+        it.setProofreader(this);
         m_file << it.days(OSIterator::FromFirstTherapy); // 19
         m_file << (int)it.endpointReached(); // 20
 
@@ -161,53 +221,83 @@ void AnalysisGenerator::her2()
         treatmentLinesIterator.set(history);
         treatmentLinesIterator.iterateToEnd();
         QDate lastEndDate = history.begin();
-        int treatmentLinesCount = 0;
-        int treatmentLinesCountCTx = 0;
-        QDate firstLineDate, secondLineDate;
+        QList<QDate> lineDates, ctxLineDates;
         foreach (const TherapyGroup& group, treatmentLinesIterator.therapies())
         {
-            treatmentLinesCount++;
             if (group.hasChemotherapy())
             {
-                treatmentLinesCountCTx++;
-            }
-            if (group.effectiveEndDate() <= lastEndDate && lastEndDate != history.begin())
-            {
-                continue;
-            }
-            switch (treatmentLinesCount)
-            {
-            case 1:
-                firstLineDate = group.beginDate();
-                break;
-            case 2:
-                secondLineDate = group.beginDate();
-                break;
+                ctxLineDates << group.beginDate();
             }
 
+            // skip groups fully contained in another group
+            if (group.effectiveEndDate() > lastEndDate || lastEndDate == history.begin())
+            {
+                lineDates << group.beginDate();
+            }
             lastEndDate = group.effectiveEndDate();
         }
-        if (secondLineDate.isValid())
+        m_file << ctxLineDates.size(); // 21
+        CurrentStateIterator currentStateIterator(history);
+        currentStateIterator.setProofreader(this);
+        int line = 0;
+        for (; line<qMin(reportedLines, ctxLineDates.size()); line++) // 22-31
         {
-            m_file << firstLineDate.daysTo(secondLineDate); // 21
-            m_file << 1;
+            QDate begin = ctxLineDates[line];
+            QDate end;
+            int reachedEndpoint = 0;
+            if (ctxLineDates.size() > line+1)
+            {
+                end = ctxLineDates[line+1];
+                reachedEndpoint = 1;
+            }
+            else
+            {
+                end = currentStateIterator.effectiveHistoryEnd();
+                if (currentStateIterator.effectiveState() == DiseaseState::Deceased)
+                {
+                    reachedEndpoint = 1;
+                }
+                else
+                {
+                    reachedEndpoint = 0;
+                }
+            }
+            m_file << begin.daysTo(end);
+            m_file << reachedEndpoint;
         }
-        else if (firstLineDate.isValid())
+        for (; line < reportedLines; line++)
         {
-            CurrentStateIterator csit(history);
-            m_file << firstLineDate.daysTo(csit.effectiveHistoryEnd()); // 21
-            m_file << 0; // 22
+            m_file << QVariant();
+            m_file << 0;
         }
-        else
-        {
-            m_file << QVariant(); // 21
-            m_file << 0;     // 22
-        }
-        m_file << treatmentLinesCountCTx; // 23
 
+        m_file << p->id; // 32
+        writeIHCPropertySplit(disease, PathologyPropertyInfo::IHC_pERK); // 33-34
+        writeIHCPropertySplit(disease, PathologyPropertyInfo::IHC_pAKT); // 35-36
+        writePathologyProperty(disease, PathologyPropertyInfo::IHC_PTEN); // 37
+        writeIHCIsPositive(disease, PathologyPropertyInfo::IHC_PTEN); // 38
+
+        m_file << disease.initialTNM.Tnumber();
+        m_file << disease.initialTNM.Nnumber();
+        m_file << (disease.initialTNM.m_pTNM.R == 'x' ? QVariant() : QVariant(QString(disease.initialTNM.m_pTNM.R)));
+        m_file << (disease.initialTNM.m_pTNM.G == 'x' ? QVariant() : QVariant(QString(disease.initialTNM.m_pTNM.G)));
+
+        m_file << (p->dateOfBirth.daysTo(disease.initialDiagnosis) / 365.0);
+
+        m_file << disease.initialTNM.toText();
 
         m_file.newLine();
     }
+    m_currentPatient = Patient::Ptr();
 
     m_file.finishWriting();
+}
+
+void AnalysisGenerator::problem(const HistoryElement *, const QString &problem)
+{
+    if (!m_currentPatient)
+    {
+        qDebug() << problem;
+    }
+    qDebug() << m_currentPatient->firstName + " " + m_currentPatient->surname + ": " << problem;
 }

@@ -58,6 +58,7 @@ void CSVFile::finishWriting()
 {
     m_stream.flush();
     m_file.close();
+    m_stream.setDevice(0);
 }
 
 void CSVFile::writeToString(QString *string)

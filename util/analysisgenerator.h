@@ -24,11 +24,13 @@
 
 #include "csvfile.h"
 #include "pathologypropertyinfo.h"
+#include "patient.h"
+#include "history/historyiterator.h"
 
 class Disease;
 
 
-class AnalysisGenerator
+class AnalysisGenerator : HistoryProofreader
 {
 public:
     AnalysisGenerator();
@@ -38,8 +40,12 @@ public:
 protected:
 
     QVariant writePathologyProperty(const Disease& disease, PathologyPropertyInfo::Property id);
+    void writeIHCPropertySplit(const Disease& disease, PathologyPropertyInfo::Property id);
+    void writeIHCIsPositive(const Disease& disease, PathologyPropertyInfo::Property id);
+    virtual void problem(const HistoryElement* element, const QString& problem);
 
     CSVFile m_file;
+    Patient::Ptr m_currentPatient;
 };
 
 #endif // ANALYSISGENERATOR_H
