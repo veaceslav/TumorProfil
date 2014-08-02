@@ -35,15 +35,12 @@
 #include "patientdb.h"
 #include "schemaupdater.h"
 
-class DatabaseAccessStaticPriv
+class DatabaseAccessPriv
 {
 public:
 
-    DatabaseAccessStaticPriv()
-        : backend(0), db(0),
-          initializing(false)
-    {}
-    ~DatabaseAccessStaticPriv() {};
+    DatabaseAccessPriv();
+    ~DatabaseAccessPriv();
 
     DatabaseCoreBackend* backend;
     PatientDB*          db;
@@ -52,13 +49,16 @@ public:
     QString             lastError;
 
     bool                initializing;
+
+    void checkBackend();
+    void constructorLock();
 };
 
 class DatabaseAccessMutexLocker : public QMutexLocker
 {
 public:
 
-    DatabaseAccessMutexLocker(DatabaseAccessStaticPriv* d)
+    DatabaseAccessMutexLocker(DatabaseAccessPriv* d)
         : QMutexLocker(&d->lock.mutex), d(d)
     {
         d->lock.lockCount++;
@@ -69,26 +69,51 @@ public:
         d->lock.lockCount--;
     }
 
-    DatabaseAccessStaticPriv* const d;
+    DatabaseAccessPriv* const d;
 };
 
-DatabaseAccessStaticPriv* DatabaseAccess::d = 0;
-
-DatabaseAccess::DatabaseAccess()
+DatabaseAccessPriv::DatabaseAccessPriv()
+    : backend(0),
+      db(0),
+      initializing(false)
 {
-    Q_ASSERT(d/*You will want to call setParameters before constructing DatabaseAccess*/);
-    d->lock.mutex.lock();
-    d->lock.lockCount++;
+}
 
-    if (!d->backend->isOpen() && !d->initializing)
+DatabaseAccessPriv::~DatabaseAccessPriv()
+{
+    DatabaseAccessMutexLocker locker(this);
+    backend->close();
+    delete db;
+    delete backend;
+}
+
+void DatabaseAccessPriv::checkBackend()
+{
+    if (!backend->isOpen() && !initializing)
     {
         // avoid endless loops
-        d->initializing = true;
+        initializing = true;
 
-        d->backend->open(d->parameters);
+        backend->open(parameters);
 
-        d->initializing = false;
+        initializing = false;
     }
+}
+
+void DatabaseAccessPriv::constructorLock()
+{
+    lock.mutex.lock();
+    lock.lockCount++;
+}
+
+DatabaseAccessPriv* DatabaseAccess::mainAccess = 0;
+
+DatabaseAccess::DatabaseAccess()
+    : d(mainAccess)
+{
+    Q_ASSERT(d/*You will want to call setParameters before constructing DatabaseAccess*/);
+    d->constructorLock();
+    d->checkBackend();
 }
 
 DatabaseAccess::~DatabaseAccess()
@@ -97,12 +122,12 @@ DatabaseAccess::~DatabaseAccess()
     d->lock.mutex.unlock();
 }
 
-DatabaseAccess::DatabaseAccess(bool)
+DatabaseAccess::DatabaseAccess(DatabaseAccessPriv* d)
+    : d(d)
 {
     // private constructor, when mutex is locked and
     // backend should not be checked
-    d->lock.mutex.lock();
-    d->lock.lockCount++;
+    d->constructorLock();
 }
 
 PatientDB* DatabaseAccess::db() const
@@ -117,37 +142,53 @@ DatabaseCoreBackend* DatabaseAccess::backend() const
 
 DatabaseParameters DatabaseAccess::parameters()
 {
-    if (d)
+    if (mainAccess)
     {
-        return d->parameters;
+        return mainAccess->parameters;
     }
 
     return DatabaseParameters();
 }
 
+QString DatabaseAccess::lastError()
+{
+    return d->lastError;
+}
+
+void DatabaseAccess::setLastError(const QString& error)
+{
+    d->lastError = error;
+}
+
+/// --- Static methods ---
+
 bool DatabaseAccess::isInitialized()
 {
-    return d;
+    return mainAccess;
 }
 
 void DatabaseAccess::initDatabaseErrorHandler(DatabaseErrorHandler* errorhandler)
 {
-    if (!d)
+    if (mainAccess)
     {
-        d = new DatabaseAccessStaticPriv();
+        //DatabaseErrorHandler *errorhandler = new DatabaseGUIErrorHandler(d->parameters);
+        mainAccess->backend->setDatabaseErrorHandler(errorhandler);
     }
 
-    //DatabaseErrorHandler *errorhandler = new DatabaseGUIErrorHandler(d->parameters);
-    d->backend->setDatabaseErrorHandler(errorhandler);
 }
 
 void DatabaseAccess::setParameters(const DatabaseParameters& parameters)
 {
-    if (!d)
+    if (!mainAccess)
     {
-        d = new DatabaseAccessStaticPriv();
+        mainAccess = new DatabaseAccessPriv();
     }
 
+    performSetParameters(mainAccess, parameters);
+}
+
+void DatabaseAccess::performSetParameters(DatabaseAccessPriv* d, const DatabaseParameters& parameters)
+{
     DatabaseAccessMutexLocker lock(d);
 
     if (d->parameters == parameters)
@@ -181,114 +222,97 @@ bool DatabaseAccess::checkReadyForUse(InitializationObserver* observer)
 {
     QStringList drivers = QSqlDatabase::drivers();
 
+    if (!mainAccess)
+    {
+        qWarning() << "mainAccess is null. You must call setParameters before checkReadyForUse";
+        return false;
+    }
+
     if (!drivers.contains("QSQLITE"))
     {
         qWarning() << "No SQLite3 driver available. List of QSqlDatabase drivers: " << drivers;
-        d->lastError = QObject::tr("The driver \"SQLITE\" for SQLite3 databases is not available.\n"
+        mainAccess->lastError = QObject::tr("The driver \"SQLITE\" for SQLite3 databases is not available.\n"
                             "digiKam depends on the drivers provided by the SQL module of Qt4.");
         return false;
     }
 
     // create an object with private shortcut constructor
-    DatabaseAccess access(false);
+    DatabaseAccess access(mainAccess);
+    return performReadyCheck(access, observer);
+}
 
-    if (!d->backend)
+bool DatabaseAccess::performReadyCheck(DatabaseAccess& access, InitializationObserver* observer)
+{
+    if (!access.d->backend)
     {
         qWarning() << "No database backend available in checkReadyForUse. "
                    "Did you call setParameters before?";
         return false;
     }
 
-    if (d->backend->isReady())
+    if (access.d->backend->isReady())
     {
         return true;
     }
 
-    if (!d->backend->isOpen())
+    if (!access.d->backend->isOpen())
     {
-        if (!d->backend->open(d->parameters))
+        if (!access.d->backend->open(access.d->parameters))
         {
             access.setLastError(QObject::tr("Error opening database backend.\n ")
-                                + d->backend->lastError());
+                                + access.d->backend->lastError());
             return false;
         }
     }
 
     // avoid endless loops (if called methods create new DatabaseAccess objects)
-    d->initializing = true;
+    access.d->initializing = true;
 
     // update schema
     SchemaUpdater updater(&access);
     updater.setObserver(observer);
 
-    if (!d->backend->initSchema(&updater))
+    if (!access.d->backend->initSchema(&updater))
     {
-        d->initializing = false;
+        access.d->initializing = false;
         return false;
     }
 
-    d->initializing = false;
+    access.d->initializing = false;
 
-    return d->backend->isReady();
-}
-
-QString DatabaseAccess::lastError()
-{
-    return d->lastError;
-}
-
-void DatabaseAccess::setLastError(const QString& error)
-{
-    d->lastError = error;
+    return access.d->backend->isReady();
 }
 
 void DatabaseAccess::cleanUpDatabase()
 {
-    if (d)
-    {
-        DatabaseAccessMutexLocker locker(d);
-        d->backend->close();
-        delete d->db;
-        delete d->backend;
-    }
+    delete mainAccess;
+    mainAccess = 0;
+}
 
-    delete d;
-    d = 0;
+DatabaseAccess* DatabaseAccess::createExternalAccess(const DatabaseParameters& params, InitializationObserver* observer)
+{
+    DatabaseAccessPriv* d = new DatabaseAccessPriv;
+    DatabaseAccess* access = new DatabaseAccess(d);
+    performSetParameters(d, params);
+    performReadyCheck(*access, observer);
+    return access;
 }
 
 // --------
 
-DatabaseAccessUnlock::DatabaseAccessUnlock()
-{
-    // acquire lock
-    DatabaseAccess::d->lock.mutex.lock();
-    // store lock count
-    count = DatabaseAccess::d->lock.lockCount;
-    // set lock count to 0
-    DatabaseAccess::d->lock.lockCount = 0;
-
-    // unlock
-    for (int i=0; i<count; ++i)
-    {
-        DatabaseAccess::d->lock.mutex.unlock();
-    }
-
-    // drop lock acquired in first line. Mutex is now free.
-    DatabaseAccess::d->lock.mutex.unlock();
-}
-
-DatabaseAccessUnlock::DatabaseAccessUnlock(DatabaseAccess*)
+DatabaseAccessUnlock::DatabaseAccessUnlock(DatabaseAccess* access)
+    : access(access)
 {
     // With the passed pointer, we have assured that the mutex is acquired
     // Store lock count
-    count = DatabaseAccess::d->lock.lockCount;
+    count = access->d->lock.lockCount;
     // set lock count to 0
-    DatabaseAccess::d->lock.lockCount = 0;
+    access->d->lock.lockCount = 0;
 
     // unlock
     for (int i=0; i<count; ++i)
     {
-        DatabaseAccess::d->lock.mutex.unlock();
+        access->d->lock.mutex.unlock();
     }
 
     // Mutex is now free
@@ -299,10 +323,10 @@ DatabaseAccessUnlock::~DatabaseAccessUnlock()
     // lock as often as it was locked before
     for (int i=0; i<count; ++i)
     {
-        DatabaseAccess::d->lock.mutex.lock();
+        access->d->lock.mutex.lock();
     }
 
     // update lock count
-    DatabaseAccess::d->lock.lockCount += count;
+    access->d->lock.lockCount += count;
 }
 

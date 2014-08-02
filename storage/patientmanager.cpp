@@ -60,16 +60,16 @@ public:
         return true;
     }
 
-    void moreSchemaUpdateSteps(int numberOfSteps)
+    void moreSchemaUpdateSteps(int)
     {
         qApp->setOverrideCursor(Qt::WaitCursor);
     }
 
-    void schemaUpdateProgress(const QString& message, int numberOfSteps)
+    void schemaUpdateProgress(const QString&, int)
     {
     }
 
-    void finishedSchemaUpdate(UpdateResult result)
+    void finishedSchemaUpdate(UpdateResult)
     {
         qApp->restoreOverrideCursor();
     }

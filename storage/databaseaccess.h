@@ -33,7 +33,7 @@ class QMutexLocker;
 class DatabaseCoreBackend;
 class InitializationObserver;
 class PatientDB;
-class DatabaseAccessStaticPriv;
+class DatabaseAccessPriv;
 
 class DatabaseAccess
 {
@@ -65,12 +65,22 @@ public:
       */
     void setLastError(const QString& error);
 
+    /**
+     * Create a DatabaseAccess for a database which is not the main database.
+     * The db file will, if necessary, be schema-updated.
+     * You must delete the DatabaseAccess object which you receive.
+     */
+    DatabaseAccess* createExternalAccess(const DatabaseParameters& params, InitializationObserver* observer);
+
 private:
 
-    DatabaseAccess(bool);
+    DatabaseAccess(DatabaseAccessPriv* d);
     friend class DatabaseAccessUnlock;
+    static bool performReadyCheck(DatabaseAccess& access, InitializationObserver* observer);
+    static void performSetParameters(DatabaseAccessPriv* d, const DatabaseParameters& parameters);
 
-    static DatabaseAccessStaticPriv* d;
+    DatabaseAccessPriv* d;
+    static DatabaseAccessPriv* mainAccess;
 };
 
 class DatabaseAccessUnlock
@@ -84,12 +94,12 @@ public:
      *  If you need to access any locked structures during lifetime, acquire a new
      *  DatabaseAccess.
      */
-    DatabaseAccessUnlock();
     DatabaseAccessUnlock(DatabaseAccess* access);
     ~DatabaseAccessUnlock();
 
 private:
 
+    DatabaseAccess* access;
     int count;
 };
 
