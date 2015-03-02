@@ -221,7 +221,7 @@ void PatientPropertyModelViewAdapter::Private::adjustModels()
                 << Pathology::PulmonaryBronchoalveloar
                 << Pathology::PulmonaryAdenosquamous;
         settings.pathologyProperties.clear();
-        settings.pathologyProperties[PathologyPropertyInfo::info(PathologyPropertyInfo::Comb_cMetActivation).id]
+        settings.pathologyProperties[PathologyPropertyInfo::info(PathologyPropertyInfo::Comb_cMetIHC3plusScore).id]
                 = true;
         filterModel->setFilterSettings(settings);
         break;

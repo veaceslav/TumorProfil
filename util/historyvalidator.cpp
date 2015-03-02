@@ -71,7 +71,8 @@ void HistoryValidator::report(const Patient::Ptr& p, const QString& problem)
     qDebug() << p->firstName << p->surname << p->dateOfBirth.toString("dd.MM.yyyy") << problem;
 }
 
-void HistoryValidator::problem(const HistoryElement* element, const QString& problem)
+void HistoryValidator::problem(const HistoryElement*, const QString& problem)
 {
-    //qDebug() << p->firstName << p->surname << p->dateOfBirth.toString("dd.MM.yyyy")  << problem;
+    return;
+    qDebug() << p->firstName << p->surname << p->dateOfBirth.toString("dd.MM.yyyy")  << problem;
 }

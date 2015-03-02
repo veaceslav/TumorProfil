@@ -59,13 +59,13 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("Innere Klinik (Tumorforschung)");
     QCoreApplication::setApplicationName("Tumorprofil");
 
-    if (!QIcon::hasThemeIcon("document-open")) {
+    //if (!QIcon::hasThemeIcon("document-open")) {
         //If there is no default working icon theme then we should
         //use an icon theme that we provide via a .qrc file
         //This case happens under Windows and Mac OS X
         //This does not happen under GNOME or KDE
         QIcon::setThemeName("silk");
-    }
+    //}
 
     qDebug() << QDir::currentPath();
     QFileInfo info("tumorprofil.db");
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     qDebug() << tnm.mstatus(TNM::AssumeM0IfMissing) << tnm.mstatus(TNM::AssumeMxIfMissing);
     return 0;*/
     AnalysisGenerator generator;
-    generator.her2();
+    generator.fishRatioListe();
     return 0;
     /*HistoryValidator validator;
     validator.validatePAC();

@@ -9,7 +9,6 @@ QT       += core gui sql xml
 TARGET = Tumorprofil
 TEMPLATE = app
 
-
 SOURCES += main.cpp\
         mainwindow.cpp \
     datamodel/patient.cpp \

@@ -97,14 +97,14 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
         case Pathology::PulmonaryAdenosquamous:
         case Pathology::PulmonaryOtherCarcinoma:
             m_objects << new QLabel(tr("Immunhistochemie"));
-            m_objects << create(PathologyPropertyInfo::IHC_pAKT);
-            m_objects << create(PathologyPropertyInfo::IHC_ALK);
-            m_objects << create(PathologyPropertyInfo::IHC_pERK);
             m_objects << create(PathologyPropertyInfo::IHC_PTEN);
-            m_objects << create(PathologyPropertyInfo::IHC_ROS1);
+            m_objects << create(PathologyPropertyInfo::IHC_cMET);
+            m_objects << create(PathologyPropertyInfo::IHC_pAKT);
+            m_objects << create(PathologyPropertyInfo::IHC_pERK);
+            m_objects << create(PathologyPropertyInfo::IHC_ALK);
             m_objects << create(PathologyPropertyInfo::IHC_HER2);
             m_objects << create(PathologyPropertyInfo::IHC_HER2_DAKO);
-            m_objects << create(PathologyPropertyInfo::IHC_cMET);
+            m_objects << create(PathologyPropertyInfo::IHC_ROS1);
 
             m_objects << new QLabel(tr("FISH"));
             m_objects << create(PathologyPropertyInfo::Fish_ALK);
@@ -127,6 +127,7 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
             m_objects << create(PathologyPropertyInfo::IHC_PTEN);
             m_objects << create(PathologyPropertyInfo::IHC_pAKT);
             m_objects << create(PathologyPropertyInfo::IHC_pERK);
+            m_objects << create(PathologyPropertyInfo::IHC_cMET);
 
             m_objects << new QLabel(tr("FISH"));
             m_objects << create(PathologyPropertyInfo::Fish_FGFR1);
@@ -145,11 +146,11 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
             break;
         case Pathology::ColorectalAdeno:
             m_objects << new QLabel(tr("Immunhistochemie"));
+            m_objects << create(PathologyPropertyInfo::IHC_PTEN);
+            m_objects << create(PathologyPropertyInfo::IHC_cMET);
             m_objects << create(PathologyPropertyInfo::IHC_pAKT);
             m_objects << create(PathologyPropertyInfo::IHC_pP70S6K);
             m_objects << create(PathologyPropertyInfo::IHC_pERK);
-            m_objects << create(PathologyPropertyInfo::IHC_PTEN);
-            m_objects << create(PathologyPropertyInfo::IHC_cMET);
 
             m_objects << new QLabel(tr("Sequenzanalysen"));
             m_objects << create(PathologyPropertyInfo::Mut_KRAS_2);
