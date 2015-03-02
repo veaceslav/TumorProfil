@@ -41,13 +41,17 @@ public:
 
     enum ChangeFlag
     {
+        ChangedNothing           = 0,
         ChangedPathologyData     = 1 << 0,
         ChangedDiseaseProperties = 1 << 1,
         ChangedDiseaseMetadata   = 1 << 2,
         ChangedPatientProperties = 1 << 3,
         ChangedPatientMetadata   = 1 << 4,
 
-        ChangedDiseaseHistory    = ChangedDiseaseProperties
+        ChangedDiseaseHistory    = ChangedDiseaseProperties,
+        ChangedAll               = ChangedPathologyData | ChangedDiseaseProperties
+                                  | ChangedDiseaseMetadata | ChangedPatientProperties
+                                  | ChangedPatientMetadata
     };
     Q_DECLARE_FLAGS(ChangeFlags, ChangeFlag)
 
@@ -75,6 +79,7 @@ public:
                                      Patient::Gender gender = Patient::UnknownGender);
 
     void historySecurityCopy(const Patient::Ptr& p, const QString& type, const QString& value);
+    void mergeDatabase(const DatabaseParameters& otherDb);
 
 signals:
 

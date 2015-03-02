@@ -26,13 +26,16 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QTextEdit>
 
 // Local includes
 
 #include "databaseaccess.h"
+#include "databasetransaction.h"
 #include "databaseinitializationobserver.h"
 #include "databaseoperationgroup.h"
 #include "databaseparameters.h"
+#include "diseasehistory.h"
 #include "patient.h"
 #include "patientdb.h"
 #include "patientmanager.h"
@@ -411,6 +414,7 @@ void PatientManager::loadData(const Patient::Ptr& p)
         qWarning() << "Invalid patient given to loadData";
     }
 
+    //NOTE: Keep in sync with mergeDatabase code below
     p->patientProperties = DatabaseAccess().db()->properties(PatientDB::PatientProperties, p->id);
     p->diseases = DatabaseAccess().db()->findDiseases(p->id);
     for (int i=0; i<p->diseases.size(); ++i)
@@ -448,5 +452,286 @@ void PatientManager::historySecurityCopy(const Patient::Ptr& p, const QString& t
     else
     {
         qDebug() << "Failed to open" << filePath;
+    }
+}
+
+class QMessageBoxResize: public QMessageBox
+{
+public:
+    QMessageBoxResize() {
+        setMouseTracking(true);
+        setSizeGripEnabled(true);
+    }
+    QMessageBoxResize( Icon icon, const QString & title, const QString & text, StandardButtons buttons = NoButton, QWidget * parent = 0, Qt::WindowFlags f = Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint )
+        : QMessageBox(icon, title, text, buttons, parent, f)
+    {
+        setMouseTracking(true);
+        setSizeGripEnabled(true);
+    }
+private:
+    virtual bool event(QEvent *e) {
+        bool res = QMessageBox::event(e);
+        switch (e->type()) {
+        case QEvent::MouseMove:
+        case QEvent::MouseButtonPress:
+            setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+            if (QWidget *textEdit = findChild<QTextEdit *>()) {
+                textEdit->setMaximumHeight(QWIDGETSIZE_MAX);
+            }
+        default:break;
+        }
+        return res;
+    }
+};
+
+void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
+{
+    DefaultInitializationObserver observer;
+    DatabaseAccess* access = DatabaseAccess::createExternalAccess(otherDb, &observer);
+    if (!access)
+    {
+        qWarning() << "Failed to access other database" << otherDb;
+    }
+
+    QList<Patient> patients = access->db()->findPatients();
+    for (int i=0; i<patients.size(); ++i)
+    {
+        Patient& p = patients[i];
+
+        p.patientProperties = access->db()->properties(PatientDB::PatientProperties, p.id);
+        p.diseases = access->db()->findDiseases(p.id);
+        for (int i=0; i<p.diseases.size(); ++i)
+        {
+            Disease& disease = p.diseases[i];
+            disease.diseaseProperties = access->db()->properties(PatientDB::DiseaseProperties, disease.id);
+            disease.pathologies = access->db()->findPathologies(disease.id);
+            for (int u=0; u<disease.pathologies.size(); ++u)
+            {
+                Pathology& pathology = disease.pathologies[u];
+                pathology.properties = access->db()->properties(PatientDB::PathologyProperties, pathology.id);
+            }
+        }
+    }
+    delete access;
+    qDebug() << "Currently" << d->patients.size() << "patients, new db" << patients.size();
+
+    // Dry run
+    QStringList mergeActions;
+    foreach (const Patient& other, patients)
+    {
+        Patient::Ptr p;
+        QList<Patient::Ptr> ps = findPatients(other);
+        if (ps.isEmpty())
+        {
+            mergeActions << "Merge new Patient" + other.firstName + other.surname + other.dateOfBirth.toString();
+            continue;
+        }
+        else
+        {
+            p = ps.first();
+            if (ps.size() > 1)
+            {
+                mergeActions << "Warning: Multiple patients found for" + other.firstName + other.surname + other.dateOfBirth.toString();
+            }
+        }
+
+
+        ChangeFlags changed = ChangedNothing;
+        if (p->patientProperties != other.patientProperties)
+        {
+            changed |= ChangedPatientProperties;
+        }
+        foreach (const Disease& otherD, other.diseases)
+        {
+            int diseaseIndex;
+            for (diseaseIndex=0; diseaseIndex<p->diseases.size(); ++diseaseIndex)
+            {
+                if (p->diseases[diseaseIndex].entity() == otherD.entity())
+                {
+                    break;
+                }
+            }
+            if (diseaseIndex == p->diseases.size())
+            {
+                mergeActions << "Adding new disease for " + p->firstName + p->surname + p->dateOfBirth.toString();
+                changed |= ChangedDiseaseMetadata | ChangedDiseaseProperties | ChangedPathologyData;
+                continue;
+            }
+            else
+            {
+                Disease& d = p->diseases[diseaseIndex];
+                // ! initialDiagnosis: Do not merge
+                // ! initialTNM: Do not merge
+                // ! diseaseProperties: Handle history
+                if (d.diseaseProperties != otherD.diseaseProperties)
+                {
+                    DiseaseHistory h = d.history();
+                    DiseaseHistory otherH = otherD.history();
+                    bool dateNewer = (otherH.lastDocumentation().isValid() && h.lastDocumentation().isValid() && otherH.lastDocumentation() > h.lastDocumentation())
+                            || (otherH.lastDocumentation().isValid() && !h.lastDocumentation().isValid());
+                    if (otherH.size() >= h.size() || dateNewer)
+                    {
+                        mergeActions << "History of "+ p->firstName + p->surname + p->dateOfBirth.toString() << "was updated";
+                    }
+                    else
+                    {
+                        qDebug() << "History shrinked / changed:" + p->firstName << p->surname << "elements" << otherH.size() << "here" << h.size();
+                    }
+                }
+                foreach (const Pathology& otherP, otherD.pathologies)
+                {
+                    if (!d.hasPathology(otherP.context))
+                    {
+                        mergeActions << "Adding new pathology for " + p->firstName + p->surname + p->dateOfBirth.toString();
+                        changed |= ChangedPathologyData;
+                        continue;
+                    }
+                    else
+                    {
+                        Pathology& pa = d.firstPathology(otherP.context);
+                        if (pa == otherP)
+                        {
+                            continue;
+                        }
+                        mergeActions << "Merging changed pathology for " + p->firstName + p->surname + p->dateOfBirth.toString();
+                        qDebug() << "Pathology different:" << p->firstName << p->surname << p->dateOfBirth.toString();
+
+                        changed |= ChangedPathologyData;
+                        continue;
+                    }
+                }
+            }
+        }
+        if (changed == ChangedPatientProperties)
+        {
+            mergeActions << "Merging patient properties for " + p->firstName + p->surname + p->dateOfBirth.toString();
+        }
+    }
+
+    if (mergeActions.isEmpty())
+    {
+        QMessageBox::information(0, tr("Keine Änderungen"), tr("Keine Änderungen zum Zusammenführen"));
+        return;
+    }
+    else
+    {
+        QMessageBoxResize msgBox(QMessageBox::Question, tr("Zusammenführen"), tr("Sollen %1 Änderungen durchgeführt werden?").arg(mergeActions.size()), QMessageBox::Ok | QMessageBox::Cancel);
+        msgBox.setDetailedText(mergeActions.join("\n"));
+        msgBox.resize(600, 400);
+        if (msgBox.exec() != QMessageBox::Ok)
+        {
+            return;
+        }
+    }
+
+    DatabaseAccess taccess;
+    DatabaseTransaction transaction(&taccess);
+    foreach (const Patient& other, patients)
+    {
+        Patient::Ptr p;
+        ChangeFlags changed = ChangedNothing;
+        QList<Patient::Ptr> ps = findPatients(other);
+        if (ps.isEmpty())
+        {
+            qDebug() << "New patient merged" << other.surname;
+            Patient newValues(other);
+            newValues.id = 0; // will not be added to db if it has an id
+            newValues.diseases.clear(); // merge below, afterwards
+            p = addPatient(newValues);
+            if (!p)
+            {
+                qDebug() << "Failed to add patient when merging" << other.firstName << other.surname;
+                continue;
+            }
+            changed = ChangedAll;
+        }
+        else
+        {
+            p = ps.first();
+            if (ps.size() > 1)
+            {
+                qWarning() << "Multiple patients found for" << p->firstName << p->surname << p->dateOfBirth;
+            }
+        }
+
+        if (p->patientProperties != other.patientProperties)
+        {
+            p->patientProperties.merge(other.patientProperties);
+            changed |= ChangedPatientProperties;
+        }
+        foreach (const Disease& otherD, other.diseases)
+        {
+            int diseaseIndex;
+            for (diseaseIndex=0; diseaseIndex<p->diseases.size(); ++diseaseIndex)
+            {
+                if (p->diseases[diseaseIndex].entity() == otherD.entity())
+                {
+                    break;
+                }
+            }
+            if (diseaseIndex == p->diseases.size())
+            {
+                qDebug() << "Copy new disease" << p->surname << p->firstName;
+                p->diseases << otherD;
+                Disease& d = p->diseases.last();
+                // reset id trans-database
+                d.id = 0;
+                for (int o=0; o<d.pathologies.size(); o++)
+                {
+                    d.pathologies[o].id = 0;
+                }
+                changed |= ChangedDiseaseMetadata | ChangedDiseaseProperties | ChangedPathologyData;
+            }
+            else
+            {
+                Disease& d = p->diseases[diseaseIndex];
+                // ! initialDiagnosis: Merge if history changed
+                // ! initialTNM: Merge if history changed
+                // ! diseaseProperties: Handle history
+                if (d.diseaseProperties != otherD.diseaseProperties)
+                {
+                    DiseaseHistory h = d.history();
+                    DiseaseHistory otherH = otherD.history();
+                    bool dateNewer = (otherH.lastDocumentation().isValid() && h.lastDocumentation().isValid() && otherH.lastDocumentation() > h.lastDocumentation())
+                            || (otherH.lastDocumentation().isValid() && !h.lastDocumentation().isValid());
+                    if (otherH.size() >= h.size() || dateNewer)
+                    {
+                        d.setHistory(otherH);
+                        if (otherD.initialDiagnosis.isValid())
+                        {
+                            d.initialDiagnosis = otherD.initialDiagnosis;
+                        }
+                        if (!otherD.initialTNM.toText().isEmpty())
+                            d.initialTNM = otherD.initialTNM;
+                    }
+                }
+                foreach (const Pathology& otherP, otherD.pathologies)
+                {
+                    if (!d.hasPathology(otherP.context))
+                    {
+                        qDebug() << "Copy new pathology" << p->surname << p->firstName;
+                        d.pathologies << otherP;
+                        // reset id trans-database
+                        d.pathologies.last().id = 0;
+                        changed |= ChangedPathologyData;
+                    }
+                    else
+                    {
+                        Pathology& pa = d.firstPathology(otherP.context);
+                        if (pa == otherP)
+                        {
+                            continue;
+                        }
+                        qDebug() << "Merging pathology" << p->surname << p->firstName << pa.context;
+                        pa.entity = otherP.entity;
+                        pa.sampleOrigin = otherP.sampleOrigin;
+                        pa.date = otherP.date;
+                        pa.properties.merge(otherP.properties);
+                        changed |= ChangedPathologyData;
+                    }
+                }
+            }
+        }
+        updateData(p, changed);
     }
 }
