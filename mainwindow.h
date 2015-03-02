@@ -61,6 +61,7 @@ protected slots:
     void patientNameEdited(const Patient& p);
     void patientNumberChanged();
     void selectFilteredPatient();
+    void mergeDatabase();
 
 private:
 

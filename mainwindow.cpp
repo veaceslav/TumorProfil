@@ -29,6 +29,7 @@
 #include <QCheckBox>
 #include <QClipboard>
 #include <QDebug>
+#include <QFileDialog>
 #include <QKeyEvent>
 #include <QLineEdit>
 #include <QMessageBox>
@@ -41,6 +42,7 @@
 
 // Local includes
 
+#include "databaseparameters.h"
 #include "diseasetabwidget.h"
 #include "historywindow.h"
 #include "patientdisplay.h"
@@ -84,7 +86,8 @@ class MainWindow::MainWindowPriv
 public:
     MainWindowPriv()
         : historyEnabled(true),
-          editingEnabled(true)
+          editingEnabled(true),
+          adminEnabled(true)
     {
     }
 
@@ -103,6 +106,7 @@ public:
 
     bool              historyEnabled;
     bool              editingEnabled;
+    bool              adminEnabled;
 
     Patient::Ptr      currentPatient;
 };
@@ -143,18 +147,18 @@ void MainWindow::setupToolbar()
     d->toolBar = addToolBar(tr("Aktionen"));
     d->toolBar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
-    QAction* addAction = d->toolBar->addAction(QIcon::fromTheme("add"),
-                                               tr("Neuer Patient"),
-                                               this, SLOT(enterNewPatient()));
+    QAction* addPAction = d->toolBar->addAction(QIcon::fromTheme("add"),
+                                                tr("Neuer Patient"),
+                                                this, SLOT(enterNewPatient()));
 
-    QAction* delAction = d->toolBar->addAction(QIcon::fromTheme("cancel"),
-                                               tr("Änderungen verwerfen"),
-                                               this, SLOT(discardChanges()));
+    QAction* delPAction = d->toolBar->addAction(QIcon::fromTheme("cancel"),
+                                                tr("Änderungen verwerfen"),
+                                                this, SLOT(discardChanges()));
 
     if (!d->editingEnabled)
     {
-        addAction->setEnabled(false);
-        delAction->setEnabled(false);
+        addPAction->setEnabled(false);
+        delPAction->setEnabled(false);
     }
 
     d->toolBar->addSeparator();
@@ -169,6 +173,12 @@ void MainWindow::setupToolbar()
                               tr("Krankheitsverlauf"),
                               this, SLOT(showHistory()));
     }
+
+    // Hidden, only via shortcut
+    QAction* mergeAction = new QAction(tr("Datenbanken zusammenführen"), this);
+    mergeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_M));
+    connect(mergeAction, SIGNAL(triggered()), this, SLOT(mergeDatabase()));
+    addAction(mergeAction);
 }
 
 void MainWindow::setupStatusBar()
@@ -373,4 +383,14 @@ void MainWindow::selectFilteredPatient()
         setPatient(d->listView->currentPatient());
     }
     d->searchBar->clear();
+}
+
+void MainWindow::mergeDatabase()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Wähle Datenbankdatei, die eingelesen werden soll"));
+    if (fileName.isNull())
+    {
+        return;
+    }
+    PatientManager::instance()->mergeDatabase(DatabaseParameters::parametersForSQLite(fileName));
 }
