@@ -79,10 +79,11 @@ public:
         Comb_HER2,
         Comb_HormoneReceptor,
         Comb_TripleNegative,
-        Comb_cMetActivation, // Reminder: Adjust LastProperty
+        Comb_cMetActivation,
+        Comb_cMetIHC3plusScore, // Reminder: Adjust LastProperty
 
         FirstProperty = IHC_PTEN,
-        LastProperty  = Comb_cMetActivation
+        LastProperty  = Comb_cMetIHC3plusScore
     };
 
     enum ValueTypeCategory
@@ -90,7 +91,7 @@ public:
         InvalidCategory,
         IHCClassical,
         IHCClassicalPoints,
-        IHCBoolean, // "<10%, niedrige Intensität"
+        IHCBoolean, // "<10%, niedrige Intensitaet"
         IHCBooleanPercentage,
         IHCTwoDim,
         IHCHScore,
