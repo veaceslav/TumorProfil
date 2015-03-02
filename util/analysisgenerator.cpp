@@ -51,6 +51,30 @@ QVariant AnalysisGenerator::writePathologyProperty(const Disease& disease, Patho
     return value;
 }
 
+bool AnalysisGenerator::hasDetailValue(const Disease& disease, PathologyPropertyInfo::Property id)
+{
+    PathologyPropertyInfo info(id);
+    Property prop = disease.pathologyProperty(info.id);
+    if (prop.isNull() || prop.detail.isEmpty())
+    {
+        return false;
+    }
+    return true;
+}
+
+QVariant AnalysisGenerator::writeDetailValue(const Disease& disease, PathologyPropertyInfo::Property id)
+{
+    PathologyPropertyInfo info(id);
+    Property prop = disease.pathologyProperty(info.id);
+    if (prop.isNull() || prop.detail.isEmpty())
+    {
+        m_file << QString();
+        return QVariant();
+    }
+    m_file << prop.detail;
+    return prop.detail;
+}
+
 void AnalysisGenerator::writeIHCPropertySplit(const Disease& disease, PathologyPropertyInfo::Property id)
 {
     PathologyPropertyInfo info(id);
@@ -87,7 +111,7 @@ void AnalysisGenerator::her2()
     models.setReportType(PatientPropertyModelViewAdapter::PulmonaryAdenoIHCMut);
 
     //m_file.openForWriting("C:\\Users\\wiesweg\\Documents\\Tumorprofil\\HER2-Auswertung 03042014.csv");
-    m_file.openForWriting("/home/marcel/Dokumente/Tumorprofil/HER2-Auswertung 15052014.csv");
+    m_file.openForWriting("/home/marcel/Dokumente/Tumorprofil/HER2-Auswertung 01092014.csv");
 
     const int reportedLines = 5;
 
@@ -131,6 +155,8 @@ void AnalysisGenerator::her2()
     m_file << "G";
     m_file << "AlterBeiDiagnose";
     m_file << "TNMString";
+    m_file << "ALK"; // 45
+    m_file << "ALK IHC"; //46
     m_file.newLine();
 
     QMap<QDate, Patient::Ptr> birthdates;
@@ -286,6 +312,9 @@ void AnalysisGenerator::her2()
 
         m_file << disease.initialTNM.toText();
 
+        writePathologyProperty(disease, PathologyPropertyInfo::Fish_ALK); // 45
+        writePathologyProperty(disease, PathologyPropertyInfo::IHC_ALK); // 46
+
         m_file.newLine();
     }
     m_currentPatient = Patient::Ptr();
@@ -293,8 +322,351 @@ void AnalysisGenerator::her2()
     m_file.finishWriting();
 }
 
+QList<Patient::Ptr> AnalysisGenerator::patientsFromCSV(const QString &path)
+{
+    QList<Patient::Ptr> patients;
+    CSVFile source;
+    if (!source.read(path))
+    {
+        qDebug() << "Failed to open source file";
+        return patients;
+    }
+    // skip header line
+    source.parseNextLine();
+    while (!source.atEnd())
+    {
+        QList<QVariant> data = source.parseNextLine();
+        if (data.size() < 4)
+            continue;
+        QDate dob = QDate::fromString(data[3].toString(), "yyyy-MM-dd");
+        if (!dob.isValid())
+        {
+            dob = QDate::fromString(data[3].toString(), "M/d/yyyy");
+            if (!dob.isValid())
+            {
+                qDebug() << "Failed to parse d o b" << data[3].toString();
+                continue;
+            }
+        }
+        QString surname = data[1].toString();
+        // special cases in HER2 file
+        if (surname == "Muenchow") surname = "Münchow";
+        if (surname == "Huettmann") surname = "Hüttmann";
+        QList<Patient::Ptr> candidates = PatientManager::instance()->findPatients(surname, data[2].toString(), dob);
+        if (candidates.isEmpty())
+        {
+            qDebug() << "Did not identify" << data[1];
+            continue;
+        }
+        else if (candidates.size() > 1)
+        {
+            qDebug() << "Multiple pts for" << data[1];
+        }
+        if (candidates.first()->id != data[0].toInt())
+        {
+            qDebug() << "Id mismatch" << data[1].toString() << data[2].toString() << data[0].toInt() << candidates.first()->id;
+        }
+        patients << candidates.first();
+    }
+    return patients;
+}
+
+void AnalysisGenerator::findPikBrafTherapy()
+{
+    QList<Patient::Ptr> patients = patientsFromCSV("/home/marcel/Dokumente/Tumorprofil/Her2-Projekt/Her2_NSCLC_Enddatei_III_IV.csv");
+
+    QSet<QString> therapies;
+    therapies << "BKM120" << "Dabrafenib" << "Vemurafenib";
+    foreach (Patient::Ptr p, patients)
+    {
+        const Disease& disease = p->firstDisease();
+        const DiseaseHistory& history = disease.history();
+        NewTreatmentLineIterator treatmentLinesIterator;
+        treatmentLinesIterator.setProofreader(this);
+        treatmentLinesIterator.set(history);
+        treatmentLinesIterator.iterateToEnd();
+
+        foreach (const TherapyGroup& group, treatmentLinesIterator.therapies())
+        {
+            if (!group.substances().intersect(therapies).isEmpty())
+            {
+                qDebug() << p->firstName << p->surname << group.substances();
+                break;
+            }
+        }
+    }
+}
+
+void AnalysisGenerator::her2therapy()
+{
+    QList<Patient::Ptr> patients = patientsFromCSV("/home/marcel/Dokumente/Tumorprofil/Her2-Projekt/Her2_NSCLC_Enddatei_III_IV.csv");
+    m_file.openForWriting("/home/marcel/Dokumente/Tumorprofil/HER2 Therapiedaten 19122014.csv");
+    m_file << "id";
+    m_file << "Nachname";
+    m_file << "Vorname";
+    m_file << "Geburtsdatum";
+    m_file << "PemFirstLine";
+    m_file << "EGFR_TKI";
+    m_file.newLine();
+
+    qDebug() << "Identified" << patients.size();
+    QSet<QString> overallSubstances;
+    int numberPemFirstLine = 0;
+
+    foreach (Patient::Ptr p, patients)
+    {
+        m_file << p->id;
+        m_file << p->surname;
+        m_file << p->firstName;
+        m_file << p->dateOfBirth;
+
+        const Disease& disease = p->firstDisease();
+        const DiseaseHistory& history = disease.history();
+        TNM::MStatus m = disease.initialTNM.mstatus();
+
+        QDate firstProgress;
+        if (m == TNM::M0)
+        {
+            ProgressionIterator pit;
+            pit.set(history);
+            bool anyProgress = false;
+            if (pit.next() == HistoryIterator::Match)
+            {
+                firstProgress = pit.currentElement()->date;
+                anyProgress = true;
+            }
+            Q_UNUSED(anyProgress)
+
+            /*if (!anyProgress)
+            {
+                qDebug() << "Never saw any progress with" << p->firstName << p->surname;
+            }*/
+            /*EffectiveStateIterator esit(history);
+            bool sawFollowUp;
+            while (esit.next() != HistoryIterator::AtEnd)
+            {
+
+            }*/
+        }
+
+        NewTreatmentLineIterator treatmentLinesIterator;
+        treatmentLinesIterator.setProofreader(this);
+        treatmentLinesIterator.set(history);
+        treatmentLinesIterator.iterateToEnd();
+
+        QSet<QString> allSubstances;
+        foreach (const TherapyGroup& group, treatmentLinesIterator.therapies())
+        {
+            allSubstances += group.substances();
+        }
+        overallSubstances += allSubstances;
+
+        TherapyGroup firstLineTherapy, firstLineCTx;
+        foreach (const TherapyGroup& group, treatmentLinesIterator.therapies())
+        {
+            if (firstProgress.isValid() && group.beginDate() < firstProgress)
+            {
+                continue;
+            }
+
+            if (group.hasChemotherapy())
+            {
+                firstLineCTx = group;
+                break;
+            }
+            // If there is no CTx but a first line therapy (RTx), catch it
+            if (firstLineTherapy.isEmpty())
+            {
+                firstLineTherapy = group;
+            }
+        }
+
+        /*
+        if (firstLineTherapy.isEmpty() && firstLineCTx.isEmpty() && !firstProgress.isValid())
+        {
+            qDebug() << "No therapy for" << p->firstName << p->surname;
+        }
+        else if (firstLineCTx.isEmpty() && !firstProgress.isValid())
+        {
+            qDebug() << "No first line for" << p->firstName << p->surname;
+        }
+        */
+
+        // Pem 1st line
+        if (firstLineCTx.size())
+        {
+            bool pemFirstLine = firstLineCTx.substances().contains("Pemetrexed");
+            m_file << pemFirstLine;
+            if (pemFirstLine)
+                numberPemFirstLine++;
+        }
+        else
+        {
+            m_file << QVariant();
+        }
+
+        // any EGFR TKI
+        QSet<QString> egfrTKIs;
+        egfrTKIs << "AZD9291" << "Afatinib" << "BIBW 2992" << "Erlotinib" << "Gefitinib";
+        if (firstLineCTx.size())
+        {
+            m_file << !allSubstances.intersect(egfrTKIs).isEmpty();
+        }
+        else
+        {
+            m_file << QVariant();
+        }
+
+
+
+        m_file.newLine();
+    }
+    QList<QString> overallSubstancesList = overallSubstances.toList();
+    qSort(overallSubstancesList);
+    qDebug() << overallSubstancesList;
+
+    m_file.finishWriting();
+}
+
+void AnalysisGenerator::cmetListe()
+{
+    PatientPropertyModelViewAdapter models;
+    models.setReportType(PatientPropertyModelViewAdapter::PulmonaryAdenoIHCMut);
+
+    m_file.openForWriting("/home/marcel/Dokumente/Tumorprofil/cMET Adeno-Ca Stand 24.01.2015.csv");
+
+    // Header
+    m_file << "Nachname"; // 1
+    m_file << "Vorname"; // 2
+    m_file << "Geburtsdatum"; // 3
+    m_file << "Befunddatum"; // 4
+    m_file << "Erstdiagnose";
+    m_file << "MET Hscore";
+    m_file << "MET IHC 1+";
+    m_file << "MET IHC 2+";
+    m_file << "MET IHC 3+";
+    m_file.newLine();
+
+    QMap<QDate, Patient::Ptr> birthdates;
+
+    const int size = models.filterModel()->rowCount();
+    for (int i=0; i<size; i++)
+    {
+        Patient::Ptr p = PatientModel::retrievePatient(models.filterModel()->index(i, 0));
+        m_currentPatient = p;
+        const Disease& disease = p->firstDisease();
+        if (!disease.hasProfilePathology())
+        {
+            continue;
+        }
+        if (p->surname.startsWith("Dktk", Qt::CaseInsensitive) && p->firstName.trimmed().isEmpty())
+        {
+            continue;
+        }
+        PathologyPropertyInfo infoMet(PathologyPropertyInfo::IHC_cMET);
+        ValueTypeCategoryInfo ihcTypeMet(PathologyPropertyInfo::IHC_cMET);
+        Property prop = disease.pathologyProperty(infoMet.id);
+        if (prop.isNull())
+        {
+            continue;
+        }
+
+        /// Metadata
+        m_file << p->surname; // 1
+        m_file << p->firstName; // 2
+        m_file << p->dateOfBirth; // 3
+
+        m_file << disease.firstProfilePathology().date;
+        m_file << disease.initialDiagnosis;
+
+        /*
+        CombinedValue metComb(PathologyPropertyInfo::Comb_cMetIHC3plusScore);
+        metComb.combine(disease);
+        m_file << metComb.toValue();
+        */
+
+        writePathologyProperty(disease, PathologyPropertyInfo::IHC_cMET); // 16
+        HScore hscore = ihcTypeMet.toMedicalValue(prop).value<HScore>();
+        m_file << hscore.percentageWeak();
+        m_file << hscore.percentageMedium();
+        m_file << hscore.percentageStrong();
+
+        m_file.newLine();
+    }
+    m_file.finishWriting();
+}
+
+void AnalysisGenerator::fishRatioListe()
+{
+    PatientPropertyModelViewAdapter models;
+    models.setReportType(PatientPropertyModelViewAdapter::PulmonarySquamousIHCMut);
+
+    m_file.openForWriting("/home/marcel/Dokumente/Tumorprofil/FISH PEC Ratio Stand 12.02.2015.csv");
+
+    // Header
+    m_file << "Nachname"; // 1
+    m_file << "Vorname"; // 2
+    m_file << "Geburtsdatum"; // 3
+    m_file << "Befunddatum"; // 4
+    m_file << "HER2 ratio";
+    m_file << "PIK3CA ratio";
+    m_file << "FGFR ratio";
+    m_file << "Alk ratio";
+    m_file << "Ros1 ratio";
+    m_file.newLine();
+
+    QMap<QDate, Patient::Ptr> birthdates;
+
+    const int size = models.filterModel()->rowCount();
+    for (int i=0; i<size; i++)
+    {
+        Patient::Ptr p = PatientModel::retrievePatient(models.filterModel()->index(i, 0));
+        m_currentPatient = p;
+        const Disease& disease = p->firstDisease();
+        if (!disease.hasProfilePathology())
+        {
+            continue;
+        }
+        if (p->surname.startsWith("Dktk", Qt::CaseInsensitive) && p->firstName.trimmed().isEmpty())
+        {
+            continue;
+        }
+        if (!hasDetailValue(disease, PathologyPropertyInfo::Fish_HER2)
+                && !hasDetailValue(disease, PathologyPropertyInfo::Fish_PIK3CA)
+                && !hasDetailValue(disease, PathologyPropertyInfo::Fish_FGFR1)
+                && !hasDetailValue(disease, PathologyPropertyInfo::Fish_ALK)
+                && !hasDetailValue(disease, PathologyPropertyInfo::Fish_ROS1))
+        {
+            continue;
+        }
+
+        /// Metadata
+        m_file << p->surname; // 1
+        m_file << p->firstName; // 2
+        m_file << p->dateOfBirth; // 3
+
+        m_file << disease.firstProfilePathology().date;
+
+        /*
+        CombinedValue metComb(PathologyPropertyInfo::Comb_cMetIHC3plusScore);
+        metComb.combine(disease);
+        m_file << metComb.toValue();
+        */
+
+        writeDetailValue(disease, PathologyPropertyInfo::Fish_HER2);
+        writeDetailValue(disease, PathologyPropertyInfo::Fish_PIK3CA);
+        writeDetailValue(disease, PathologyPropertyInfo::Fish_FGFR1);
+        writeDetailValue(disease, PathologyPropertyInfo::Fish_ALK);
+        writeDetailValue(disease, PathologyPropertyInfo::Fish_ROS1);
+
+        m_file.newLine();
+    }
+    m_file.finishWriting();
+}
+
 void AnalysisGenerator::problem(const HistoryElement *, const QString &problem)
 {
+    return; // be silent
     if (!m_currentPatient)
     {
         qDebug() << problem;

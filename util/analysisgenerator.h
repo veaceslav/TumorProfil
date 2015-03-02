@@ -36,13 +36,20 @@ public:
     AnalysisGenerator();
 
     void her2();
+    void her2therapy();
+    void findPikBrafTherapy();
+    void cmetListe();
+    void fishRatioListe();
 
 protected:
 
     QVariant writePathologyProperty(const Disease& disease, PathologyPropertyInfo::Property id);
+    QVariant writeDetailValue(const Disease& disease, PathologyPropertyInfo::Property id);
+    bool hasDetailValue(const Disease& disease, PathologyPropertyInfo::Property id);
     void writeIHCPropertySplit(const Disease& disease, PathologyPropertyInfo::Property id);
     void writeIHCIsPositive(const Disease& disease, PathologyPropertyInfo::Property id);
     virtual void problem(const HistoryElement* element, const QString& problem);
+    QList<Patient::Ptr> patientsFromCSV(const QString& path);
 
     CSVFile m_file;
     Patient::Ptr m_currentPatient;
