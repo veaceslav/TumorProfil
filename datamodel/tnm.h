@@ -50,6 +50,8 @@ public:
     char                   V;
     char                   G;
     char                   R;
+
+    bool isEmpty() const;
 };
 
 class TNM
@@ -100,6 +102,9 @@ public:
       Replaces the current data - either cTNM or pTNM.
       */
     void setTNM(const TNMData& tnm);
+
+    /// Returns true if there is no valid data (all x)
+    bool isEmpty() const;
 
     /**
       Checks both cTNM and pTNM and returns the more valid value

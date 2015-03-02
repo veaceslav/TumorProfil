@@ -38,6 +38,19 @@ TNMData::TNMData(ClinicalOrPathological type)
     R = 'x';
 }
 
+bool TNMData::isEmpty() const
+{
+    return
+            T == "x" &&
+            N == "x" &&
+            M == "x" &&
+            L == 'x' &&
+            V == 'x' &&
+            G == 'x' &&
+            R == 'x';
+
+}
+
 class TNMParser
 {
 public:
@@ -174,6 +187,11 @@ TNM::TNM(const TNMData &tnm)
 TNM::TNM(const QString& tnm)
 {
     setTNM(tnm);
+}
+
+bool TNM::isEmpty() const
+{
+    return m_pTNM.isEmpty() && m_cTNM.isEmpty();
 }
 
 void TNM::addTNM(const QString& tnm, StageConflictBehavior behavior)
