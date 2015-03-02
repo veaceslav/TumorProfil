@@ -21,9 +21,50 @@
 
 #include "pathology.h"
 
+#include <QDebug>
+
 Pathology::Pathology()
     : entity(UnknownEntity),
       sampleOrigin(UnknownOrigin),
       id(0)
 {
+}
+
+bool Pathology::operator==(const Pathology& other) const
+{
+    if (   entity       == other.entity
+        && sampleOrigin == other.sampleOrigin
+        && context      == other.context
+        && date         == other.date
+           )
+    {
+        if (properties == other.properties)
+        {
+            return true;
+        }
+        if (properties.size() != other.properties.size())
+        {
+            //return false;
+        }
+        // Check if only order is different
+        PropertyList leftSorted(properties);
+        qSort(leftSorted);
+        PropertyList rightSorted(properties);
+        qSort(rightSorted);
+        if (leftSorted == rightSorted)
+        {
+            return true;
+        }
+        qDebug() << "Left properties size" << properties.size();
+        foreach (const Property& prop, properties)
+        {
+            qDebug() << prop.property << prop.value << prop.detail;
+        }
+        qDebug() << "Right properties size" << other.properties.size();
+        foreach (const Property& prop, other.properties)
+        {
+            qDebug() << prop.property << prop.value << prop.detail;
+        }
+    }
+    return false;
 }

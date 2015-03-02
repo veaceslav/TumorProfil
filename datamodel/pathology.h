@@ -74,6 +74,7 @@ public:
     typedef QSharedPointer<Pathology> Ptr;
 
     Pathology();
+    bool operator==(const Pathology& other) const;
 
     Entity          entity;
     SampleOrigin    sampleOrigin;
