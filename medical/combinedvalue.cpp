@@ -263,6 +263,21 @@ void CombinedValue::combine(const Disease& disease)
         }
         break;
     }
+    case PathologyPropertyInfo::Comb_cMetIHC3plusScore:
+    {
+        PathologyPropertyInfo ihcInfo(PathologyPropertyInfo::IHC_cMET);
+        Property ihc = disease.pathologyProperty(ihcInfo.id);
+
+        if (ihc.isNull())
+        {
+            return;
+        }
+        ValueTypeCategoryInfo ihcType(PathologyPropertyInfo::IHC_cMET);
+        // CINC280X2102 definition
+        resultValue = (ihcType.toMedicalValue(ihc).value<HScore>().percentageStrong() >= 50);
+        determiningProperty = ihc;
+        break;
+    }
     default:
         qDebug() << "Unsupported combined value" << info.id << info.property;
         break;
@@ -364,6 +379,15 @@ QString CombinedValue::toDisplayString() const
             }
         }
         return str;
+    }
+    case PathologyPropertyInfo::Comb_cMetIHC3plusScore:
+    {
+        if (resultValue.toBool())
+        {
+            ValueTypeCategoryInfo ihcType(PathologyPropertyInfo::IHC_cMET);
+            int strongCells = ihcType.toMedicalValue(determiningProperty).value<HScore>().percentageStrong();
+            str += QString(" (%1%%)").arg(strongCells);
+        }
     }
     default:
         return str;

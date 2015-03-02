@@ -108,6 +108,7 @@ QString AggregatedDatumInfo::label() const
 
 QList<AggregatedDatumInfo> AggregatedDatumInfo::fieldsFromCategory(const ValueTypeCategoryInfo& info)
 {
+    Q_UNUSED(info)
     QList<AggregatedDatumInfo> infos;
     infos << possibleValueTypes(Count);
     infos << possibleValueTypes(Positive);
