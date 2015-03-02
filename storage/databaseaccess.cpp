@@ -294,7 +294,11 @@ DatabaseAccess* DatabaseAccess::createExternalAccess(const DatabaseParameters& p
     DatabaseAccessPriv* d = new DatabaseAccessPriv;
     DatabaseAccess* access = new DatabaseAccess(d);
     performSetParameters(d, params);
-    performReadyCheck(*access, observer);
+    if (!performReadyCheck(*access, observer))
+    {
+        delete access;
+        return 0;
+    }
     return access;
 }
 

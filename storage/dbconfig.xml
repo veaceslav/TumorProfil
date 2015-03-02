@@ -50,8 +50,8 @@
                  (id INTEGER PRIMARY KEY,
                   diseaseid INTEGER,
                   entity INTEGER,
-                  sampleOrigin INTEGER
-                  context TEXT
+                  sampleOrigin INTEGER,
+                  context TEXT,
                   date DATETIME);
                 </statement>
                 <statement mode="plain">

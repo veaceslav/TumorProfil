@@ -70,7 +70,7 @@ public:
      * The db file will, if necessary, be schema-updated.
      * You must delete the DatabaseAccess object which you receive.
      */
-    DatabaseAccess* createExternalAccess(const DatabaseParameters& params, InitializationObserver* observer);
+    static DatabaseAccess* createExternalAccess(const DatabaseParameters& params, InitializationObserver* observer);
 
 private:
 
