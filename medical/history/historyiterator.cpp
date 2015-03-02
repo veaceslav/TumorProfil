@@ -328,7 +328,7 @@ float OSIterator::months(Definition definition) const
     return float(d)/30.0;
 }
 
-bool OSIterator::isInterested(HistoryElement* element)
+bool OSIterator::isInterested(HistoryElement*)
 {
     return true;
 }
@@ -437,7 +437,7 @@ EffectiveStateIterator::EffectiveStateIterator(const DiseaseHistory& history)
     set(history);
 }
 
-bool EffectiveStateIterator::isInterested(HistoryElement* element)
+bool EffectiveStateIterator::isInterested(HistoryElement*)
 {
     return true;
 }

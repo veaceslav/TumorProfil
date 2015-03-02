@@ -395,7 +395,7 @@ QModelIndex DataAggregationModel::index(int row, int column, const QModelIndex& 
     return createIndex(row, column, 0);
 }
 
-int DataAggregationModel::columnCount(const QModelIndex& parent) const
+int DataAggregationModel::columnCount(const QModelIndex&) const
 {
     if (!d->sourceModel)
     {
@@ -413,7 +413,7 @@ int DataAggregationModel::rowCount(const QModelIndex& parent ) const
     return d->rows.size();
 }
 
-Qt::ItemFlags DataAggregationModel::flags(const QModelIndex& index) const
+Qt::ItemFlags DataAggregationModel::flags(const QModelIndex&) const
 {
     return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
@@ -427,7 +427,7 @@ bool DataAggregationModel::hasChildren(const QModelIndex& parent ) const
     return true;
 }
 
-QModelIndex DataAggregationModel::parent(const QModelIndex& index) const
+QModelIndex DataAggregationModel::parent(const QModelIndex&) const
 {
     return QModelIndex();
 }

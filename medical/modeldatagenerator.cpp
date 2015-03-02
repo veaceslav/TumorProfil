@@ -489,6 +489,7 @@ QVariant ModelDataGenerator::completenessDatum(CompletenessField value)
 
 QVariant ModelDataGenerator::completenessHeader(CompletenessField value)
 {
+    Q_UNUSED(value)
     switch (role)
     {
     case Qt::DisplayRole:

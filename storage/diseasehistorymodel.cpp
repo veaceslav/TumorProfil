@@ -415,12 +415,12 @@ int DiseaseHistoryModel::rowCount(const QModelIndex& parent ) const
     return m_history.size();
 }
 
-int DiseaseHistoryModel::columnCount(const QModelIndex& parent) const
+int DiseaseHistoryModel::columnCount(const QModelIndex&) const
 {
     return ColumnCount;
 }
 
-Qt::ItemFlags DiseaseHistoryModel::flags(const QModelIndex& index) const
+Qt::ItemFlags DiseaseHistoryModel::flags(const QModelIndex&) const
 {
     return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }

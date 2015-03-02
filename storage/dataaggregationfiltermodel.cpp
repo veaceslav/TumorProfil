@@ -29,7 +29,7 @@ DataAggregationFilterModel::DataAggregationFilterModel(QObject *parent) :
 }
 
 bool DataAggregationFilterModel::filterAcceptsColumn(int source_column,
-                                                     const QModelIndex &source_parent) const
+                                                     const QModelIndex &) const
 {
     const int rowCount = sourceModel()->rowCount();
     for (int row=0; row<rowCount; row++)
@@ -43,8 +43,8 @@ bool DataAggregationFilterModel::filterAcceptsColumn(int source_column,
     return false;
 }
 
-bool DataAggregationFilterModel::filterAcceptsRow(int source_row,
-                                                  const QModelIndex &source_parent) const
+bool DataAggregationFilterModel::filterAcceptsRow(int,
+                                                  const QModelIndex &) const
 {
     return true;
 }
