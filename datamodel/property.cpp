@@ -41,11 +41,24 @@ bool Property::isEmpty() const
     return !isValid() || value.isEmpty();
 }
 
-bool Property::operator==(const Property& other)
+bool Property::operator==(const Property& other) const
 {
     return property == other.property &&
             value   == other.value &&
             detail  == other.detail;
+}
+
+bool Property::operator <(const Property& other) const
+{
+    if (property == other.property)
+    {
+        if (value == other.value)
+        {
+            return detail<other.detail;
+        }
+        return value < other.value;
+    }
+    return property < other.property;
 }
 
 PropertyList::PropertyList()
@@ -131,3 +144,10 @@ void PropertyList::removeProperty(const QString& prop, const QString& value, con
     }
 }
 
+void PropertyList::merge(const PropertyList &other)
+{
+    for (QList<Property>::const_iterator it = other.begin(); it != other.end(); ++it)
+    {
+        setProperty(it->property, it->value, it->detail);
+    }
+}

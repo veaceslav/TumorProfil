@@ -34,7 +34,8 @@ public:
     Property();
     Property(const QString& property, const QString& value, const QString& detail = QString());
 
-    bool operator==(const Property& other);
+    bool operator==(const Property& other) const;
+    bool operator<(const Property& other) const;
 
     /// A property is valid if the "property" key is valid
     bool isValid() const;
@@ -88,6 +89,12 @@ public:
       Removes all matching properties.
       */
     void removeProperty(const QString& prop, const QString& value = QString(), const QString& detail = QString());
+
+    /**
+      Merge the given list into this list. The given list has priority,
+      if properties are present in both lists, the property from the given list replaces the property of this list.
+      */
+    void merge(const PropertyList& other);
 };
 
 Q_DECLARE_METATYPE(Property)
