@@ -55,6 +55,7 @@ public:
                   << PathologyPropertyInfo::IHC_ALK
                   << PathologyPropertyInfo::IHC_ROS1
                   << PathologyPropertyInfo::Comb_cMetActivation
+                  << PathologyPropertyInfo::Comb_cMetIHC3plusScore
                   //<< PathologyPropertyInfo::IHC_HER2
                   //<< PathologyPropertyInfo::IHC_HER2_DAKO
                   << PathologyPropertyInfo::Fish_HER2
@@ -450,7 +451,7 @@ QVariant PatientPropertyModel::headerData(int section, Qt::Orientation orientati
     return QVariant();
 }
 
-int PatientPropertyModel::columnCount(const QModelIndex& parent) const
+int PatientPropertyModel::columnCount(const QModelIndex&) const
 {
     DataGenerator generator(d->profile, d->infos, Patient::Ptr(), 0, 0);
 

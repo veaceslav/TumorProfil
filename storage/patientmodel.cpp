@@ -201,7 +201,7 @@ int PatientModel::columnCount(const QModelIndex& parent ) const
     return ColumnCount;
 }
 
-Qt::ItemFlags PatientModel::flags(const QModelIndex& index) const
+Qt::ItemFlags PatientModel::flags(const QModelIndex&) const
 {
     return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
@@ -233,7 +233,7 @@ QModelIndex PatientModel::createIndexForRow(int row, int column) const
     return createIndex(row, column, PatientManager::instance()->patientId(row));
 }
 
-QModelIndex PatientModel::parent(const QModelIndex& index) const
+QModelIndex PatientModel::parent(const QModelIndex&) const
 {
     return QModelIndex();
 }
@@ -268,7 +268,7 @@ Patient::Ptr PatientModel::retrievePatient(const QModelIndex& index)
     return data.value<Patient::Ptr>();
 }
 
-void PatientModel::patientAdded(int index, const Patient::Ptr& patient)
+void PatientModel::patientAdded(int index, const Patient::Ptr&)
 {
     beginInsertRows(QModelIndex(), index, index);
     endInsertRows();
@@ -280,12 +280,12 @@ void PatientModel::patientDataChanged(const Patient::Ptr& patient, int)
     emit dataChanged(index, index);
 }
 
-void PatientModel::patientAboutToBeRemoved(int index, const Patient::Ptr& patient)
+void PatientModel::patientAboutToBeRemoved(int index, const Patient::Ptr&)
 {
     beginRemoveRows(QModelIndex(), index, index);
 }
 
-void PatientModel::patientRemoved(const Patient::Ptr& patient)
+void PatientModel::patientRemoved(const Patient::Ptr&)
 {
     endRemoveRows();
 }

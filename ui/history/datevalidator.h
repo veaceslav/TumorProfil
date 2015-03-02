@@ -50,7 +50,7 @@ class DateValidator: public QValidator
     public:
         static bool		IsValid(const QString &text);
         static void     setDate(QLineEdit* lineEdit, const QDate& date);
-        static QString DateToText(QDate date);
+        static QString DateToText(const QDate& date);
         static QDate TextToDate(QString text, QChar trennzeichen = '.');
 
 

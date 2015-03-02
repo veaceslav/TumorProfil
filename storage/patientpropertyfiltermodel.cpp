@@ -299,7 +299,6 @@ bool PatientPropertyFilterSettings::matchesCriteria(Patient::Ptr p) const
     QMap<Criteria,bool>::const_iterator it;
     for (it = criteria.begin(); it != criteria.end(); ++it)
     {
-        qDebug() << "Criteria" << it.key() << p->surname << p->surname.startsWith("Dktk", Qt::CaseInsensitive) << p->firstName.trimmed().isEmpty();
         switch (it.key())
         {
         case LocalCenterOrigin:
@@ -307,7 +306,6 @@ bool PatientPropertyFilterSettings::matchesCriteria(Patient::Ptr p) const
             bool isFromLocalCenter = true;
             if (p->surname.startsWith("Dktk", Qt::CaseInsensitive) && p->firstName.trimmed().isEmpty())
             {
-                qDebug() << "not from local center" << p->surname;
                 isFromLocalCenter = false;
             }
             if (isFromLocalCenter != it.value())

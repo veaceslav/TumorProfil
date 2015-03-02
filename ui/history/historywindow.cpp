@@ -148,7 +148,7 @@ public:
 class HistoryColorProvider : public RoleDataProvider
 {
 public:
-    virtual QVariant data(const PatientModel* model, const QModelIndex& index, const Patient::Ptr& p)
+    virtual QVariant data(const PatientModel*, const QModelIndex&, const Patient::Ptr& p)
     {
         QHash<int,QVariant>::const_iterator it = hash.find(p->id);
         if (it != hash.end())

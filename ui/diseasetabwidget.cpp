@@ -125,7 +125,7 @@ public:
     TrialParticipantTab();
     virtual PathologyContextInfo::Context context() const { return PathologyContextInfo::InvalidContext; }
     virtual QString tabLabel() const { return QObject::tr("Studien"); }
-    virtual void switchEntity(Pathology::Entity entity) {}
+    virtual void switchEntity(Pathology::Entity) {}
     virtual void save(const Patient::Ptr& p, Disease& disease, Pathology::Entity entity);
     virtual bool load(const Patient::Ptr& p, const Disease& disease);
     virtual void reset();
@@ -376,7 +376,7 @@ void DiseaseTabWidget::save(const Patient::Ptr& p)
     }
 }
 
-void DiseaseTabWidget::slotEntitySelectionChanged(Pathology::Entity entity)
+void DiseaseTabWidget::slotEntitySelectionChanged(Pathology::Entity)
 {
     if (d->hasValidPathology)
     {
@@ -557,12 +557,12 @@ bool PathologyTab::saveProperties(Disease& disease, PathologyContextInfo::Contex
     return true;
 }
 
-bool PathologyTab::load(const Patient::Ptr& p, const Disease& disease)
+bool PathologyTab::load(const Patient::Ptr&, const Disease& disease)
 {
     return loadProperties(disease, context());
 }
 
-void PathologyTab::save(const Patient::Ptr& p, Disease& disease, Pathology::Entity entity)
+void PathologyTab::save(const Patient::Ptr&, Disease& disease, Pathology::Entity)
 {
     saveProperties(disease, context());
 }
@@ -622,7 +622,7 @@ void TrialParticipantTab::save(const Patient::Ptr& p, Disease&, Pathology::Entit
     }
 }
 
-bool TrialParticipantTab::load(const Patient::Ptr& p, const Disease& disease)
+bool TrialParticipantTab::load(const Patient::Ptr& p, const Disease&)
 {
     QMap<TrialContextInfo::Trial, QCheckBox*>::const_iterator it;
     for (it = checkboxes.begin(); it != checkboxes.end(); ++it)

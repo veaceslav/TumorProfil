@@ -328,7 +328,7 @@ public:
     }
 };
 
-void VisualHistoryWidget::paintEvent(QPaintEvent *event)
+void VisualHistoryWidget::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);

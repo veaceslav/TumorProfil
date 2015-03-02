@@ -103,6 +103,7 @@ enum
 }
 
 CTxEditWidget::CTxEditWidget(QWidget* parent)
+    : TherapyElementEditWidget(parent)
 {
     therapyLabel->setText(tr("Substanz"));
 
@@ -189,6 +190,7 @@ void CTxEditWidget::setElement(TherapyElement* element)
 }
 
 RTxEditWidget::RTxEditWidget(QWidget* parent)
+    : TherapyElementEditWidget(parent)
 {
     therapyLabel->setText(tr("Bestrahlung"));
 
@@ -228,6 +230,7 @@ void RTxEditWidget::setElement(TherapyElement* element)
 }
 
 ToxicityEditWidget::ToxicityEditWidget(QWidget* parent)
+    : TherapyElementEditWidget(parent)
 {
     therapyLabel->setText(tr("Komplikation"));
 

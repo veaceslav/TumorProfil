@@ -9,7 +9,7 @@
 #include <QSettings>
 #include <QVBoxLayout>
 
-ColumnSelectionDialog::ColumnSelectionDialog(QAbstractItemModel* model, QWidget* parent)
+ColumnSelectionDialog::ColumnSelectionDialog(QAbstractItemModel* model, QWidget*)
 {
     QVBoxLayout *layout = new QVBoxLayout;
     QLabel *label = new QLabel(tr("Bitte Spalten für CSV-Export auswählen:"));

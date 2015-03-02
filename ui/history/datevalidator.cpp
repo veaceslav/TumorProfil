@@ -76,7 +76,7 @@ bool DateValidator::m_noValidate = false;
 **	return	:	Text leer                                               *
 *************************************************************************/
 
-QString DateValidator::DateToText(QDate date)
+QString DateValidator::DateToText(const QDate&)
 {
     return "";                                  // muss sich jeder nach geschmack selbst schreiben ...
                                                 // oder die Methode von QDate nehmen
@@ -334,6 +334,7 @@ void DateValidator::setTrennzeichen(char trennzeichen)
 
 QValidator::State DateValidator::validate( QString & input, int & pos) const
 {
+    Q_UNUSED(pos)
     // nur validieren wenn nicht abgeschaltet
 
     if (m_noValidate == true)
