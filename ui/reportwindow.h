@@ -27,8 +27,8 @@
 
 #include "filtermainwindow.h"
 #include "patient.h"
+#include <QModelIndex>
 
-class QModelIndex;
 class ReportTableView;
 
 class ReportWindow : public FilterMainWindow

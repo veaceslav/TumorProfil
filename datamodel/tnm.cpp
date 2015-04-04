@@ -71,7 +71,8 @@ public:
         while ((index = regexpT.indexIn(s)) != -1)
         {
             TNMData& tnm = relevantData(regexpT.cap(2));
-            tnm.flags = regexpT.cap(1).toLower().toAscii();
+#pragma message "See toAscii conversion"
+            tnm.flags = regexpT.cap(1).toLower().toLatin1();
             tnm.T = regexpT.cap(3).toLower();
             s.remove(index, regexpT.matchedLength());
             hasT = true;
@@ -101,8 +102,8 @@ public:
         }
         while ((index = regexpLGVR.indexIn(s)) != -1)
         {
-            char value = regexpLGVR.cap(2).toLower().toAscii().at(0);
-            switch (regexpLGVR.cap(1).toUpper().toAscii().at(0))
+            char value = regexpLGVR.cap(2).toLower().toLatin1().at(0);
+            switch (regexpLGVR.cap(1).toUpper().toLatin1().at(0))
             {
             case 'L':
                 pTNM.L = value;

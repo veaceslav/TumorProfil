@@ -24,6 +24,7 @@
 // Qt includes
 
 #include <QAbstractItemModel>
+#include <QMimeData>
 #include <QAction>
 #include <QApplication>
 #include <QCheckBox>

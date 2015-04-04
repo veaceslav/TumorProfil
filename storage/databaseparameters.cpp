@@ -35,6 +35,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QFile>
+#include <QUrlQuery>
 
 namespace
 {
@@ -81,12 +82,13 @@ DatabaseParameters::DatabaseParameters(const QString& type,
 DatabaseParameters::DatabaseParameters(const QUrl& url)
     : port(-1), internalServer(false)
 {
-    databaseType   = url.queryItemValue("databaseType");
-    databaseName   = url.queryItemValue("databaseName");
-    databaseNameThumbnails   = url.queryItemValue("databaseNameThumbnails");
-    connectOptions = url.queryItemValue("connectOptions");
-    hostName       = url.queryItemValue("hostName");
-    QString queryPort = url.queryItemValue("port");
+    QUrlQuery urlQuery(url.query());
+    databaseType   = urlQuery.queryItemValue("databaseType");
+    databaseName   = urlQuery.queryItemValue("databaseName");
+    databaseNameThumbnails   = urlQuery.queryItemValue("databaseNameThumbnails");
+    connectOptions = urlQuery.queryItemValue("connectOptions");
+    hostName       = urlQuery.queryItemValue("hostName");
+    QString queryPort = urlQuery.queryItemValue("port");
 
     if (!queryPort.isNull())
     {
@@ -104,8 +106,8 @@ DatabaseParameters::DatabaseParameters(const QUrl& url)
     internalServer = false;
 #endif // HAVE_INTERNALMYSQL
 
-    userName       = url.queryItemValue("userName");
-    password       = url.queryItemValue("password");
+    userName       = urlQuery.queryItemValue("userName");
+    password       = urlQuery.queryItemValue("password");
 }
 
 bool DatabaseParameters::operator==(const DatabaseParameters& other) const
@@ -391,50 +393,56 @@ void DatabaseParameters::insertInUrl(QUrl& url) const
 {
     removeFromUrl(url);
 
-    url.addQueryItem("databaseType", databaseType);
-    url.addQueryItem("databaseName", databaseName);
+    QUrlQuery urlQuery(url.query());
+    urlQuery.addQueryItem("databaseType", databaseType);
+    urlQuery.addQueryItem("databaseName", databaseName);
 
     if (!connectOptions.isNull())
     {
-        url.addQueryItem("connectOptions", connectOptions);
+        urlQuery.addQueryItem("connectOptions", connectOptions);
     }
 
     if (!hostName.isNull())
     {
-        url.addQueryItem("hostName", hostName);
+        urlQuery.addQueryItem("hostName", hostName);
     }
 
     if (port != -1)
     {
-        url.addQueryItem("port", QString::number(port));
+        urlQuery.addQueryItem("port", QString::number(port));
     }
 
     if (internalServer)
     {
-        url.addQueryItem("internalServer", "true");
+        urlQuery.addQueryItem("internalServer", "true");
     }
 
     if (!userName.isNull())
     {
-        url.addQueryItem("userName", userName);
+        urlQuery.addQueryItem("userName", userName);
     }
 
     if (!password.isNull())
     {
-        url.addQueryItem("password", password);
+        urlQuery.addQueryItem("password", password);
     }
+
+    url.setQuery(urlQuery);
 }
 
 void DatabaseParameters::removeFromUrl(QUrl& url)
 {
-    url.removeQueryItem("databaseType");
-    url.removeQueryItem("databaseName");
-    url.removeQueryItem("connectOptions");
-    url.removeQueryItem("hostName");
-    url.removeQueryItem("port");
-    url.removeQueryItem("internalServer");
-    url.removeQueryItem("userName");
-    url.removeQueryItem("password");
+    QUrlQuery urlQuery(url.query());
+    urlQuery.removeQueryItem("databaseType");
+    urlQuery.removeQueryItem("databaseName");
+    urlQuery.removeQueryItem("connectOptions");
+    urlQuery.removeQueryItem("hostName");
+    urlQuery.removeQueryItem("port");
+    urlQuery.removeQueryItem("internalServer");
+    urlQuery.removeQueryItem("userName");
+    urlQuery.removeQueryItem("password");
+
+    url.setQuery(urlQuery);
 }
 
 QDebug operator<<(QDebug dbg, const DatabaseParameters& p)

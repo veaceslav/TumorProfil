@@ -21,7 +21,7 @@
 
 // Qt includes
 
-#include <QtGui/QApplication>
+#include <QApplication>
 #include <QDir>
 #include <QDebug>
 #include <QFileInfo>

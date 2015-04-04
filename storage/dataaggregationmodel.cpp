@@ -392,7 +392,7 @@ QModelIndex DataAggregationModel::index(int row, int column, const QModelIndex& 
     {
         return QModelIndex();
     }
-    return createIndex(row, column, 0);
+    return createIndex(row, column);
 }
 
 int DataAggregationModel::columnCount(const QModelIndex&) const
