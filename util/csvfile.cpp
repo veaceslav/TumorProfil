@@ -197,10 +197,33 @@ QVariant CSVFile::toVariant(const QString& s, bool wasQuoted)
 {
     if (s.count('.') == 2)
     {
-        QDate date = QDate::fromString(s, "dd.MM.yyyy");
-        if (date.isValid())
+        if (s.length() == 10)
         {
-            return date;
+            QDate date = QDate::fromString(s, "dd.MM.yyyy");
+            if (date.isValid())
+            {
+                return date;
+            }
+        }
+        else if (s.length() == 8)
+        {
+            QDate date = QDate::fromString(s, "dd.MM.yy");
+            if (!date.isValid())
+            {
+                date = QDate::fromString(s, "d.M.yyyy");
+            }
+            if (date.isValid())
+            {
+                return date;
+            }
+        }
+        else
+        {
+            QDate date = QDate::fromString(s, "d.M.yy");
+            if (date.isValid())
+            {
+                return date;
+            }
         }
     }
     else if (s.count('/') == 2)
