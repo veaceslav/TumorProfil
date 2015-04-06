@@ -302,6 +302,7 @@ TherapyEditWidget::TherapyEditWidget()
     QGridLayout* infoLayout = new QGridLayout;
     addFlagButton(Therapy::BeginsTherapyBlock, tr("Anfang Therapieblock"), infoGroup, infoLayout, 0, 0);
     addFlagButton(Therapy::EndsTherapyBlock, tr("Ende Therapieblock"), infoGroup, infoLayout, 1, 0);
+    connect(infoGroup, SIGNAL(buttonClicked(int)), this, SIGNAL(changed()));
     infoBox->setLayout(infoLayout);
     mainLayout->addWidget(infoBox);
 }
