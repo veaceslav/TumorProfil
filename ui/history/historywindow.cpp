@@ -197,6 +197,8 @@ public:
           tnmEdit(0),
           lastDocumentation(0),
           lastDocumentationDate(0),
+          lastValidation(0),
+          lastValidationDate(0),
           proofOutput(0),
           colorProvider(0),
           proofReader(0),
@@ -221,6 +223,8 @@ public:
     QLineEdit              *tnmEdit;
     QCheckBox              *lastDocumentation;
     QDateEdit              *lastDocumentationDate;
+    QCheckBox              *lastValidation;
+    QDateEdit              *lastValidationDate;
     QListWidget            *proofOutput;
     HistoryColorProvider   *colorProvider;
     HistoryWindowProofReadOutput* proofReader;
@@ -308,6 +312,24 @@ void HistoryWindow::applyData()
             }
         }
 
+        QDate lastValid = history.lastValidation();
+        if (d->lastValidation->isChecked())
+        {
+            if (lastValid != d->lastValidationDate->date())
+            {
+                changed = true;
+                history.setLastValidation(d->lastValidationDate->date());
+            }
+        }
+        else
+        {
+            if (lastValid.isValid())
+            {
+                changed = true;
+                history.setLastValidation(QDate());
+            }
+        }
+
         if (changed || history != previousHistory)
         {
             /*qDebug() << "history changed from";
@@ -365,6 +387,9 @@ void HistoryWindow::setCurrentPatient(Patient::Ptr p)
         QDate lastDoc = history.lastDocumentation();
         d->lastDocumentation->setChecked(lastDoc.isValid());
         d->lastDocumentationDate->setDate(lastDoc.isValid() ? lastDoc : QDate::currentDate());
+        QDate lastValid = history.lastValidation();
+        d->lastValidation->setChecked(lastValid.isValid());
+        d->lastValidationDate->setDate(lastValid.isValid() ? lastValid : (lastDoc.isValid() ? lastDoc : (history.end().isValid() ? history.end() : QDate::currentDate())));
     }
     d->patientDisplay->setPatient(d->currentPatient);
     d->addBar->setEnabled(d->currentPatient);
@@ -493,11 +518,12 @@ void HistoryWindow::setupView()
     d->mainPanelLayout->addWidget(d->patientDisplay);
 
     QFormLayout* idAndTnmLayout = new QFormLayout;
+    idAndTnmLayout->setLabelAlignment(Qt::AlignLeft);
     d->initialDiagnosisEdit = new QDateEdit;
     idAndTnmLayout->addRow(tr("Erstdiagnose:"), d->initialDiagnosisEdit);
     d->tnmEdit = new QLineEdit;
     idAndTnmLayout->addRow(tr("TNM (initial):"), d->tnmEdit);
-    d->mainPanelLayout->addLayout(idAndTnmLayout);
+
     d->lastDocumentation = new QCheckBox(tr("Letzte Doku"));
     d->lastDocumentationDate = new QDateEdit;
     d->lastDocumentationDate->setEnabled(false);
@@ -505,6 +531,14 @@ void HistoryWindow::setupView()
     connect(d->lastDocumentation, SIGNAL(toggled(bool)), this, SLOT(slotLastDocumentationDateChanged()));
     connect(d->lastDocumentationDate, SIGNAL(dateChanged(QDate)), this, SLOT(slotLastDocumentationDateChanged()));
     idAndTnmLayout->addRow(d->lastDocumentation, d->lastDocumentationDate);
+
+    d->lastValidation = new QCheckBox(tr("Validiert"));
+    d->lastValidationDate = new QDateEdit;
+    d->lastValidationDate->setEnabled(false);
+    connect(d->lastValidation, SIGNAL(toggled(bool)), d->lastValidationDate, SLOT(setEnabled(bool)));
+    idAndTnmLayout->addRow(d->lastValidation, d->lastValidationDate);
+
+    d->mainPanelLayout->addLayout(idAndTnmLayout);
 
     // Tool bar
     d->addBar = new QToolBar;
