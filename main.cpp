@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
         //This does not happen under GNOME or KDE
         QIcon::setThemeName("silk");
     //}
+    a.setWindowIcon(QIcon::fromTheme("folder_table"));
 
     qDebug() << QDir::currentPath();
     QFileInfo info("tumorprofil.db");
@@ -90,21 +91,14 @@ int main(int argc, char *argv[])
     }
     PatientManager::instance()->readDatabase();
 
-    //CSVConverter::execute();
-    //return 0;
-    //ReportWindow report;
-    //report.showMaximized();
-    /*TNM tnm("cT3 Nx M1b (PUL BRA)");
-    qDebug() << tnm.mstatus(TNM::AssumeM0IfMissing) << tnm.mstatus(TNM::AssumeMxIfMissing);
-    return 0;*/
+    /*
     AnalysisGenerator generator;
-    generator.fishRatioListe();
+    generator.cmetListe();
     return 0;
-    /*HistoryValidator validator;
-    validator.validatePAC();
-    return 0;*/
+    */
 
     MainWindow w;
+    w.setWindowIcon(QIcon::fromTheme("folder_table"));
     w.show();
 
     //DiseaseHistory::test();
