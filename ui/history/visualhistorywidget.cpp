@@ -233,8 +233,7 @@ public:
             break;
         }*/
         CurrentStateIterator it(history);
-
-        qDebug() << "endVisit" << it.effectiveHistoryEnd();
+        //qDebug() << "endVisit" << lastState << lastDate << lastLimitDate << lastDefiningElement << it.effectiveHistoryEnd();
         visit(DiseaseState::UnknownState, 0, it.effectiveHistoryEnd());
     }
 
@@ -459,7 +458,8 @@ QSize VisualHistoryWidget::sizeHint() const
     {
         return QSize(0, d->height);
     }
-    float days = d->history.begin().daysTo(d->history.end());
+    CurrentStateIterator it(d->history);
+    float days = d->history.begin().daysTo(it.effectiveHistoryEnd());
     //qDebug() << "sizeHint" << QSize(qCeil(days / 356)*d->pixelsPerYear, d->height) << "size" << size();
     return QSize(qCeil(days / 356)*d->pixelsPerYear, d->height);
 }
