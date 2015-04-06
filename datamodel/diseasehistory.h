@@ -54,6 +54,8 @@ public:
     const PropertyList& properties() const;
     void setLastDocumentation(const QDate& date);
     QDate lastDocumentation() const;
+    void setLastValidation(const QDate& date);
+    QDate lastValidation() const;
 
     void sort();
 

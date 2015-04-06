@@ -225,6 +225,28 @@ QDate DiseaseHistory::lastDocumentation() const
     return QDate::fromString(prop.value, Qt::ISODate);
 }
 
+void DiseaseHistory::setLastValidation(const QDate& date)
+{
+    if (!date.isValid())
+    {
+        d->properties.removeProperty("lastValidation");
+    }
+    else
+    {
+        d->properties.setProperty("lastValidation", date.toString(Qt::ISODate));
+    }
+}
+
+QDate DiseaseHistory::lastValidation() const
+{
+    Property prop = d->properties.property("lastValidation");
+    if (prop.isNull())
+    {
+        return QDate();
+    }
+    return QDate::fromString(prop.value, Qt::ISODate);
+}
+
 static int historyElementTypeOrder(const HistoryElement* a)
 {
     return a->is<Finding>() ? 1
