@@ -40,12 +40,15 @@ public:
     void findPikBrafTherapy();
     void cmetListe();
     void fishRatioListe();
+    void crc2015();
+    void nsclcSNCNTrialFinalFromCSV();
 
 protected:
 
     QVariant writePathologyProperty(const Disease& disease, PathologyPropertyInfo::Property id);
     QVariant writeDetailValue(const Disease& disease, PathologyPropertyInfo::Property id);
     bool hasDetailValue(const Disease& disease, PathologyPropertyInfo::Property id);
+    QVariant writeMutationAsDetail(const Disease& disease, PathologyPropertyInfo::Property id);
     void writeIHCPropertySplit(const Disease& disease, PathologyPropertyInfo::Property id);
     void writeIHCIsPositive(const Disease& disease, PathologyPropertyInfo::Property id);
     virtual void problem(const HistoryElement* element, const QString& problem);
