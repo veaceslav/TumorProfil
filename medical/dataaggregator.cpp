@@ -403,6 +403,10 @@ QVariant DataAggregator::aggregate(const AggregatedDatumInfo& datumInfo,
     case AggregatedDatumInfo::Median:
     {
         QList<int> ints;
+        if (values.size() == 1)
+        {
+            return values.first().toInt();
+        }
         foreach (const QVariant& value, values)
         {
             ints << value.toInt();
