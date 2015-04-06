@@ -516,7 +516,7 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
     qDebug() << "Currently" << d->patients.size() << "patients, new db" << patients.size();
 
     // Dry run
-    QStringList mergeActions;
+    QStringList mergeActions, mergeHints;
     foreach (const Patient& other, patients)
     {
         Patient::Ptr p;
@@ -535,6 +535,7 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
             }
         }
 
+        QString patientIdentifierString = p->firstName + " " + p->surname + ", " + p->dateOfBirth.toString();
 
         ChangeFlags changed = ChangedNothing;
         if (p->patientProperties != other.patientProperties)
@@ -553,9 +554,16 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
             }
             if (diseaseIndex == p->diseases.size())
             {
-                mergeActions << "Adding new disease for " + p->firstName + p->surname + p->dateOfBirth.toString();
-                changed |= ChangedDiseaseMetadata | ChangedDiseaseProperties | ChangedPathologyData;
-                continue;
+                if (p->diseases.size())
+                {
+                    mergeHints << "Second entity for " + patientIdentifierString + ", please check manually";
+                }
+                else
+                {
+                    mergeActions << "Adding new disease for " + patientIdentifierString;
+                    changed |= ChangedDiseaseMetadata | ChangedDiseaseProperties | ChangedPathologyData;
+                    continue;
+                }
             }
             else
             {
@@ -571,7 +579,7 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
                             || (otherH.lastDocumentation().isValid() && !h.lastDocumentation().isValid());
                     if (otherH.size() >= h.size() || dateNewer)
                     {
-                        mergeActions << "History of "+ p->firstName + p->surname + p->dateOfBirth.toString() << "was updated";
+                        mergeActions << "History of "+ patientIdentifierString << "was updated";
                     }
                     else
                     {
@@ -582,7 +590,7 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
                 {
                     if (!d.hasPathology(otherP.context))
                     {
-                        mergeActions << "Adding new pathology for " + p->firstName + p->surname + p->dateOfBirth.toString();
+                        mergeActions << "Adding new pathology for " + patientIdentifierString;
                         changed |= ChangedPathologyData;
                         continue;
                     }
@@ -593,7 +601,7 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
                         {
                             continue;
                         }
-                        mergeActions << "Merging changed pathology for " + p->firstName + p->surname + p->dateOfBirth.toString();
+                        mergeActions << "Merging changed pathology for " + patientIdentifierString;
                         qDebug() << "Pathology different:" << p->firstName << p->surname << p->dateOfBirth.toString();
 
                         changed |= ChangedPathologyData;
@@ -604,14 +612,26 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
         }
         if (changed == ChangedPatientProperties)
         {
-            mergeActions << "Merging patient properties for " + p->firstName + p->surname + p->dateOfBirth.toString();
+            mergeActions << "Merging patient properties for " + patientIdentifierString;
         }
     }
+    qDebug() << "Mergehints/actions" << mergeHints << mergeActions;
 
     if (mergeActions.isEmpty())
     {
-        QMessageBox::information(0, tr("Keine Änderungen"), tr("Keine Änderungen zum Zusammenführen"));
-        return;
+        if (mergeHints.isEmpty())
+        {
+            QMessageBox::information(0, tr("Keine Änderungen"), tr("Keine Änderungen zum Zusammenführen"));
+            return;
+        }
+        else
+        {
+            QMessageBoxResize msgBox(QMessageBox::Information, tr("Keine Änderungen"), tr("Keine Änderungen zum Zusammenführen. Bitte beachten Sie die Hinweise."), QMessageBox::Ok);
+            msgBox.setDetailedText(mergeHints.join("\n"));
+            msgBox.resize(600, 400);
+            msgBox.exec();
+            return;
+        }
     }
     else
     {
@@ -654,6 +674,8 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
             }
         }
 
+        QString patientIdentifierString = p->firstName + " " + p->surname + ", " + p->dateOfBirth.toString();
+
         if (p->patientProperties != other.patientProperties)
         {
             p->patientProperties.merge(other.patientProperties);
@@ -671,16 +693,23 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
             }
             if (diseaseIndex == p->diseases.size())
             {
-                qDebug() << "Copy new disease" << p->surname << p->firstName;
-                p->diseases << otherD;
-                Disease& d = p->diseases.last();
-                // reset id trans-database
-                d.id = 0;
-                for (int o=0; o<d.pathologies.size(); o++)
+                if (p->diseases.size())
                 {
-                    d.pathologies[o].id = 0;
+                    qDebug() << "Second entity NOT copied automatically" << patientIdentifierString;
                 }
-                changed |= ChangedDiseaseMetadata | ChangedDiseaseProperties | ChangedPathologyData;
+                else
+                {
+                    qDebug() << "Copy new disease" << patientIdentifierString;
+                    p->diseases << otherD;
+                    Disease& d = p->diseases.last();
+                    // reset id trans-database
+                    d.id = 0;
+                    for (int o=0; o<d.pathologies.size(); o++)
+                    {
+                        d.pathologies[o].id = 0;
+                    }
+                    changed |= ChangedDiseaseMetadata | ChangedDiseaseProperties | ChangedPathologyData;
+                }
             }
             else
             {
@@ -709,7 +738,7 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
                 {
                     if (!d.hasPathology(otherP.context))
                     {
-                        qDebug() << "Copy new pathology" << p->surname << p->firstName;
+                        qDebug() << "Copy new pathology" << patientIdentifierString;
                         d.pathologies << otherP;
                         // reset id trans-database
                         d.pathologies.last().id = 0;
@@ -722,7 +751,7 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
                         {
                             continue;
                         }
-                        qDebug() << "Merging pathology" << p->surname << p->firstName << pa.context;
+                        qDebug() << "Merging pathology" << patientIdentifierString << pa.context;
                         pa.entity = otherP.entity;
                         pa.sampleOrigin = otherP.sampleOrigin;
                         pa.date = otherP.date;
