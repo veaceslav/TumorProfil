@@ -478,13 +478,12 @@ bool EffectiveStateIterator::visit(HistoryElement* element)
         return false;
     }
 
-    m_therapyForValidTo = 0;
-    m_definingElement = 0;
     if (element->is<DiseaseState>())
     {
         DiseaseState* state = element->as<DiseaseState>();
-        m_effectiveState = state->state;
-        m_definingElement = element;
+        m_effectiveState    = state->state;
+        m_definingElement   = element;
+        m_therapyForValidTo = 0;
 
         return true;
     }
@@ -501,24 +500,50 @@ bool EffectiveStateIterator::visit(HistoryElement* element)
         {
             if (f->context == Finding::InitialDiagnosis)
             {
-                m_effectiveState = DiseaseState::InitialDiagnosis;
-                m_definingElement = element;
+                m_effectiveState    = DiseaseState::InitialDiagnosis;
+                m_definingElement   = element;
+                m_therapyForValidTo = 0;
                 return true;
             }
         }
         if (f->type == Finding::Death)
         {
-            m_effectiveState  = DiseaseState::Deceased;
-            m_definingElement = f;
+            m_effectiveState    = DiseaseState::Deceased;
+            m_definingElement   = f;
+            m_therapyForValidTo = 0;
             return true;
         }
+        // Other findings do not touch the effective state
     }
     else // if (element->is<Therapy>())
     {
         Therapy* t = element->as<Therapy>();
-        m_effectiveState = DiseaseState::Therapy;
-        m_definingElement = element;
-        m_therapyForValidTo = t;
+        if (m_effectiveState == DiseaseState::Therapy)
+        {
+            // we are already inside a therapy, now comes a new one
+            m_effectiveState    = DiseaseState::Therapy;
+            m_definingElement   = element;
+            m_therapyForValidTo = t;
+            /*if (m_therapyForValidTo && m_therapyForValidTo->end.isValid())
+            {
+                // only change m_therapyForValidTo if the current therapy lasts longer than the previous, which is ongoing
+                // (think: surgery inside CTx
+                if (t->end.isValid() && t->end >= m_therapyForValidTo->end)
+                {
+                    m_therapyForValidTo = t;
+                }
+            }
+            else
+            {
+                m_therapyForValidTo = t;
+            }*/
+        }
+        else
+        {
+            m_effectiveState    = DiseaseState::Therapy;
+            m_definingElement   = element;
+            m_therapyForValidTo = t;
+        }
         if (t->end.isValid() && t->end < t->begin())
         {
             reportProblem(t, "Ende vor Anfang!");
@@ -573,12 +598,13 @@ QDate CurrentStateIterator::effectiveHistoryEnd() const
     QDate endDate = m_history.end();
     if (m_definingElement)
     {
-        endDate = qMax(m_history.end(), m_definingElement->date);
-        if (stateValidTo().isValid())
-        {
-            endDate = qMax(endDate, stateValidTo());
-        }
+        endDate = qMax(endDate, m_definingElement->date);
     }
+    if (stateValidTo().isValid())
+    {
+        endDate = qMax(endDate, stateValidTo());
+    }
+    //qDebug() << "effective end:" << endDate << "history end" << m_history.end() << "defining element" << (m_definingElement ? m_definingElement->date : QDate())<< "stateValidTo" << stateValidTo() << "last documentation" << m_history.lastDocumentation();
     switch (effectiveState())
     {
     case DiseaseState::BestSupportiveCare:
