@@ -81,7 +81,10 @@ void ActionableResultChecker::fillFields(const Disease &disease)
                    << PathologyPropertyInfo::Comb_cMetActivation
                    << PathologyPropertyInfo::Fish_ROS1
                    << PathologyPropertyInfo::Fish_FGFR1;
-    negativeFields << PathologyPropertyInfo::IHC_PTEN;
+    if (flags & IncludePTEN)
+    {
+        negativeFields << PathologyPropertyInfo::IHC_PTEN;
+    }
 
     switch (disease.entity())
     {
