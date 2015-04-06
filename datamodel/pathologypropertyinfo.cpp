@@ -172,6 +172,10 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
         return PathologyPropertyInfo(property, BooleanCombination, "combination/c-met", QObject::tr("cMet-Aktivierung"));
     case Comb_cMetIHC3plusScore:
         return PathologyPropertyInfo(property, BooleanCombination, "combination/c-met/ihc3+score", QObject::tr("cMet IHC 3+ Score"));
+    case Comb_RASMutation:
+        return PathologyPropertyInfo(property, BooleanCombination, "combination/ras-mutation", QObject::tr("RAS Mutation"));
+    case Comb_KRASMutation:
+        return PathologyPropertyInfo(property, BooleanCombination, "combination/kras-mutation", QObject::tr("KRAS Mutation"));
     case InvalidProperty:
         break;
     }

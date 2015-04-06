@@ -45,6 +45,8 @@ public:
 
 protected:
 
+    QVariant listOfMutationsResult(const Disease& disease, const QList<PathologyPropertyInfo::Property>& propIds);
+
     QVariant resultValue;
     Property determiningProperty;
 

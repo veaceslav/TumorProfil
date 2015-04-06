@@ -123,6 +123,34 @@ QVariant CombinedValue::fishResult(const Disease& disease, const Property& prop)
     return QVariant();
 }
 
+QVariant CombinedValue::listOfMutationsResult(const Disease& disease, const QList<PathologyPropertyInfo::Property>& propIds)
+{
+    int sawMutation = 0;
+    foreach (PathologyPropertyInfo::Property propertyId, propIds)
+    {
+        PathologyPropertyInfo info(propertyId);
+        Property mut = disease.pathologyProperty(info.id);
+        if (mut.isNull())
+        {
+            continue;
+        }
+        ValueTypeCategoryInfo mutType(propertyId);
+        if (mutType.toMedicalValue(mut).toBool())
+        {
+            resultValue = true;
+            determiningProperty = mut;
+            break;
+        }
+        sawMutation++;
+    }
+    // If we did not see a mutation, but saw all mutation analyses as wildtype, result is valid.
+    // Result is not valid if we did not see all for this combined value.
+    if (resultValue.isNull() && sawMutation == propIds.size())
+    {
+        resultValue = false;
+    }
+}
+
 void CombinedValue::combine(const Disease& disease)
 {
     resultValue = QVariant();
@@ -277,6 +305,23 @@ void CombinedValue::combine(const Disease& disease)
         resultValue = (ihcType.toMedicalValue(ihc).value<HScore>().percentageStrong() >= 50);
         determiningProperty = ihc;
         break;
+    }
+    case PathologyPropertyInfo::Comb_RASMutation:
+    {
+        QList<PathologyPropertyInfo::Property> rases;
+        rases << PathologyPropertyInfo::Mut_KRAS_2;
+        rases << PathologyPropertyInfo::Mut_KRAS_3;
+        rases << PathologyPropertyInfo::Mut_KRAS_4;
+        rases << PathologyPropertyInfo::Mut_NRAS_2_4;
+        listOfMutationsResult(disease, rases);
+    }
+    case PathologyPropertyInfo::Comb_KRASMutation:
+    {
+        QList<PathologyPropertyInfo::Property> rases;
+        rases << PathologyPropertyInfo::Mut_KRAS_2;
+        rases << PathologyPropertyInfo::Mut_KRAS_3;
+        rases << PathologyPropertyInfo::Mut_KRAS_4;
+        listOfMutationsResult(disease, rases);
     }
     default:
         qDebug() << "Unsupported combined value" << info.id << info.property;

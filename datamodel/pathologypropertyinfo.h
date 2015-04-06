@@ -80,7 +80,9 @@ public:
         Comb_HormoneReceptor,
         Comb_TripleNegative,
         Comb_cMetActivation,
-        Comb_cMetIHC3plusScore, // Reminder: Adjust LastProperty
+        Comb_cMetIHC3plusScore,
+        Comb_RASMutation,
+        Comb_KRASMutation, // Reminder: Adjust LastProperty
 
         FirstProperty = IHC_PTEN,
         LastProperty  = Comb_cMetIHC3plusScore
