@@ -131,7 +131,6 @@ HistoryElement* DiseaseHistoryModel::takeElement(HistoryElement* e)
         qDebug() << "Element" << e << "is not known, cannot remove";
         return 0;
     }
-    QModelIndex p = parent(toRemove);
     beginRemoveRows(e->parent() ? parent(toRemove) : QModelIndex(), toRemove.row(), toRemove.row());
     m_history.remove(e);
     endRemoveRows();

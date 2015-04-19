@@ -123,7 +123,7 @@ QVariant CombinedValue::fishResult(const Disease& disease, const Property& prop)
     return QVariant();
 }
 
-QVariant CombinedValue::listOfMutationsResult(const Disease& disease, const QList<PathologyPropertyInfo::Property>& propIds)
+void CombinedValue::listOfMutationsResult(const Disease& disease, const QList<PathologyPropertyInfo::Property>& propIds)
 {
     int sawMutation = 0;
     foreach (PathologyPropertyInfo::Property propertyId, propIds)
