@@ -391,8 +391,8 @@ QList<Patient::Ptr> AnalysisGenerator::patientsFromCSV(const QString &path)
         }
         QString surname = data[1].toString();
         // special cases in HER2 file
-        if (surname == "Muenchow") surname = "Münchow";
-        if (surname == "Huettmann") surname = "Hüttmann";
+        if (surname == "Muenchow") surname = "MÃ¼nchow";
+        if (surname == "Huettmann") surname = "HÃ¼ttmann";
         QList<Patient::Ptr> candidates = PatientManager::instance()->findPatients(surname, data[2].toString(), dob);
         if (candidates.isEmpty())
         {

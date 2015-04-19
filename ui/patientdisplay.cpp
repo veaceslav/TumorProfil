@@ -78,7 +78,7 @@ void PatientDisplay::setPatient(const Patient::Ptr& patient)
     {
         //: Name display, Surname, first name
         d->name->setText(tr("%1, %2").arg(patient->surname).arg(patient->firstName));
-        d->gender->setText(patient->gender == Patient::Male ? tr("Männlich") : tr("Weiblich"));
+        d->gender->setText(patient->gender == Patient::Male ? tr("MÃ¤nnlich") : tr("Weiblich"));
         d->dateOfBirth->setText(patient->dateOfBirth.toString("dd.MM.yyyy"));
     }
     else

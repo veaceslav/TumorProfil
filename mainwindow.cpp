@@ -153,7 +153,7 @@ void MainWindow::setupToolbar()
                                                 this, SLOT(enterNewPatient()));
 
     QAction* delPAction = d->toolBar->addAction(QIcon::fromTheme("cancel"),
-                                                tr("Änderungen verwerfen"),
+                                                tr("Ã„nderungen verwerfen"),
                                                 this, SLOT(discardChanges()));
 
     if (!d->editingEnabled)
@@ -176,7 +176,7 @@ void MainWindow::setupToolbar()
     }
 
     // Hidden, only via shortcut
-    QAction* mergeAction = new QAction(tr("Datenbanken zusammenführen"), this);
+    QAction* mergeAction = new QAction(tr("Datenbanken zusammenfÃ¼hren"), this);
     mergeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_M));
     connect(mergeAction, SIGNAL(triggered()), this, SLOT(mergeDatabase()));
     addAction(mergeAction);
@@ -307,8 +307,8 @@ void MainWindow::newPatientEntered(const Patient& p)
 
 void MainWindow::discardChanges()
 {
-    if (QMessageBox::warning(this, tr("Änderungen verwerfen"),
-                              tr("Möchten Sie allen Änderungen zu diesem Patienten verwerfen?"),
+    if (QMessageBox::warning(this, tr("Ã„nderungen verwerfen"),
+                              tr("MÃ¶chten Sie allen Ã„nderungen zu diesem Patienten verwerfen?"),
                               QMessageBox::Discard | QMessageBox::No, QMessageBox::Discard)
             == QMessageBox::Discard)
     {
@@ -388,7 +388,7 @@ void MainWindow::selectFilteredPatient()
 
 void MainWindow::mergeDatabase()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Wähle Datenbankdatei, die eingelesen werden soll"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("WÃ¤hle Datenbankdatei, die eingelesen werden soll"));
     if (fileName.isNull())
     {
         return;

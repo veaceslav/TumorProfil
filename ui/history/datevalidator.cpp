@@ -32,18 +32,18 @@
 
 /****************************************************************************
 *                                                                           *
-* Eingabemöglichkeiten  : 010205, 01.0205, 01.02.05 01022005 01.022005      *
+* EingabemÃ¶glichkeiten  : 010205, 01.0205, 01.02.05 01022005 01.022005      *
 *                         01.02.2005                                        *
 * Pfeil links rechts    : selektiert den Tag, Monat oder Jahrbereich        *
-* Pfeil oben unten      : zählt je nach ausgewähltem Bereich die Tage,      *
-*                         Monate oder Jahre vor oder zurück                 *
-* Fixup                 : wird beim Verlassen des EditWidget durchgeführt   *
+* Pfeil oben unten      : zÃ¤hlt je nach ausgewÃ¤hltem Bereich die Tage,      *
+*                         Monate oder Jahre vor oder zurÃ¼ck                 *
+* Fixup                 : wird beim Verlassen des EditWidget durchgefÃ¼hrt   *
 * Signal                : dateChanged(QDate&) wird bei fixup gesendet       *
 *                                                                           *
-* Trennzeichen          : können selbst gesetzt werden, default = '.'       *
+* Trennzeichen          : kÃ¶nnen selbst gesetzt werden, default = '.'       *
 * Jahrhungergrenze      : kann zwischen 0 ] grenze [ 100 gesetzt werden     *
 *                         default ist 50                                    *
-* zulässiger Bereich    : einstellbar von (1800,1,1) bis (4000,1,1)         *
+* zulÃ¤ssiger Bereich    : einstellbar von (1800,1,1) bis (4000,1,1)         *
 * unendlich             : 1.1.4000 wird wie kein Datum o. unendlich be-     *
 *                         handelt und entsprich einem leeren text           *
 *****************************************************************************/
@@ -69,7 +69,7 @@ bool DateValidator::m_noValidate = false;
 **	Funktion :	DateToText								A.28.09.04	    *
 **																		*
 **  Aufgabe	:	hier nicht implementiert, weil ich eine andere Methode  *
-**              über eine von QDate abgeleitete Klasse benutze          *
+**              Ã¼ber eine von QDate abgeleitete Klasse benutze          *
 **	Annahme :	-														*
 **	Eingabe :	QDate													*
 **	Ausgabe :	-														*
@@ -86,7 +86,7 @@ QString DateValidator::DateToText(const QDate&)
 **	Funktion :	TextToDate								A.28.09.04	    *
 **																		*
 **  Aufgabe	:	Wandelt Text in QDate um. Bei fehlschlag wird           *
-**              QDate(0,0,0) zurückgegeben                              *
+**              QDate(0,0,0) zurÃ¼ckgegeben                              *
 **	Annahme :	    													*
 **	Eingabe :	text													*
 **	Ausgabe :	Int64 												    *
@@ -103,7 +103,7 @@ QDate DateValidator::TextToDate(QString input,QChar trennzeichen)
     QString monat;
     QString jahr;
 
-    // prüfen, ob leertext zulässig
+    // prÃ¼fen, ob leertext zulÃ¤ssig
 
     if (input.isEmpty() == true)
     {
@@ -128,7 +128,7 @@ QDate DateValidator::TextToDate(QString input,QChar trennzeichen)
     zuvielTrenner = input.indexOf(trennzeichen,monatTrenner + 1);
 
     // tag und monat nur dann getrennt auslesen, wenn die
-    // punkte nicht völlig verkrautet sind
+    // punkte nicht vÃ¶llig verkrautet sind
 
     if (    (zuvielTrenner < 0)                                     &&
             ((   (tagTrenner == 1)  &&
@@ -186,7 +186,7 @@ void     DateValidator::setDate(QLineEdit* lineEdit, const QDate& date)
 **	Funktion :	Konstruktor 								A.28.09.04	*
 **																		*
 **  Aufgabe	:	Konstruktor von DateValidator, setzt den minimal und    *
-**              den maximal zulässigen Eurowert                         *
+**              den maximal zulÃ¤ssigen Eurowert                         *
 **	Annahme :	    													*
 **	Eingabe :	parent, name    										*
 **	Ausgabe :													        *
@@ -217,7 +217,7 @@ DateValidator::~DateValidator()
 
 /************************************************************************
 **															    		*
-** Virtuelle Methoden zur Ãœberprüfung                                   *
+** Virtuelle Methoden zur ÃƒÂœberprÃ¼fung                                   *
 **																		*
 *************************************************************************/
 
@@ -226,8 +226,8 @@ DateValidator::~DateValidator()
 **																		*
 ** Aufgabe :    Stellt sicher, dass ein EventFilter auf Objekt (nur	    *
 **				QEditline und QComboBox) gesetzt wird und ruft an-      *
-**				schlieÃŸend QEditLine->setValidator() auf. Zugleich	    *
-**				wird ein erster Fixup durchgeführt. 				    *
+**				schlieÃƒÂŸend QEditLine->setValidator() auf. Zugleich	    *
+**				wird ein erster Fixup durchgefÃ¼hrt. 				    *
 **																		*
 **	Annahme :	pEditLine ungleich Null									*
 **	Eingabe :	QLineEdit, QComboBox                                    *
@@ -255,7 +255,7 @@ void DateValidator::setLineEdit(QLineEdit *pEditLine)
 /************************************************************************
 ** Methode :	SetRange     								A.28.09.04	*
 **																		*
-** Aufgabe :    Setzt den zulässigen Bereich der Eingabe (minimun und   *
+** Aufgabe :    Setzt den zulÃ¤ssigen Bereich der Eingabe (minimun und   *
 **              und maximum                                             *
 **																		*
 **	Annahme :	pEditLine ungleich Null									*
@@ -319,10 +319,10 @@ void DateValidator::setTrennzeichen(char trennzeichen)
 /************************************************************************
 **  Methode : validate     								    A.28.09.04	*
 **																		*
-**  Aufgabe : Prüft die Eingabe und gibt Invalid oder Intermediate      *
-**            zurück. Ein Acceptable wird nicht vergeben (wie beim Jura *
+**  Aufgabe : PrÃ¼ft die Eingabe und gibt Invalid oder Intermediate      *
+**            zurÃ¼ck. Ein Acceptable wird nicht vergeben (wie beim Jura *
 **            Examen) weil zum Schluss immer noch die Punkte richtig    *
-**            gesetzt erden müssen.										*
+**            gesetzt erden mÃ¼ssen.										*
 **																		*
 **	Annahme :                           								*
 **	Eingabe : input, pos                                                *
@@ -348,7 +348,7 @@ QValidator::State DateValidator::validate( QString & input, int & pos) const
 
     // input = input.replace(QString(m_trennzeichen),"");
 
-    // Es sind noch andere ungültige Ziffern vorhanden
+    // Es sind noch andere ungÃ¼ltige Ziffern vorhanden
 
     if (input.indexOf(QRegExp("[^0-9.]")) >= 0)
     {
@@ -363,14 +363,14 @@ QValidator::State DateValidator::validate( QString & input, int & pos) const
 /****************************************************************************
 ** Methode:     fixup                                            A.29.09.04	*
 **                                                                          *
-** Aufgabe :    Ãœbergeben wird eine grundsätzlich akzeptabel Eingabe (siehe *
+** Aufgabe :    ÃƒÂœbergeben wird eine grundsÃ¤tzlich akzeptabel Eingabe (siehe *
 **				Validate). Die Eingabe wird nur noch in die richtige Form	*
 **				gebracht, d.h. mit tausender Punkten und mit zwei Stellen	*
 **				nach dem Komma												*
 **																			*
-** Annahme :    übergebener Text ist intermediate                           *
+** Annahme :    Ã¼bergebener Text ist intermediate                           *
 ** Eingabe :    eurotext                                                    *
-** Rückgabe:    eurotext                                                    *
+** RÃ¼ckgabe:    eurotext                                                    *
 ** return  :     -                                                          *
 *****************************************************************************/
 
@@ -384,7 +384,7 @@ void DateValidator::fixup ( QString & input ) const
     QString monat;
     QString jahr;
 
-    // prüfen, ob leertext zulässig
+    // prÃ¼fen, ob leertext zulÃ¤ssig
 
     if (    (input.isEmpty() == true)   &&
             (m_keinJahrEnabled == true) )
@@ -410,7 +410,7 @@ void DateValidator::fixup ( QString & input ) const
     zuvielTrenner = input.indexOf(m_trennzeichen,monatTrenner + 1);
 
     // tag und monat nur dann getrennt auslesen, wenn die
-    // punkte nicht völlig verkrautet sind
+    // punkte nicht vÃ¶llig verkrautet sind
 
     if (    (zuvielTrenner < 0)                                     &&
             ((   (tagTrenner == 1)  &&
@@ -486,7 +486,7 @@ void DateValidator::fixup ( QString & input ) const
         jahrInt = m_maxDate.year();
     }
 
-    // Falls eine Umwandlung nicht OK war, ist das Datum zwar gültig
+    // Falls eine Umwandlung nicht OK war, ist das Datum zwar gÃ¼ltig
     // es wird jedoch das currentDatum gesetzt
 
     if (    (tagOK && monatOK && jahrOK) == false)
@@ -503,23 +503,23 @@ void DateValidator::fixup ( QString & input ) const
 
 /****************************************************************************
 **																			*
-** eventFilter(..)	Sorgt dafür, dass beim Verlassen des Eingbe Controls	*
-**					ein Key - Press Event übermittelt wird. Das Key - Press *
+** eventFilter(..)	Sorgt dafÃ¼r, dass beim Verlassen des Eingbe Controls	*
+**					ein Key - Press Event Ã¼bermittelt wird. Das Key - Press *
 **					event hat zur Folgte, dass Fixup aufgerufen wird und	*
-**					der Inhalt der Eingabe überprüft wird					*
+**					der Inhalt der Eingabe Ã¼berprÃ¼ft wird					*
 **																			*
 *****************************************************************************/
 
 /****************************************************************************
 ** Methode:     eventFilter                                     A.29.09.04	*
 **                                                                          *
-** Aufgabe:     Sorgt dafür, dass beim Verlassen des Eingbe Controls	    *
-**				ein fixup durchgeführt und der Inhalt der Eingabe überprüft *
+** Aufgabe:     Sorgt dafÃ¼r, dass beim Verlassen des Eingbe Controls	    *
+**				ein fixup durchgefÃ¼hrt und der Inhalt der Eingabe Ã¼berprÃ¼ft *
 **              wird					                                    *
 **																			*
 ** Annahme :    pObject und pEvent ungeleich NULL                           *
 ** Eingabe :    zeiger auf object und pEvent                                *
-** Rückgabe:    eurotext                                                    *
+** RÃ¼ckgabe:    eurotext                                                    *
 ** return  :     -                                                          *
 *****************************************************************************/
 
@@ -537,7 +537,7 @@ bool DateValidator::eventFilter ( QObject * pObject, QEvent * pEvent)
     }
 
     // Wenn ein FocusOut Event vorliegt wird ein fixup an dem Text
-    // durchgeführt und der Text zurückgeschrieben. Auf diese Weise
+    // durchgefÃ¼hrt und der Text zurÃ¼ckgeschrieben. Auf diese Weise
     // sieht das Ergebnis nach dem Verlassen der EditLine immer korrekt aus
 
     if (pEvent->type() == QEvent::FocusOut)
@@ -847,7 +847,7 @@ bool DateValidator::eventFilter ( QObject * pObject, QEvent * pEvent)
 
     // die normale Eingabe forcieren und immer dann, wenn der Cursor
     // neben zwei Ziffern und auf dem Trennzeichen steht
-    // die nächste Spalte (monat, jahr) selectieren
+    // die nÃ¤chste Spalte (monat, jahr) selectieren
 
     else if (pEvent->type() == QEvent::KeyRelease)
     {
@@ -869,7 +869,7 @@ bool DateValidator::eventFilter ( QObject * pObject, QEvent * pEvent)
         if (pLineEdit)
         {
 
-            // Eventfiler löschen, sonst rekursion, ausführen
+            // Eventfiler lÃ¶schen, sonst rekursion, ausfÃ¼hren
             // und Eventfilter wieder installieren (leider etwas overhead)
 
             m_eventFilterOn = true;
@@ -909,11 +909,11 @@ bool DateValidator::eventFilter ( QObject * pObject, QEvent * pEvent)
 ** Methode:     setValidate                                   A.29.09.04	*
 **                                                                          *
 ** Aufgabe:     setzt die statische Membervarialble noValdidate. Wird be-   *
-**              nötigt, um Validate im Anschluss an fixup auszuschalten     *
+**              nÃ¶tigt, um Validate im Anschluss an fixup auszuschalten     *
 **																			*
 ** Annahme :    -                                                           *
 ** Eingabe :    -                                                           *
-** Rückgabe:    -                                                           *
+** RÃ¼ckgabe:    -                                                           *
 ** return  :    -                                                           *
 *****************************************************************************/
 
@@ -929,14 +929,14 @@ void DateValidator::setValidate(bool on)
 ** Aufgabe:     erlaubt das Vorhandensein von leerem Text, das entspricht   *
 **              einem unendlich fernen Datum (intern bei mir der 1.1.4000)  *
 **                                                                          *
-**              Auf diese Weise ist es möglich einen Zeitraum anzugeben, der*
+**              Auf diese Weise ist es mÃ¶glich einen Zeitraum anzugeben, der*
 **              nach hinten offen ist                                       *
-**              VONDATUM - BISDATUM (für die meisten Anwendungen sollte     *
+**              VONDATUM - BISDATUM (fÃ¼r die meisten Anwendungen sollte     *
 **                                   der 1.1.4000 wie unendlich sein        *
 **																			*
 ** Annahme :    -                                                           *
 ** Eingabe :    -                                                           *
-** Rückgabe:    -                                                           *
+** RÃ¼ckgabe:    -                                                           *
 ** return  :    -                                                           *
 *****************************************************************************/
 

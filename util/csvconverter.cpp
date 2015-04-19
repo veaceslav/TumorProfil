@@ -115,7 +115,7 @@ void CSVConverter::convertBestRx(const QString& filename)
         }
 
         QString sampleOrigin = data[35].toString();
-        if (sampleOrigin.contains("Prim‰r") || sampleOrigin.contains("Zytologie"))
+        if (sampleOrigin.contains("Prim√§r") || sampleOrigin.contains("Zytologie"))
         {
             path.sampleOrigin = Pathology::Primary;
         }
@@ -272,7 +272,7 @@ void CSVConverter::convertBGJ389(const QString& filename)
         }
 
         QString sampleOrigin = data[10].toString();
-        if (sampleOrigin == "Prim‰r")
+        if (sampleOrigin == "Prim√§r")
         {
             path.sampleOrigin = Pathology::Primary;
         }

@@ -382,10 +382,10 @@ void DiseaseTabWidget::slotEntitySelectionChanged(Pathology::Entity)
     {
         QMessageBox box;
         box.setIcon(QMessageBox::Warning);
-        box.setText(tr("Die histologische Entität wurde geändert, "
+        box.setText(tr("Die histologische EntitÃ¤t wurde geÃ¤ndert, "
                        "obwohl bereits Befunde eingegeben wurden."));
-        box.setInformativeText(tr("Möchten sie die Entität ändern? "
-                                  "Einige Befunde werden möglicherweise fortfallen."));
+        box.setInformativeText(tr("MÃ¶chten sie die EntitÃ¤t Ã¤ndern? "
+                                  "Einige Befunde werden mÃ¶glicherweise fortfallen."));
         box.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
         box.button(QMessageBox::Yes)->setText(tr("Ja"));
         box.button(QMessageBox::No)->setText(tr("Nein"));

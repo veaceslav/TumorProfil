@@ -129,7 +129,7 @@ QVariant PatientModel::data(const QModelIndex& index, int role) const
                     case Pathology::RenalCell:
                         return "RCC";
                     case Pathology::Esophageal:
-                        return "Öso";
+                        return "Ã–so";
                     case Pathology::EsophagogastrealJunction:
                         return "AEG";
                     case Pathology::Gastric:

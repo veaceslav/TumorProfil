@@ -201,7 +201,7 @@ QVariant DiseaseHistoryModel::data(const QModelIndex& index, int role) const
         case ColumnInfo:
             if (t->dose)
             {
-                return QString("%1 mg/m²").arg(t->dose);
+                return QString("%1 mg/mÂ²").arg(t->dose);
             }
         default:
             break;
@@ -226,11 +226,11 @@ QVariant DiseaseHistoryModel::data(const QModelIndex& index, int role) const
         switch (index.column())
         {
         case ColumnDescription:
-            return t->description.isEmpty() ? tr("<Toxizität>") : t->description;
+            return t->description.isEmpty() ? tr("<ToxizitÃ¤t>") : t->description;
         case ColumnInfo:
             if (t->grade)
             {
-                return QString("%1°").arg(t->grade);
+                return QString("%1Â°").arg(t->grade);
             }
         default:
             break;
@@ -262,7 +262,7 @@ QVariant DiseaseHistoryModel::data(const QModelIndex& index, int role) const
             wantAnswer = true;
             break;
         case Finding::XRay:
-            modality = tr("Röntgen");
+            modality = tr("RÃ¶ntgen");
             wantAnswer = true;
             break;
         case Finding::Sono:

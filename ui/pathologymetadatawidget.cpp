@@ -61,7 +61,7 @@ PathologyMetadataWidget::PathologyMetadataWidget(QWidget *parent) :
 
     // Sample origin buttons
     QFormLayout* buttonLayout = new QFormLayout;
-    d->sampleFromPrimaryButton = new QRadioButton(tr("aus dem Primärtumor"));
+    d->sampleFromPrimaryButton = new QRadioButton(tr("aus dem PrimÃ¤rtumor"));
     d->sampleFromLNButton = new QRadioButton(tr("aus einem lokalen Lymphknoten"));
     d->sampleFromMetastasisButton = new QRadioButton(tr("aus einer Metastase"));
     buttonLayout->addRow(tr("Histologie"), d->sampleFromPrimaryButton);

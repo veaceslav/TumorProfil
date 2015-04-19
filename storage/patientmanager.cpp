@@ -621,12 +621,12 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
     {
         if (mergeHints.isEmpty())
         {
-            QMessageBox::information(0, tr("Keine Änderungen"), tr("Keine Änderungen zum Zusammenführen"));
+            QMessageBox::information(0, tr("Keine Ã„nderungen"), tr("Keine Ã„nderungen zum ZusammenfÃ¼hren"));
             return;
         }
         else
         {
-            QMessageBoxResize msgBox(QMessageBox::Information, tr("Keine Änderungen"), tr("Keine Änderungen zum Zusammenführen. Bitte beachten Sie die Hinweise."), QMessageBox::Ok);
+            QMessageBoxResize msgBox(QMessageBox::Information, tr("Keine Ã„nderungen"), tr("Keine Ã„nderungen zum ZusammenfÃ¼hren. Bitte beachten Sie die Hinweise."), QMessageBox::Ok);
             msgBox.setDetailedText(mergeHints.join("\n"));
             msgBox.resize(600, 400);
             msgBox.exec();
@@ -635,7 +635,7 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
     }
     else
     {
-        QMessageBoxResize msgBox(QMessageBox::Question, tr("Zusammenführen"), tr("Sollen %1 Änderungen durchgeführt werden?").arg(mergeActions.size()), QMessageBox::Ok | QMessageBox::Cancel);
+        QMessageBoxResize msgBox(QMessageBox::Question, tr("ZusammenfÃ¼hren"), tr("Sollen %1 Ã„nderungen durchgefÃ¼hrt werden?").arg(mergeActions.size()), QMessageBox::Ok | QMessageBox::Cancel);
         msgBox.setDetailedText(mergeActions.join("\n"));
         msgBox.resize(600, 400);
         if (msgBox.exec() != QMessageBox::Ok)

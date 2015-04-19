@@ -62,7 +62,7 @@ PatientEnterForm::PatientEnterForm(QWidget *parent) :
     d->dobEdit       = new QDateEdit;
     d->dobEdit->setDate(QDate(1956, 01, 01));
     QHBoxLayout* genderLayout = new QHBoxLayout;
-    d->maleButton    = new QRadioButton(tr("Männlich"));
+    d->maleButton    = new QRadioButton(tr("MÃ¤nnlich"));
     d->femaleButton  = new QRadioButton(tr("Weiblich"));
     d->maleButton->setChecked(true);
     genderLayout->addWidget(d->maleButton);
@@ -121,8 +121,8 @@ void PatientEnterForm::returnPressed()
 {
     if (!isValid())
     {
-        QMessageBox::warning(this, tr("Ungültige Daten"),
-                             tr("Die Patientendaten sind nicht vollständig oder nicht plausibel"));
+        QMessageBox::warning(this, tr("UngÃ¼ltige Daten"),
+                             tr("Die Patientendaten sind nicht vollstÃ¤ndig oder nicht plausibel"));
         return;
     }
     emit editingFinished(currentPatient());

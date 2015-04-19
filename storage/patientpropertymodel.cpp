@@ -255,7 +255,7 @@ public:
             switch (field)
             {
             case OverviewEntityColumn:
-                return QObject::tr("Entit‰t");
+                return QObject::tr("Entit√§t");
             case OverviewResultsColum:
                 return QObject::tr("Anzahl Befunde");
             }

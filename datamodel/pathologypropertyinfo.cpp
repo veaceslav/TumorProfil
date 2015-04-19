@@ -51,7 +51,7 @@ PathologyPropertyInfo::PathologyPropertyInfo(Property property)
 enum ValueTypeCategory
 {
     IHCClassical,
-    IHCBoolean, // "<10%, niedrige Intensität"
+    IHCBoolean, // "<10%, niedrige IntensitÃ¤t"
     IHCBooleanPercentage,
     Fish,
     Mutation,
@@ -286,9 +286,9 @@ QString ValueTypeCategoryInfo::toUILabel(const QVariant& value) const
         case 1:
             return QObject::tr("schwache");
         case 2:
-            return QObject::tr("mäßige");
+            return QObject::tr("mÃ¤ÃŸige");
         case 3:
-            return QObject::tr("starke Färbung");
+            return QObject::tr("starke FÃ¤rbung");
         }
         break;
     case PathologyPropertyInfo::IHCBoolean:
@@ -298,7 +298,7 @@ QString ValueTypeCategoryInfo::toUILabel(const QVariant& value) const
         }
         else
         {
-            return QObject::tr("negativ (<10%, niedrige Intensität)");
+            return QObject::tr("negativ (<10%, niedrige IntensitÃ¤t)");
         }
         break;
     case PathologyPropertyInfo::IHCBooleanPercentage:

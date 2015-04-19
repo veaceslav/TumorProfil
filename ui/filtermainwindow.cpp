@@ -113,11 +113,11 @@ void FilterMainWindow::setupToolbar()
 {
     d->toolBar = addToolBar(tr("Auswahl"));
 
-    QAction* overviewAction = d->toolBar->addAction(QIcon::fromTheme("table"), tr("‹bersicht"),
+    QAction* overviewAction = d->toolBar->addAction(QIcon::fromTheme("table"), tr("√úbersicht"),
                                                     this, SLOT(entryActivated()));
     overviewAction->setData((int)PatientPropertyModelViewAdapter::OverviewReport);
 
-    QAction* profilesAction = d->toolBar->addAction(QIcon::fromTheme("photo"), tr("Nach Entit‰t"));
+    QAction* profilesAction = d->toolBar->addAction(QIcon::fromTheme("photo"), tr("Nach Entit√§t"));
     QToolButton* profilesButton = static_cast<QToolButton*>(d->toolBar->widgetForAction(profilesAction));
     profilesButton->setPopupMode(QToolButton::InstantPopup);
     ProfileMenu* profilesMenu = new ProfileMenu;
@@ -125,7 +125,7 @@ void FilterMainWindow::setupToolbar()
     profilesMenu->addAction(tr("Plattenepithelkarzinom Lunge"), PatientPropertyModelViewAdapter::PulmonarySquamousIHCMut, this);
     profilesMenu->addAction(tr("Kolorektales Karzinom"), PatientPropertyModelViewAdapter::CRCIHCMut, this);
     profilesMenu->addAction(tr("Mammakarzinom"), PatientPropertyModelViewAdapter::BreastCaIHCMut, this);
-    profilesMenu->addAction(tr("Alle vier Tumorprofil-Entit‰ten"), PatientPropertyModelViewAdapter::TumorprofilIHCMut, this);
+    profilesMenu->addAction(tr("Alle vier Tumorprofil-Entit√§ten"), PatientPropertyModelViewAdapter::TumorprofilIHCMut, this);
     profilesButton->setMenu(profilesMenu);
 
     QAction* byMutationAction = d->toolBar->addAction(QIcon::fromTheme("palette"), tr("Nach Befund"));
@@ -140,7 +140,7 @@ void FilterMainWindow::setupToolbar()
     byMutationMenu->addAction(tr("NSCLC KRAS-Mutation"), PatientPropertyModelViewAdapter::NSCLCKRASMutation, this);
     byMutationMenu->addAction(tr("NSCLC Her2-Amplifikation"), PatientPropertyModelViewAdapter::NSCLCHer2Amplification, this);
     byMutationMenu->addAction(tr("NSCLC cMET IHC3+ Score"), PatientPropertyModelViewAdapter::NSCLCcMetOverexpression, this);
-    byMutationMenu->addAction(tr("CRC cMET-‹berexpression"), PatientPropertyModelViewAdapter::CRCcMetOverexpression, this);
+    byMutationMenu->addAction(tr("CRC cMET-√úberexpression"), PatientPropertyModelViewAdapter::CRCcMetOverexpression, this);
     byMutationButton->setMenu(byMutationMenu);
 
     d->toolBar->addSeparator();
@@ -182,7 +182,7 @@ void FilterMainWindow::setupToolbar()
     byDateButton->setPopupMode(QToolButton::InstantPopup);
     QMenu* byDateMenu = new QMenu;
 
-    byDateMenu->addAction(tr("Datumsfilter zur¸cksetzen"), this, SLOT(clearDateFilter()));
+    byDateMenu->addAction(tr("Datumsfilter zur√ºcksetzen"), this, SLOT(clearDateFilter()));
 
     d->fromEdit = new QDateEdit;
     connect(d->fromEdit, SIGNAL(dateChanged(QDate)), this, SLOT(filterByDate()));

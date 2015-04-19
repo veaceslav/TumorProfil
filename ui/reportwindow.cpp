@@ -93,7 +93,7 @@ void ReportWindow::setupToolbar()
     aggregateAction->setCheckable(true);
     connect(aggregateAction, SIGNAL(toggled(bool)), this, SLOT(setAggregateVisible(bool)));
 
-    QAction* clearFilterAction = toolBar()->addAction(QIcon::fromTheme("link_break"), tr("Zweitfilter zur¸cksetzen"));
+    QAction* clearFilterAction = toolBar()->addAction(QIcon::fromTheme("link_break"), tr("Zweitfilter zur√ºcksetzen"));
     connect(clearFilterAction, SIGNAL(triggered()), adapter(), SLOT(clearFilter()));
 }
 

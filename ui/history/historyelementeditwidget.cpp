@@ -291,12 +291,12 @@ TherapyEditWidget::TherapyEditWidget()
     moreRTxButton = new QPushButton(QIcon::fromTheme("add"), tr("Bestrahlung"));
     connect(moreRTxButton, SIGNAL(clicked()), this, SLOT(addRadiation()));
     buttonLayout->addWidget(moreRTxButton);
-    moreToxButton = new QPushButton(QIcon::fromTheme("add"), tr("Toxizität"));
+    moreToxButton = new QPushButton(QIcon::fromTheme("add"), tr("ToxizitÃ¤t"));
     connect(moreToxButton, SIGNAL(clicked()), this, SLOT(addToxicity()));
     buttonLayout->addWidget(moreToxButton);
     mainLayout->addLayout(buttonLayout);
 
-    QGroupBox* infoBox = new QGroupBox(tr("Zusätzliche Aspekte"));
+    QGroupBox* infoBox = new QGroupBox(tr("ZusÃ¤tzliche Aspekte"));
     infoGroup = new QButtonGroup;
     infoGroup->setExclusive(false);
     QGridLayout* infoLayout = new QGridLayout;
@@ -447,7 +447,7 @@ FindingEditWidget::FindingEditWidget()
     addButton(Finding::MRI, tr("MRT"), modalityGroup, modalityLayout, 0, 1);
     addButton(Finding::Sono, tr("Sono"), modalityGroup, modalityLayout, 0, 2);
     addButton(Finding::Clinical, tr("Klinisch"), modalityGroup, modalityLayout, 1, 0);
-    addButton(Finding::XRay, tr("Röntgen"), modalityGroup, modalityLayout, 1, 1);
+    addButton(Finding::XRay, tr("RÃ¶ntgen"), modalityGroup, modalityLayout, 1, 1);
     addButton(Finding::PETCT, tr("PET-CT"), modalityGroup, modalityLayout, 1, 2);
     addButton(Finding::Scintigraphy, tr("Szinti"), modalityGroup, modalityLayout, 2, 0);
     addButton(Finding::Histopathological, tr("Histo"), modalityGroup, modalityLayout, 2, 1);
@@ -479,7 +479,7 @@ FindingEditWidget::FindingEditWidget()
     addButton(Finding::ResultNotApplicable, tr("(kein Ergebnis)"), resultGroup, resultGroupLayout, 8, 0);
     resultBox->setLayout(resultGroupLayout);
 
-    QGroupBox* infoBox = new QGroupBox(tr("Zusätzliche Aspekte"));
+    QGroupBox* infoBox = new QGroupBox(tr("ZusÃ¤tzliche Aspekte"));
     infoGroup = new QButtonGroup;
     infoGroup->setExclusive(false);
     QGridLayout* infoLayout = new QGridLayout;

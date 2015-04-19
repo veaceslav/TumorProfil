@@ -567,7 +567,7 @@ void HistoryWindow::setupView()
     f.setBold(true);
     f.setPixelSize(20);
     d->heading->setFont(f);
-    d->clearButton = new QPushButton(QIcon::fromTheme("delete"), tr("Löschen"));
+    d->clearButton = new QPushButton(QIcon::fromTheme("delete"), tr("LÃ¶schen"));
     connect(d->clearButton, SIGNAL(clicked()), this, SLOT(clearCurrentElement()));
     headingLayout->addWidget(d->heading);
     headingLayout->addStretch(1);

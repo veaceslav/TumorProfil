@@ -817,7 +817,7 @@ bool NewTreatmentLineIterator::visit(HistoryElement* element)
                 isContinued = m_therapies.last().isContinuation(t);
             }
             /*qDebug() << "Therapie" << t->elements.substances() << t->begin() << t->end
-                     << "Fortführung" << isContinued << "PD" << m_seenProgression
+                     << "FortfÃ¼hrung" << isContinued << "PD" << m_seenProgression
                      << "Abstand" << daysDistance << "in Block" << m_isInTherapyBlock;*/
 
             if (m_isInTherapyBlock)

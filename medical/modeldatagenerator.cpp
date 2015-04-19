@@ -57,13 +57,13 @@ QVariant ModelDataGenerator::entityNameDatum()
         case Pathology::PulmonaryAdeno:
             return QObject::tr("Lunge Adeno");
         case Pathology::PulmonaryBronchoalveloar:
-            return QObject::tr("Lunge Bronchioloaveol‰r");
+            return QObject::tr("Lunge Bronchioloaveol√§r");
         case Pathology::PulmonaryLargeCell:
-            return QObject::tr("Lunge Groﬂzeller");
+            return QObject::tr("Lunge Gro√üzeller");
         case Pathology::PulmonarySquamous:
             return QObject::tr("Lunge Platte");
         case Pathology::PulmonaryAdenosquamous:
-            return QObject::tr("Lunge Adenosquamˆs");
+            return QObject::tr("Lunge Adenosquam√∂s");
         case Pathology::PulmonaryOtherCarcinoma:
             return QObject::tr("Lunge anderes");
         case Pathology::ColorectalAdeno:
@@ -73,9 +73,9 @@ QVariant ModelDataGenerator::entityNameDatum()
         case Pathology::RenalCell:
             return QObject::tr("Nierenzell");
         case Pathology::Esophageal:
-            return QObject::tr("÷sophagus");
+            return QObject::tr("√ñsophagus");
         case Pathology::EsophagogastrealJunction:
-            return QObject::tr("÷sophagogastral");
+            return QObject::tr("√ñsophagogastral");
         case Pathology::Gastric:
             return QObject::tr("Magen");
         case Pathology::Breast:
@@ -83,7 +83,7 @@ QVariant ModelDataGenerator::entityNameDatum()
         case Pathology::TransitionalCell:
             return QObject::tr("Urothel");
         case Pathology::Thyroid:
-            return QObject::tr("Schilddr¸se");
+            return QObject::tr("Schilddr√ºse");
         case Pathology::Melanoma:
             return QObject::tr("Melanom");
         case Pathology::UnknownEntity:
@@ -165,7 +165,7 @@ QVariant ModelDataGenerator::additionalInfoDatum()
                 switch (p->firstDisease().firstPathology(primaryContext).sampleOrigin)
                 {
                 case Pathology::Primary:
-                    return QObject::tr("Prim‰rtumor");
+                    return QObject::tr("Prim√§rtumor");
                 case Pathology::LocalLymphNode:
                     return QObject::tr("Lymphknoten");
                 case Pathology::Metastasis:

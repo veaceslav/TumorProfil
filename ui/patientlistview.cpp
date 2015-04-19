@@ -169,7 +169,7 @@ void PatientListView::contextMenuEvent(QContextMenuEvent *event)
 
     QMenu menu;
 
-    QAction* editPatientAction = menu.addAction(tr("Patientendaten ändern"), this, SLOT(editPatient()));
+    QAction* editPatientAction = menu.addAction(tr("Patientendaten Ã¤ndern"), this, SLOT(editPatient()));
     editPatientAction->setData(QVariant::fromValue(p));
     QAction* delPatientAction = menu.addAction(tr("Patienten entfernen"), this, SLOT(deletePatient()));
     delPatientAction->setData(QVariant::fromValue(p));
@@ -238,8 +238,8 @@ void PatientListView::deletePatient()
 
     QMessageBox box;
     box.setIcon(QMessageBox::Warning);
-    box.setText(tr("Das Löschen eines Patienten entfernt alle Daten unwiderruflich"));
-    box.setInformativeText(tr("Möchten sie den Patienten \"%1, %2\" wirklich aus der Datenbank entfernen?")
+    box.setText(tr("Das LÃ¶schen eines Patienten entfernt alle Daten unwiderruflich"));
+    box.setInformativeText(tr("MÃ¶chten sie den Patienten \"%1, %2\" wirklich aus der Datenbank entfernen?")
                            .arg(p->surname).arg(p->firstName));
     box.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
     box.button(QMessageBox::Yes)->setText(tr("Entfernen"));

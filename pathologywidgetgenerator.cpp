@@ -138,7 +138,7 @@ QList<QObject*> PathologyWidgetGenerator::createWidgets(Pathology::Entity e, Pat
             m_objects << create(PathologyPropertyInfo::Mut_PIK3CA_10_21);
             m_objects << create(PathologyPropertyInfo::Mut_DDR2);
 
-            m_objects << new QLabel(tr("Weitere Sequenzanalysen (Adenosquamös)"));
+            m_objects << new QLabel(tr("Weitere Sequenzanalysen (AdenosquamÃ¶s)"));
             m_objects << create(PathologyPropertyInfo::Mut_EGFR_19_21);
             m_objects << create(PathologyPropertyInfo::Mut_KRAS_2);
             m_objects << create(PathologyPropertyInfo::Mut_KRAS_3);
