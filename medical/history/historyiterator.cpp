@@ -792,7 +792,7 @@ NewTreatmentLineIterator::NewTreatmentLineIterator()
 {
 }
 
-bool NewTreatmentLineIterator::isInterested(HistoryElement* element)
+bool NewTreatmentLineIterator::isInterested(HistoryElement*)
 {
     return true;
 }
@@ -934,7 +934,7 @@ bool NewTreatmentLineIterator::visit(HistoryElement* element)
             TherapyGroup group;
             group << t;
             m_therapies << group;
-            //qDebug() << "New Line" << t->elements.substances();
+            //qDebug() << "New Line" << t->elements.substances() << t->begin() << group.beginDate();
             m_newLineTherapy = t;
             m_seenProgression = false;
         }
@@ -946,8 +946,8 @@ bool NewTreatmentLineIterator::visit(HistoryElement* element)
                 m_therapies << TherapyGroup();
             }
             m_therapies.last() << t;
-            //qDebug() << "Including" << t->elements.substances() << "has CTx" << m_therapies.last().substances()
-              //          << m_therapies.last().effectiveEndDate();
+            /*qDebug() << "Including" << t->elements.substances() << "has CTx" << m_therapies.last().substances()
+                        << m_therapies.last().effectiveEndDate();*/
         }
 
         // adjust effective date each time
@@ -979,7 +979,6 @@ bool NewTreatmentLineIterator::visit(HistoryElement* element)
     else //if (element->is<DiseaseState>())
     {
         DiseaseState* s = element->as<DiseaseState>();
-        qDebug() << "DiseaseState" << s->state;
         if (s->state == DiseaseState::Deceased || s->state == DiseaseState::LossOfContact)
         {
             adjustEffectiveEndDate(s->date);
