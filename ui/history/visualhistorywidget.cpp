@@ -392,7 +392,7 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *)
         }
         linesX += d->durationToPixels(lastEndDate, group.beginDate());
         int pixels = d->durationToPixels(qMax(lastEndDate, group.beginDate()), group.effectiveEndDate());
-        //qDebug() << "Group" << group.substances() <<group.beginDate() << group.endDate() << "pixels" << pixels;
+        qDebug() << "Group" << group.substances() <<group.beginDate() << group.effectiveEndDate() << "pixels" << pixels;
         int limiterMargin = (linesHeight - linesVerticalLimiterHeight) / 2;
         // TTF line
         if (count == 2)

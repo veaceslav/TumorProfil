@@ -794,7 +794,7 @@ NewTreatmentLineIterator::NewTreatmentLineIterator()
 
 bool NewTreatmentLineIterator::isInterested(HistoryElement* element)
 {
-    return element->is<Therapy>() || element->is<Finding>();
+    return true;
 }
 
 bool NewTreatmentLineIterator::visit(HistoryElement* element)
@@ -979,7 +979,8 @@ bool NewTreatmentLineIterator::visit(HistoryElement* element)
     else //if (element->is<DiseaseState>())
     {
         DiseaseState* s = element->as<DiseaseState>();
-        if (s->state == DiseaseState::Deceased)
+        qDebug() << "DiseaseState" << s->state;
+        if (s->state == DiseaseState::Deceased || s->state == DiseaseState::LossOfContact)
         {
             adjustEffectiveEndDate(s->date);
         }
@@ -995,8 +996,8 @@ void NewTreatmentLineIterator::adjustEffectiveEndDate(const QDate& endDate)
     }
     TherapyGroup& t = m_therapies.last();
     /*qDebug() << "Adjusting effective date" << t.substances() << t.endDate().isNull()  << t.endDate() <<
-                 t.hasChemotherapy()
-                << m_history.lastDocumentation().isValid() << m_history.lastDocumentation();*/
+                 t.hasChemotherapy() << m_history.lastDocumentation().isValid() << m_history.lastDocumentation() <<
+                 endDate << "will be adjusted" << (t.endDate().isNull() && t.hasChemotherapy() && endDate.isValid());*/
     if (t.endDate().isNull()
             && t.hasChemotherapy()
             && endDate.isValid())
