@@ -56,6 +56,7 @@ void DiseaseHistoryModel::setHistory(const DiseaseHistory& history)
 {
     beginResetModel();
     m_history = history;
+    m_history.sort();
     endResetModel();
 }
 
@@ -94,8 +95,9 @@ HistoryElement* DiseaseHistoryModel::retrieveElement(const QModelIndex& index)
 
 void DiseaseHistoryModel::addElement(HistoryElement* e)
 {
-    beginInsertRows(QModelIndex(), m_history.size(), m_history.size());
-    m_history.entries() << e;
+    int place = m_history.sortPlace(e);
+    beginInsertRows(QModelIndex(), place, place);
+    m_history.entries().insert(place, e);
     endInsertRows();
 }
 
@@ -144,6 +146,18 @@ void DiseaseHistoryModel::elementChanged(HistoryElement* e)
     {
         qDebug() << "Element" << e << "is not known, cannot react to changes";
         return;
+    }
+    // for toplevel items, care that list remains sorted even after change (date change)
+    if (!idx.parent().isValid() && !m_history.isSorted())
+    {
+        int newRow = m_history.sortPlace(e);
+        if (beginMoveRows(QModelIndex(), idx.row(), idx.row(), QModelIndex(), newRow))
+        {
+            m_history.sort();
+            endMoveRows();
+        }
+        // became invalid
+        idx = index(e);
     }
     emit dataChanged(idx, index(e, LastColumn));
 }
