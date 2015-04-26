@@ -439,7 +439,7 @@ void HistoryWindow::setCurrentElement(HistoryElement* e)
     d->heading->setText(d->currentWidget ? d->currentWidget->heading() : QString());
     if (d->currentElement)
     {
-        QModelIndex index = d->historyModel->index(d->currentElement);
+        QModelIndex index = d->sortModel->mapFromSource(d->historyModel->index(d->currentElement));
         d->historyView->expand(index);
         d->historyView->selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect);
     }
