@@ -58,6 +58,8 @@ public:
     QDate lastValidation() const;
 
     void sort();
+    bool isSorted() const;
+    int sortPlace(HistoryElement* element) const;
 
     static DiseaseHistory fromXml(const QString& xml);
     QString toXml() const;

@@ -21,6 +21,10 @@
 
 #include "diseasehistory.h"
 
+// C++ includes
+
+#include <algorithm>
+
 // Qt includes
 
 #include <QDebug>
@@ -267,6 +271,25 @@ static bool lessThanForHistoryElements(const HistoryElement* a, const HistoryEle
 void DiseaseHistory::sort()
 {
     qStableSort(d->history.begin(), d->history.end(), lessThanForHistoryElements);
+}
+
+bool DiseaseHistory::isSorted() const
+{
+    return std::is_sorted(d->history.begin(), d->history.end(), lessThanForHistoryElements);
+}
+
+int DiseaseHistory::sortPlace(HistoryElement *element) const
+{
+    // method makes only sense if the list is sorted
+
+    // we must use the exact same algorithm as in sort() to have reliable results
+    HistoryElementList copy = d->history;
+    if (!copy.contains(element))
+    {
+        copy << element;
+    }
+    qStableSort(copy.begin(), copy.end(), lessThanForHistoryElements);
+    return copy.indexOf(element);
 }
 
 TEXT_INT_MAPPER(Therapy, Type)
