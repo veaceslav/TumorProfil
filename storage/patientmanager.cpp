@@ -484,6 +484,121 @@ private:
     }
 };
 
+static bool checkHistoryShouldBeReplaced(const Disease& currentD, const DiseaseHistory& otherHistory, const DiseaseHistory& currentHistory, const QString& patientIdentifierString, QStringList* mergeHints = 0)
+{
+    // trivial case
+    if (currentHistory.isEmpty() && !otherHistory.isEmpty())
+    {
+        return true;
+    }
+    if (currentHistory == otherHistory)
+    {
+        return false;
+    }
+
+    // by last documentation date
+    if (otherHistory.lastDocumentation().isValid())
+    {
+        if (currentHistory.lastDocumentation().isValid())
+        {
+            if (otherHistory.lastDocumentation() != currentHistory.lastDocumentation())
+            {
+                return otherHistory.lastDocumentation() > currentHistory.lastDocumentation();
+            }
+            else
+            {
+                if (otherHistory.lastValidation().isValid())
+                {
+                    if (!currentHistory.lastValidation().isValid() || otherHistory.lastValidation() > currentHistory.lastValidation())
+                    {
+                        return true;
+                    }
+                    else if (currentHistory.lastValidation().isValid() && otherHistory.lastValidation() < currentHistory.lastValidation())
+                    {
+                        return false;
+                    }
+                }
+
+                // Here, we have differing histories with the same last-documentation date and no decision from last validation
+                bool hint = false;
+
+                if (currentD.entity() == Pathology::ColorectalAdeno)
+                {
+                    hint = true;
+                }
+
+                if (hint)
+                {
+                    if (mergeHints)
+                    {
+                        *mergeHints << "Positive decision to merge histories based on hint for " + patientIdentifierString;
+                    }
+                    return true;
+                }
+                if (mergeHints)
+                {
+                    *mergeHints << "Impossible decision to merge histories, not merged. Add Hint if needed: " + patientIdentifierString;
+                }
+                return false;
+            }
+        }
+        else
+        {
+            // last documentation was added, this indicates improvement
+            return true;
+        }
+    }
+
+    const bool longer = (otherHistory.size() > currentHistory.size());
+    const bool newer  = (otherHistory.end() > currentHistory.end());
+
+    if (currentHistory.lastDocumentation().isValid())
+    {
+        if (longer)
+        {
+            if (mergeHints)
+                *mergeHints << "Discarding merged history, which is longer, but has lastDocumentation not set, while current history set it, for " + patientIdentifierString;
+        }
+        return false;
+    }
+    else
+    {
+        // both have lastDocumentation not set.
+        if (newer && longer)
+        {
+            return true;
+        }
+        else if (!newer && !longer)
+        {
+            return false;
+        }
+        else if (newer && !longer)
+        {
+            if (otherHistory.size() < currentHistory.size())
+            {
+                if (mergeHints)
+                    *mergeHints << "Merging history which is newer, but lost size, for" + patientIdentifierString;
+            }
+            return true;
+        }
+        else //if (!newer && longer)
+        {
+            if (otherHistory.end() == currentHistory.end())
+            {
+                // is longer and has same end date
+                return true;
+            }
+            else
+            {
+                if (mergeHints)
+                    *mergeHints << "Discarding merged history, which is longer, but current history is newer, for" + patientIdentifierString;
+                return false;
+            }
+
+        }
+    }
+}
+
 void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
 {
     DefaultInitializationObserver observer;
@@ -523,7 +638,7 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
         QList<Patient::Ptr> ps = findPatients(other);
         if (ps.isEmpty())
         {
-            mergeActions << "Merge new Patient" + other.firstName + other.surname + other.dateOfBirth.toString();
+            mergeActions << "Merge new Patient " + other.firstName + " " + other.surname + " "  + other.dateOfBirth.toString();
             continue;
         }
         else
@@ -575,15 +690,11 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
                 {
                     DiseaseHistory h = d.history();
                     DiseaseHistory otherH = otherD.history();
-                    bool dateNewer = (otherH.lastDocumentation().isValid() && h.lastDocumentation().isValid() && otherH.lastDocumentation() > h.lastDocumentation())
-                            || (otherH.lastDocumentation().isValid() && !h.lastDocumentation().isValid());
-                    if (otherH.size() >= h.size() || dateNewer)
+                    if (checkHistoryShouldBeReplaced(d, otherH, h, patientIdentifierString, &mergeHints))
                     {
-                        mergeActions << "History of "+ patientIdentifierString << "was updated";
-                    }
-                    else
-                    {
-                        qDebug() << "History shrinked / changed:" + p->firstName << p->surname << "elements" << otherH.size() << "here" << h.size();
+                        QString entityString; if (d.entity() == Pathology::ColorectalAdeno) entityString="CRC"; if (d.entity() == Pathology::PulmonaryAdeno) entityString="ADC";
+                        mergeActions << entityString + " History of "+ patientIdentifierString + " will be replaced";
+                        changed |= ChangedDiseaseHistory;
                     }
                 }
                 foreach (const Pathology& otherP, otherD.pathologies)
@@ -628,7 +739,7 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
         {
             QMessageBoxResize msgBox(QMessageBox::Information, tr("Keine Änderungen"), tr("Keine Änderungen zum Zusammenführen. Bitte beachten Sie die Hinweise."), QMessageBox::Ok);
             msgBox.setDetailedText(mergeHints.join("\n"));
-            msgBox.resize(600, 400);
+            msgBox.resize(800, 600);
             msgBox.exec();
             return;
         }
@@ -636,8 +747,8 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
     else
     {
         QMessageBoxResize msgBox(QMessageBox::Question, tr("Zusammenführen"), tr("Sollen %1 Änderungen durchgeführt werden?").arg(mergeActions.size()), QMessageBox::Ok | QMessageBox::Cancel);
-        msgBox.setDetailedText(mergeActions.join("\n"));
-        msgBox.resize(600, 400);
+        msgBox.setDetailedText(mergeActions.join("\n") + "\n" + mergeHints.join(("\n")));
+        msgBox.resize(800, 600);
         if (msgBox.exec() != QMessageBox::Ok)
         {
             return;
@@ -721,9 +832,7 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
                 {
                     DiseaseHistory h = d.history();
                     DiseaseHistory otherH = otherD.history();
-                    bool dateNewer = (otherH.lastDocumentation().isValid() && h.lastDocumentation().isValid() && otherH.lastDocumentation() > h.lastDocumentation())
-                            || (otherH.lastDocumentation().isValid() && !h.lastDocumentation().isValid());
-                    if (otherH.size() >= h.size() || dateNewer)
+                    if (checkHistoryShouldBeReplaced(d, otherH, h, patientIdentifierString))
                     {
                         d.setHistory(otherH);
                         if (otherD.initialDiagnosis.isValid())
