@@ -46,6 +46,7 @@
 #include "databaseparameters.h"
 #include "diseasetabwidget.h"
 #include "historywindow.h"
+#include "modelfilterlineedit.h"
 #include "patientdisplay.h"
 #include "patiententerform.h"
 #include "patientlistview.h"
@@ -56,32 +57,6 @@
 #include "reportwindow.h"
 #include "tnmwidget.h"
 #include "menubar.h"
-
-class ModelFilterLineEdit : public QLineEdit
-{
-public:
-    ModelFilterLineEdit(QSortFilterProxyModel* model)
-        : filterModel(model)
-    {
-        connect(this, SIGNAL(textChanged(QString)),
-                model, SLOT(setFilterFixedString(QString)));
-        setPlaceholderText(tr("Suche Patient"));
-    }
-
-    void keyPressEvent(QKeyEvent *e)
-    {
-        if (e->key() == Qt::Key_Escape)
-        {
-            clear();
-            return;
-        }
-        QLineEdit::keyPressEvent(e);
-    }
-
-protected:
-
-    QSortFilterProxyModel* filterModel;
-};
 
 class MainWindow::MainWindowPriv
 {
@@ -205,7 +180,7 @@ void MainWindow::setupUI()
     QWidget* leftSidebarWidget = new QWidget;
     QVBoxLayout* patientListLayout = new QVBoxLayout;
     d->listView = new PatientListView;
-    d->searchBar = new ModelFilterLineEdit(d->listView->filterModel());
+    d->searchBar = new ModelFilterLineEdit(d->listView);
     d->tumorprofilCheckbox = new QCheckBox(QObject::tr("nur Tumorprofil"));
     patientListLayout->addWidget(d->listView);
     patientListLayout->addWidget(d->searchBar);
@@ -247,7 +222,7 @@ void MainWindow::setupUI()
     connect(d->tabWidget, SIGNAL(editingFinished()),
             this, SLOT(enterNewPatient()));
 
-    connect(d->searchBar, SIGNAL(returnPressed()),
+    connect(d->searchBar, SIGNAL(selected(QModelIndex)),
             this, SLOT(selectFilteredPatient()));
 
     connect(d->tumorprofilCheckbox, SIGNAL(toggled(bool)),
@@ -375,17 +350,7 @@ void MainWindow::patientNumberChanged()
 
 void MainWindow::selectFilteredPatient()
 {
-    if (d->listView->currentIndex().isValid())
-    {
-        setPatient(d->listView->currentPatient());
-    }
-    else if (d->listView->model()->rowCount())
-    {
-        QModelIndex index = d->listView->model()->index(0,0);
-        d->listView->setCurrentIndex(index);
-        setPatient(d->listView->currentPatient());
-    }
-    d->searchBar->clear();
+    setPatient(d->listView->currentPatient());
 }
 
 void MainWindow::mergeDatabase()

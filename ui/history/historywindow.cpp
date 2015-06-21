@@ -50,7 +50,9 @@
 #include "diseasehistorymodel.h"
 #include "historyelementeditwidget.h"
 #include "history/historyiterator.h"
+#include "modelfilterlineedit.h"
 #include "patientdisplay.h"
+#include "patientpropertyfiltermodel.h"
 #include "patientmanager.h"
 #include "patientpropertymodel.h"
 #include "visualhistorywidget.h"
@@ -477,12 +479,19 @@ void HistoryWindow::setupView()
     d->viewSplitter = new QSplitter(Qt::Horizontal, this);
 
     // Patient list view
+    QWidget* firstWidget = new QWidget;
+    QVBoxLayout* firstWidgetLayout = new QVBoxLayout;
     d->patientView = new HistoryPatientListView;
     d->patientView->setAdapter(adapter());
     d->colorProvider = new HistoryColorProvider;
     adapter()->model()->installRoleDataProvider(Qt::BackgroundRole, d->colorProvider);
+    adapter()->filterModel()->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    ModelFilterLineEdit* searchBar = new ModelFilterLineEdit(d->patientView);
     connect(d->patientView, SIGNAL(currentChanged(Patient::Ptr)), this, SLOT(setCurrentPatient(Patient::Ptr)));
     connect(d->patientView, SIGNAL(currentChanged(Patient::Ptr)), this, SIGNAL(activated(Patient::Ptr)));
+    firstWidgetLayout->addWidget(d->patientView, 1);
+    firstWidgetLayout->addWidget(searchBar);
+    firstWidget->setLayout(firstWidgetLayout);
 
     // History Tree View
     QWidget* secondWidget = new QWidget;
@@ -494,13 +503,13 @@ void HistoryWindow::setupView()
     d->historyView->setModel(d->sortModel);
     d->sortModel->sort(0);
     connect(d->historyView, SIGNAL(clicked(QModelIndex)), this, SLOT(historyElementActivated(QModelIndex)));
-    secondWidgetLayout->addWidget(d->historyView, 1);
-    secondWidget->setLayout(secondWidgetLayout);
     connect(d->historyModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(slotHistoryChanged()));
     connect(d->historyModel, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)), this, SLOT(slotHistoryAboutToChange()));
     connect(d->historyModel, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT(slotHistoryChanged()));
     connect(d->historyModel, SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)), this, SLOT(slotHistoryAboutToChange()));
     connect(d->historyModel, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(slotHistoryChanged()));
+    secondWidgetLayout->addWidget(d->historyView, 1);
+    secondWidget->setLayout(secondWidgetLayout);
 
     d->proofOutput = new QListWidget;
     d->proofReader = new HistoryWindowProofReadOutput(d->proofOutput);
@@ -593,7 +602,7 @@ void HistoryWindow::setupView()
     scrollArea->setWidgetResizable(true);
     scrollArea->setWidget(mainPanel);
 
-    d->viewSplitter->addWidget(d->patientView);
+    d->viewSplitter->addWidget(firstWidget);
     d->viewSplitter->addWidget(secondWidget);
     d->viewSplitter->addWidget(scrollArea);
     //d->viewSplitter->addWidget(mainPanel);
