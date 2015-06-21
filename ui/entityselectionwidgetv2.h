@@ -31,11 +31,20 @@ class QGroupBox;
 class EntitySelectionWidgetV2 : public QWidget
 {
     Q_OBJECT
+
 public:
+
+    enum Mode
+    {
+        DisplayMode,
+        EditMode
+    };
+
     explicit EntitySelectionWidgetV2(QWidget *parent = 0);
     ~EntitySelectionWidgetV2();
 
     Pathology::Entity entity() const;
+    Mode mode() const;
 
     // Creates a group box into which this widget is moved
     QGroupBox* createGroupBox();
@@ -43,20 +52,25 @@ public:
 signals:
 
     void entityChanged(Pathology::Entity entity);
+    void modeChanged();
 
 public slots:
 
     void setEntity(Pathology::Entity entity);
+    void setMode(Mode mode);
 
 protected slots:
 
     void comboBoxIndexChanged(int index);
     void buttonPressed(QAction* action);
+    void linkPressed(const QString& ref);
 
 private:
 
     void applyButtonState();
     void applyComboBoxState();
+    void applyLabelState();
+    void applyMode();
 
     class EntitySelectionWidgetV2Priv;
     EntitySelectionWidgetV2Priv* const d;
