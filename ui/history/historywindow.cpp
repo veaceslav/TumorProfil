@@ -440,8 +440,15 @@ void HistoryWindow::setCurrentElement(HistoryElement* e)
     if (d->currentElement)
     {
         QModelIndex index = d->sortModel->mapFromSource(d->historyModel->index(d->currentElement));
-        d->historyView->expand(index);
-        d->historyView->selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect);
+        //d->historyView->expand(index);
+        //d->historyView->selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect);
+        d->historyView->setCurrentIndex(index);
+        d->visualHistoryWidget->setCursor(d->currentElement->date);
+    }
+    else
+    {
+        d->historyView->setCurrentIndex(QModelIndex());
+        d->visualHistoryWidget->setCursor(QDate());
     }
 }
 
@@ -455,7 +462,7 @@ void HistoryWindow::clearCurrentElement()
         d->currentElement = 0;
         delete d->currentWidget;
         d->currentWidget = 0;
-        setCurrentElement(0);
+        setCurrentElement(DiseaseHistoryModel::retrieveElement(d->historyView->currentIndex()));
     }
 }
 
@@ -512,6 +519,7 @@ void HistoryWindow::setupView()
     visualHistoryWidgetScrollArea->setWidgetResizable(true);
     visualHistoryWidgetScrollArea->setFrameStyle(QFrame::NoFrame);
     d->mainPanelLayout->addWidget(visualHistoryWidgetScrollArea);
+    connect(d->visualHistoryWidget, (void (VisualHistoryWidget::*)(HistoryElement*))(&VisualHistoryWidget::clicked), this, &HistoryWindow::visualHistoryClicked);
 
     d->patientDisplay = new PatientDisplay;
     d->patientDisplay->setShowGender(false);
@@ -738,12 +746,28 @@ void HistoryWindow::slotHistoryAboutToChange()
 void HistoryWindow::slotHistoryChanged()
 {
     d->visualHistoryWidget->setHistory(d->historyModel->history());
+    if (d->currentElement)
+    {
+        d->visualHistoryWidget->setCursor(d->currentElement->date);
+    }
 }
 
 void HistoryWindow::slotLastDocumentationDateChanged()
 {
     d->visualHistoryWidget->updateLastDocumentation(
                 d->lastDocumentation->isChecked() ? d->lastDocumentationDate->date() : QDate());
+    if (d->lastDocumentation->isChecked() && !d->lastValidation->isChecked())
+    {
+        d->lastValidationDate->setDate(d->lastDocumentationDate->date());
+    }
+}
+
+void HistoryWindow::visualHistoryClicked(HistoryElement* e)
+{
+    if (e)
+    {
+        setCurrentElement(e);
+    }
 }
 
 void HistoryWindow::keyPressEvent(QKeyEvent *e)

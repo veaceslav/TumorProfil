@@ -24,16 +24,29 @@
 // Qt includes
 
 #include <QtCore/qmath.h>
+#include <QAction>
+#include <QApplication>
+#include <QBuffer>
+#include <QByteArray>
+#include <QClipboard>
 #include <QDebug>
+#include <QImage>
+#include <QMimeData>
+#include <QMouseEvent>
 #include <QPainter>
+#include <QtMath>
+#include <QtSvg/QSvgGenerator>
+#include <QVector2D>
 
 // Local includes
 
 #include "history/historyiterator.h"
 
-uint qHash(const QRect&r)
+static float distanceToRect(const QPoint& p, const QRect& rect)
 {
-    return r.x() + 37*r.y() + 43*r.width() + 47*r.height();
+    float dx = qMax(qMax(rect.left() - p.x(), 0), p.x() - rect.right());
+    float dy = qMax(qMax(rect.top() - p.y(), 0), p.y()  - rect.bottom());
+    return qSqrt(dx*dx + dy*dy);
 }
 
 class VisualHistoryWidget::VisualHistoryWidgetPriv
@@ -50,13 +63,20 @@ public:
     DiseaseHistory history;
     int pixelsPerYear;
     int height;
-    QList<QPair<QRect, HistoryElement*> > toolTipElements;
+    typedef QPair<QRect, HistoryElement*> ToolTipElement;
+    QList<ToolTipElement> toolTipElements;
     HistoryProofreader* proofreader;
+    QDate cursor;
 
     int durationToPixels(const QDate& begin, const QDate& end) const
     {
         float days = qAbs(begin.daysTo(end));
         return qRound(days * pixelsPerYear / 365.0);
+    }
+
+    int pixelsToDays(float width)
+    {
+        return qRound(width/pixelsPerYear * 365.0);
     }
 
     void reportProblem(const HistoryElement* e, const QString& problem)
@@ -69,6 +89,37 @@ public:
         {
             qDebug() << problem;
         }
+    }
+
+    void addToolTipElement(const QRect& rect, HistoryElement* e)
+    {
+        toolTipElements << qMakePair(rect, e);
+    }
+
+    HistoryElement* findNearest(const QPoint& p)
+    {
+        // find direct hit
+        foreach (const ToolTipElement& tte, toolTipElements)
+        {
+            if (tte.first.contains(p))
+            {
+                return tte.second;
+            }
+        }
+
+        // find nearest
+        float nearest = 0;
+        HistoryElement* nearestElement = 0;
+        foreach (const ToolTipElement& tte, toolTipElements)
+        {
+            float distance = distanceToRect(p, tte.first);
+            if (!nearestElement || distance < nearest)
+            {
+                nearest = distance;
+                nearestElement = tte.second;
+            }
+        }
+        return nearestElement;
     }
 };
 
@@ -130,6 +181,11 @@ VisualHistoryWidget::VisualHistoryWidget(QWidget *parent) :
 {
     setAutoFillBackground(true);
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    setContextMenuPolicy(Qt::ActionsContextMenu);
+
+    QAction* copyAction = new QAction(QIcon::fromTheme("photo_add"), tr("Kopieren"), this);
+    addAction(copyAction);
+    connect(copyAction, SIGNAL(triggered(bool)), this, SLOT(copy()));
 }
 
 VisualHistoryWidget::~VisualHistoryWidget()
@@ -141,6 +197,7 @@ void VisualHistoryWidget::setHistory(const DiseaseHistory& history)
 {
     d->history = history;
     d->toolTipElements.clear();
+    d->cursor = QDate();
     //qDebug() << d->history.size() << isVisible() << "calling updateGeometry";
     updateGeometry();
     update();
@@ -166,6 +223,16 @@ void VisualHistoryWidget::updateLastDocumentation(const QDate& date)
 void VisualHistoryWidget::setProofReader(HistoryProofreader* pr)
 {
     d->proofreader = pr;
+}
+
+void VisualHistoryWidget::setCursor(const QDate &date)
+{
+    if (d->cursor == date)
+    {
+        return;
+    }
+    d->cursor = date;
+    update();
 }
 
 class StateColorDrawer
@@ -310,7 +377,7 @@ public:
                 r = QRect(x, y, pixels, height);
             }
             p->drawRect(r);
-            d->toolTipElements << qMakePair(r, definingElement);
+            d->addToolTipElement(r, definingElement);
         }
         x += pixels;
 
@@ -331,15 +398,67 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
+    render(p, true);
+}
+
+void VisualHistoryWidget::copy()
+{
+    QMimeData* data = new QMimeData;
+    data->setImageData(renderToImage());
+    QByteArray svg = renderToSVG();
+    data->setData("image/svg+xml", svg);
+    QApplication::clipboard()->setMimeData(data);
+}
+
+QByteArray VisualHistoryWidget::renderToSVG()
+{
+    QByteArray byteArray;
+    QBuffer buffer(&byteArray);
+    buffer.open(QIODevice::WriteOnly);
+
+    QSvgGenerator generator;
+    generator.setOutputDevice(&buffer);
+    generator.setSize(sizeHint());
+    generator.setTitle(tr("Tumorprofil graphischer Erkrankungsverlauf"));
+
+    QPainter p;
+    p.begin(&generator);
+    render(p);
+    p.end();
+
+    buffer.close();
+    return byteArray;
+}
+
+QImage VisualHistoryWidget::renderToImage()
+{
+    const int scaleFactor = 5;
+    QImage image(sizeHint()*scaleFactor, QImage::Format_ARGB32);
+    image.fill(Qt::transparent);
+    QPainter p;
+    p.begin(&image);
+    p.scale(scaleFactor, scaleFactor); // increase size of painting
+    p.setRenderHint(QPainter::Antialiasing);
+    render(p);
+    p.end();
+    return image;
+}
+
+void VisualHistoryWidget::render(QPainter &p, bool widgetOutput)
+{
     QPen normalPen = p.pen();
 
     //qDebug() << "Painting history with" << d->history.entries().size() << "elements";
 
-    d->toolTipElements.clear();
-    if (d->proofreader)
+    if (widgetOutput)
     {
-        d->proofreader->reset();
+        d->toolTipElements.clear();
+        if (d->proofreader)
+        {
+            d->proofreader->reset();
+        }
     }
+
     if (d->history.isEmpty())
     {
         return;
@@ -356,7 +475,10 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *)
     // Effective DiseaseState
     StateColorDrawer stateDrawer(&p, d, d->history.begin(), margin, currentY, statusHeight);
     EffectiveStateIterator effectiveState(d->history);
-    effectiveState.setProofreader(d->proofreader);
+    if (widgetOutput)
+    {
+        effectiveState.setProofreader(d->proofreader);
+    }
     for (; effectiveState.next() == HistoryIterator::Match; )
     {
         stateDrawer.visit(effectiveState.effectiveState(),
@@ -373,7 +495,10 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *)
     const int linesVerticalLimiterHeight = 6;
 
     NewTreatmentLineIterator treatmentLinesIterator;
-    treatmentLinesIterator.setProofreader(d->proofreader);
+    if (widgetOutput)
+    {
+        treatmentLinesIterator.setProofreader(d->proofreader);
+    }
     treatmentLinesIterator.set(d->history);
     treatmentLinesIterator.iterateToEnd();
     //qDebug() << "Have" << treatmentLinesIterator.therapies().size() << "therapies";
@@ -411,9 +536,12 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *)
         // horizontal line
         int mainLineY = currentY + linesHeight/2;
         p.drawLine(linesX, mainLineY, linesX + pixels, mainLineY);
-        foreach (HistoryElement* e, group)
+        if (widgetOutput)
         {
-            d->toolTipElements << qMakePair(QRect(linesX, currentY, pixels, linesHeight), e);
+            foreach (HistoryElement* e, group)
+            {
+                d->addToolTipElement(QRect(linesX, currentY, pixels, linesHeight), e);
+            }
         }
 
         linesX += pixels;
@@ -449,6 +577,19 @@ void VisualHistoryWidget::paintEvent(QPaintEvent *)
         p.setBrush(c);
         p.setPen(QPen(c, 0));
         p.drawChord(findingX-radius, currentY-radius, 2*radius, 2*radius, 0, 16*360);
+
+        if (widgetOutput)
+        {
+            d->addToolTipElement(QRect(findingX-radius, currentY-radius, 2*radius, 2*radius), (HistoryElement*)f);
+        }
+    }
+
+    // Draw cursor
+    if (widgetOutput && d->cursor.isValid() && d->cursor >= d->history.begin())
+    {
+        const int time = d->durationToPixels(d->history.begin(), d->cursor);
+        p.setPen(qRgba(0,0,0, 100)); // semitransparent black
+        p.drawLine(time + margin, 0, time + margin, height());
     }
 }
 
@@ -463,3 +604,23 @@ QSize VisualHistoryWidget::sizeHint() const
     //qDebug() << "sizeHint" << QSize(qCeil(days / 356)*d->pixelsPerYear, d->height) << "size" << size();
     return QSize(qCeil(days / 356)*d->pixelsPerYear, d->height);
 }
+
+void VisualHistoryWidget::mousePressEvent(QMouseEvent *e)
+{
+    if (d->history.isEmpty())
+    {
+        return;
+    }
+
+    if (e->button() == Qt::LeftButton)
+    {
+        QDate date = d->history.begin().addDays(d->pixelsToDays(e->localPos().x()));
+        emit clicked(date);
+        HistoryElement* elem = d->findNearest(e->pos());
+        if (elem)
+        {
+            emit clicked(elem);
+        }
+    }
+}
+

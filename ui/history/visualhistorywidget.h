@@ -44,16 +44,26 @@ public:
     static QColor colorForState(DiseaseState::State state);
     static QColor colorForResult(Finding::Result result);
 
+    QByteArray renderToSVG();
+    QImage renderToImage();
+
 signals:
+
+    void clicked(const QDate& date);
+    void clicked(HistoryElement* e);
     
 public slots:
 
     void setHistory(const DiseaseHistory& history);
+    void setCursor(const QDate& date);
     void setPixelsPerYear(int pixelsPerYear);
+    void copy();
 
 protected:
 
     virtual void paintEvent(QPaintEvent *event);
+    void render(QPainter& p, bool widgetOutput = false);
+    virtual void mousePressEvent(QMouseEvent* e);
 
 private:
 

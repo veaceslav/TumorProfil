@@ -55,6 +55,7 @@ protected slots:
     void setCurrentElement(HistoryElement* e);
     void clearCurrentElement();
     void historyElementActivated(const QModelIndex& index);
+    void visualHistoryClicked(HistoryElement* e);
 
     void addChemotherapy();
     void addFinding();
