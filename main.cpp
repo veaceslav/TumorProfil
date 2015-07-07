@@ -79,7 +79,15 @@ int main(int argc, char *argv[])
     else
     {
         dbFile = "//ikt-hpstorage/wiesweg_DB/tumorprofil.db";
-        qDebug() << "Using main database" << dbFile;
+
+        if(!QFileInfo(dbFile).exists())
+        {
+            dbFile = info.filePath();
+        }
+        else
+        {
+            qDebug() << "Using main database" << dbFile;
+        }
     }
 
     DatabaseParameters params =
