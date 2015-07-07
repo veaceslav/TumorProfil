@@ -73,7 +73,9 @@ SOURCES += main.cpp\
     medical/history/historyiterator.cpp \
     ui/history/visualhistorywidget.cpp \
     util/analysisgenerator.cpp \
-    util/historyvalidator.cpp
+    util/historyvalidator.cpp \
+    settings/mainsettings.cpp \
+    menubar.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -141,7 +143,9 @@ HEADERS  += mainwindow.h \
     medical/history/historyiterator.h \
     ui/history/visualhistorywidget.h \
     util/analysisgenerator.h \
-    util/historyvalidator.h
+    util/historyvalidator.h \
+    settings/mainsettings.h \
+    menubar.h
 
 INCLUDEPATH += datamodel/ \
     ui/ \

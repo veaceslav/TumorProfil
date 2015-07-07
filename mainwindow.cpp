@@ -55,6 +55,7 @@
 #include "reporttableview.h"
 #include "reportwindow.h"
 #include "tnmwidget.h"
+#include "menubar.h"
 
 class ModelFilterLineEdit : public QLineEdit
 {
@@ -120,6 +121,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupToolbar();
     setupStatusBar();
     setFocusPolicy(Qt::ClickFocus);
+    this->setMenuBar(new MenuBar());
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *e)
