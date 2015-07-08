@@ -1,0 +1,10 @@
+ihc-global
+(?<intensity>Schwache|Mäßige|Starke|Keine)\s+positive (?:zytoplasmatische|.*membranständige|zytoplasmatische und membranöse|zytoplasmatisch und nukleär)?\s*Reaktivität (?:nukleär|zytoplasmatisch|nukleär und zytoplasmatisch|zytoplasmatisch\/ nukleär|zytoplasmatisch und nukleär)?\s*mit dem Antikörper gegen\s+(?<protein>PTEN|c-MET|p-ERK|ALK|ROS1|p-AKTS473|HER2\/neu|p-p70S6-Kinase)\s+(?|in (?<percentage>\d+)\s*% der Tumorzellen\s+\((?:Gesamts|S)core:\s+(?<score>[\d]+)\+?\)|(?<percentage>)\(Gesamtscore:\s+(?<score>0)\)|(?<percentage>)in \(Gesamtscore:\s+(?<score>0)\)|(?<percentage>)\(Score:\s+(?<score>0)\))
+ihc-cmet
+(?<strong>\d+)\s*%ige starke(?:, (?<medium>\d+)\s*%ige mäßige)?(?: und (?<weak>\d+)\s*%ige schwache)? zytoplasmatische und membranöse Reaktivität mit dem Antikörper gegen\s+c-MET\s+\(H-Score:\s*(?<score>\d+)\)
+patient-id
+^(?<name>[\w -äöüÄÖÜß]+),\s*(?<firstName>[\w -äöüÄÖÜß]+)(?:, UE \*)(?<day>\d\d).(?<month>\d\d).(?<year>\d\d\d\d)\s+(?<refNumber>[RE]\d+\/\d+)\ vom\s+(?<refday>\d\d).(?<refmonth>\d\d).(?<refyear>\d\d\d\d)$
+ngs-table-header
+Gen\s+Untersuchte Exone\s+Mutation\s+DNA-Ebene\s+Protein-Ebene\s+Frequenz
+ngs-table-protein
+(BRAF|DDR2|EGFR|ERBB2|FGFR1|FGFR3|HRAS|KIT|KRAS|MET|NRAS|PDGFRa|PIK3CA|RET|TP53)
