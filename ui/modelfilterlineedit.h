@@ -22,11 +22,29 @@
 #ifndef MODELFILTERLINEEDIT_H
 #define MODELFILTERLINEEDIT_H
 
+#include <QLineEdit>
+
+class QAbstractItemView;
 
 class ModelFilterLineEdit : public QLineEdit
 {
+    Q_OBJECT
+
 public:
-    ModelFilterLineEdit();
+
+    /// The view's model() must be a QSortFilterProxyModel
+    ModelFilterLineEdit(QAbstractItemView* view);
+
+    virtual void keyPressEvent(QKeyEvent *e);
+
+signals:
+
+    /// Indicates the user selected the given index on the view
+    void selected(const QModelIndex& index);
+
+protected:
+
+    QAbstractItemView*     view;
 };
 
 #endif // MODELFILTERLINEEDIT_H
