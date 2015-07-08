@@ -353,6 +353,7 @@ void AnalysisGenerator::her2()
 
 QList<Patient::Ptr> AnalysisGenerator::patientsFromCSV(const QString &path)
 {
+    // Wants a header line and a first column containing (optionally) the id
     QList<Patient::Ptr> patients;
     CSVFile source;
     if (!source.read(path))

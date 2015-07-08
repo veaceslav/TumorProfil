@@ -293,8 +293,7 @@ Property PathologyPropertyWidget::currentProperty()
         ValueTypeCategoryInfo typeInfo(d->mode);
 
         HScore score(d->spinBoxes[3]->value(), d->spinBoxes[2]->value(), d->spinBoxes[1]->value());
-        qDebug() << score.percentages() << score.score();
-        p.value = typeInfo.toPropertyValue(score.binaryScore);
+        typeInfo.fillHSCore(p, score);
     }
     else
     {
