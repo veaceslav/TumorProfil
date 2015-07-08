@@ -320,6 +320,12 @@ bool PatientPropertyFilterSettings::matchesCriteria(Patient::Ptr p) const
 
 bool PatientPropertyFilterModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
 {
+    // support basic text filtering
+    if (!QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent))
+    {
+        return false;
+    }
+
     QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
     Patient::Ptr p = PatientModel::retrievePatient(index);
     if (!p)
