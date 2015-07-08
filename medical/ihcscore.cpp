@@ -202,10 +202,15 @@ void IHCScore::parseCells(const QString &detail)
     }
 }
 
+bool IHCScore::hasInterval() const
+{
+    return percentagePositiveCells.lower() != percentagePositiveCells.upper();
+}
+
 float IHCScore::positiveRatio() const
 {
     float percentage;
-    if (percentagePositiveCells.lower() != percentagePositiveCells.upper())
+    if (hasInterval())
     {
         percentage = float(percentagePositiveCells.lower() + percentagePositiveCells.upper()) / 2;
     }
