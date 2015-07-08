@@ -291,7 +291,7 @@ QVariant ModelDataGenerator::fieldDatum()
         {
             return combinedString;
         }
-        return typeInfo.toDisplayString(prop);
+        return typeInfo.toShortDisplayString(prop);
     }
     return QVariant();
 }
@@ -348,7 +348,7 @@ QVariant ModelDataGenerator::otherMutationsDatum()
             {
                 if (!data.isEmpty())
                     data += "; ";
-                data += info.plainTextLabel() + ": " + typeInfo.toDisplayString(prop);
+                data += info.plainTextLabel() + ": " + typeInfo.toShortDisplayString(prop);
             }
         }
         return data;

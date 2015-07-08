@@ -366,7 +366,7 @@ QString CombinedValue::toDisplayString() const
 {
     // "+" or "-"
     ValueTypeCategoryInfo ownType(info);
-    QString str = ownType.toDisplayString(result());
+    QString str = ownType.toShortDisplayString(result());
 
     switch (info.property)
     {
@@ -374,7 +374,7 @@ QString CombinedValue::toDisplayString() const
     {
         // "1+" etc. org "+"/"-"
         ValueTypeCategoryInfo detInfoType(PathologyPropertyInfo::info(determiningProperty.property));
-        QString propStr = detInfoType.toDisplayString(determiningProperty);
+        QString propStr = detInfoType.toShortDisplayString(determiningProperty);
 
         if (determiningProperty.property == PathologyPropertyInfo(PathologyPropertyInfo::IHC_HER2_DAKO).id)
         {
