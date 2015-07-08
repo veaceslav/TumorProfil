@@ -68,6 +68,8 @@ public:
 
     int                 id;
 
+    bool operator==(const Patient& other) const;
+
     /**
       Sets the attributes firstName, surname, dateOfBirth and gender
       from the given Patient. Does not touch properties, diseases or id.

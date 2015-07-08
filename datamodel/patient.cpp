@@ -81,3 +81,10 @@ void Patient::setPatientData(const Patient& p)
     dateOfBirth = p.dateOfBirth;
 }
 
+bool Patient::operator==(const Patient& other) const
+{
+    return firstName   == other.firstName
+        && surname     == other.surname
+        && gender      == other.gender
+        && dateOfBirth == other.dateOfBirth;
+}
