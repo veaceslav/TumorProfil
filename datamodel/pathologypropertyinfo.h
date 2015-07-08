@@ -82,10 +82,19 @@ public:
         Comb_cMetActivation,
         Comb_cMetIHC3plusScore,
         Comb_RASMutation,
-        Comb_KRASMutation, // Reminder: Adjust LastProperty
+        Comb_KRASMutation,
+        Mut_ERBB2,
+        Mut_FGFR1,
+        Mut_FGFR3,
+        Mut_HRAS_2_4,
+        Mut_KIT,
+        Mut_MET,
+        Mut_PDGFRa,
+        Mut_RET,
+        Mut_TP53, // Reminder: Adjust LastProperty
 
         FirstProperty = IHC_PTEN,
-        LastProperty  = Comb_cMetIHC3plusScore
+        LastProperty  = Mut_TP53
     };
 
     enum ValueTypeCategory
@@ -139,9 +148,12 @@ public:
 
     QList<QVariant> optionsInUI() const;
     QString toUILabel(const QVariant& value) const;
+    QVariant negativeValue() const;
+    QVariant notDoneValue() const;
 
     // Methods serving display and sorting in a model
-    QString toDisplayString(const Property& prop) const;
+    QString toShortDisplayString(const Property& prop) const;
+    QString toLongDisplayString(const Property& prop) const;
     QVariant toVariantData(const Property& prop) const;
 
     // Methods serving translation between UI, internal representation and database
@@ -158,6 +170,8 @@ public:
     // If category is IHCTwoDim
     IHCScore toIHCScore(const Property& prop) const;
     HScore toHScore(const Property& prop) const;
+    void fillIHCScore(Property& prop, int intensity, const QString& percentage) const;
+    void fillHSCore(Property& prop, const HScore& score) const;
 
     bool hasDetail() const;
 

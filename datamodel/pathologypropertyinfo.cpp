@@ -176,6 +176,24 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
         return PathologyPropertyInfo(property, BooleanCombination, "combination/ras-mutation", QObject::tr("RAS Mutation"));
     case Comb_KRASMutation:
         return PathologyPropertyInfo(property, BooleanCombination, "combination/kras-mutation", QObject::tr("KRAS Mutation"));
+    case  Mut_ERBB2:
+        return PathologyPropertyInfo(property, Mutation, "mut/erbb2", QObject::tr("ERBB2"));
+    case  Mut_FGFR1:
+        return PathologyPropertyInfo(property, Mutation, "mut/fgfr1", QObject::tr("FGFR1"));
+    case  Mut_FGFR3:
+        return PathologyPropertyInfo(property, Mutation, "mut/fgfr3", QObject::tr("FGFR3"));
+    case  Mut_HRAS_2_4:
+        return PathologyPropertyInfo(property, Mutation, "mut/hras?exon=2-4", QObject::tr("HRAS Exon 2-4"));
+    case  Mut_KIT:
+        return PathologyPropertyInfo(property, Mutation, "mut/kit", QObject::tr("cKIT"));
+    case  Mut_MET:
+        return PathologyPropertyInfo(property, Mutation, "mut/met", QObject::tr("MET"));
+    case  Mut_PDGFRa:
+        return PathologyPropertyInfo(property, Mutation, "mut/pdgfra", QObject::tr("PDGFRa"));
+    case  Mut_RET:
+        return PathologyPropertyInfo(property, Mutation, "mut/ret", QObject::tr("RET"));
+    case  Mut_TP53:
+        return PathologyPropertyInfo(property, Mutation, "mut/tp53", QObject::tr("p53"));
     case InvalidProperty:
         break;
     }
@@ -231,6 +249,34 @@ QList<QVariant> ValueTypeCategoryInfo::optionsInUI() const
         break;
     }
     return values;
+}
+
+QVariant ValueTypeCategoryInfo::negativeValue() const
+{
+    switch (category)
+    {
+    case PathologyPropertyInfo::IHCClassical:
+    case PathologyPropertyInfo::IHCClassicalPoints:
+    case PathologyPropertyInfo::IHCTwoDim:
+    case PathologyPropertyInfo::IHCHScore:
+        return 0;
+    case PathologyPropertyInfo::IHCBoolean:
+    case PathologyPropertyInfo::IHCBooleanPercentage:
+    case PathologyPropertyInfo::Fish:
+    case PathologyPropertyInfo::Mutation:
+    case PathologyPropertyInfo::StableUnstable:
+    case PathologyPropertyInfo::BooleanCombination:
+        return false;
+    case PathologyPropertyInfo::InvalidCategory:
+        break;
+    }
+    return QVariant();
+}
+
+QVariant ValueTypeCategoryInfo::notDoneValue() const
+{
+    // The null, valid variant of type Bool
+    return QVariant(QVariant::Bool);
 }
 
 bool ValueTypeCategoryInfo::isScored() const
@@ -353,6 +399,17 @@ HScore ValueTypeCategoryInfo::toHScore(const Property& prop) const
     return HScore(toValue(prop.value));
 }
 
+void ValueTypeCategoryInfo::fillIHCScore(Property& prop, int intensity, const QString& percentage) const
+{
+    prop.value    = toPropertyValue(intensity);
+    prop.detail   = percentage;
+}
+
+void ValueTypeCategoryInfo::fillHSCore(Property& prop, const HScore& score) const
+{
+    prop.value = toPropertyValue(score.binaryScore);
+}
+
 namespace
 {
 
@@ -372,6 +429,18 @@ static QString toScoreString(int score)
     return QString();
 }
 
+static QString toPositiveNegativ(bool val)
+{
+    if (val)
+    {
+        return QObject::tr("Positiv");
+    }
+    else
+    {
+        return QObject::tr("Negativ");
+    }
+}
+
 static QString toPlusMinus(bool val)
 {
     if (val)
@@ -387,7 +456,7 @@ static QString toPlusMinus(bool val)
 }
 
 // SELECT property FROM PathologyProperties WHERE pathologyid IN (SELECT id FROM Pathologies WHERE context='wtz/tumorprofil') AND property LIKE 'ihc/%';
-QString ValueTypeCategoryInfo::toDisplayString(const Property& prop) const
+QString ValueTypeCategoryInfo::toShortDisplayString(const Property& prop) const
 {
     QVariant value = toValue(prop.value);
 
@@ -441,6 +510,97 @@ QString ValueTypeCategoryInfo::toDisplayString(const Property& prop) const
     return QString();
 }
 
+QString ValueTypeCategoryInfo::toLongDisplayString(const Property &prop) const
+{
+    QVariant value = toValue(prop.value);
+
+    if (value.isNull())
+    {
+        return toUILabel(QVariant(QVariant::Bool)); // "n.d."
+    }
+
+    switch (category)
+    {
+    case PathologyPropertyInfo::IHCClassical:
+        return toScoreString(value.toInt());
+    case PathologyPropertyInfo::IHCClassicalPoints:
+        return QString::number(value.toInt());
+    case PathologyPropertyInfo::IHCTwoDim:
+    {
+        IHCScore score(value, prop.detail);
+        QString s;
+        switch (score.colorIntensity)
+        {
+        case IHCScore::InvalidIntensity:
+            return toUILabel(QVariant(QVariant::Bool)); // "n.d."
+        case IHCScore::NoIntensity:
+            return QObject::tr("Negativ (keine Färbung)");
+        case IHCScore::WeakIntensity:
+            s = QObject::tr("Schwache Färbung in %1%");
+            break;
+        case IHCScore::MediumIntensity:
+            s = QObject::tr("Mäßige Färbung in %1%");
+            break;
+        case IHCScore::StrongIntensity:
+            s = QObject::tr("Starke Färbung in %1%");
+            break;
+        }
+        return s.arg(prop.detail);
+    }
+    case PathologyPropertyInfo::IHCHScore:
+    {
+        HScore hscore(value);
+        QVector<int> percentages = hscore.percentages();
+        if (percentages[3] == 100)
+        {
+            return QObject::tr("Negativ (keine Färbung)");
+        }
+        return QObject::tr("H-Score %1 (Stark %2%, mäßig %3%, schwach %4%)")
+                .arg(hscore.score().toInt()).arg(percentages[0]).arg(percentages[1]).arg(percentages[2]);
+    }
+    case PathologyPropertyInfo::IHCBoolean:
+    case PathologyPropertyInfo::IHCBooleanPercentage:
+    case PathologyPropertyInfo::StableUnstable:
+    {
+        QString s = toPositiveNegativ(value.toBool());
+        if (!prop.detail.isEmpty())
+        {
+            s += " (" + prop.detail + ")";
+        }
+        return s;
+    }
+    case PathologyPropertyInfo::Fish:
+    {
+        QString s = toPositiveNegativ(value.toBool());
+        if (!prop.detail.isEmpty())
+        {
+            PathologyPropertyInfo info = PathologyPropertyInfo::info(prop.property);
+            s += " (" + info.detailLabel + " " + prop.detail + ")";
+        }
+        return s;
+    }
+    case PathologyPropertyInfo::Mutation:
+    {
+        if (value.toBool())
+        {
+            if (prop.detail.isEmpty())
+            {
+                return QObject::tr("Mutationsnachweis");
+            }
+            return prop.detail;
+        }
+        else
+        {
+            return toUILabel(value);
+        }
+    }
+    case PathologyPropertyInfo::BooleanCombination: // not applicable here
+    case PathologyPropertyInfo::InvalidCategory:
+        break;
+    }
+    return QString();
+}
+
 QVariant ValueTypeCategoryInfo::toVariantData(const Property& prop) const
 {
     QVariant value = toValue(prop.value);
@@ -459,11 +619,12 @@ QVariant ValueTypeCategoryInfo::toVariantData(const Property& prop) const
     case PathologyPropertyInfo::IHCTwoDim:
     {
         QVariant score = IHCScore(value, prop.detail).score();
-        if (score.isNull())
+
+        if (!score.isValid())
         {
             return QVariant();
         }
-        else if (score.type() == QVariant::Int)
+        else if (score == QVariant::Int)
         {
             return score;
         }
