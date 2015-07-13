@@ -29,6 +29,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPointer>
 #include <QRadioButton>
 #include <QSpinBox>
 #include <QVariant>
@@ -42,8 +43,6 @@ class PathologyPropertyWidget::PathologyPropertyWidgetPriv
 public:
     PathologyPropertyWidgetPriv(PathologyPropertyWidget* q)
         : mode(PathologyPropertyInfo::InvalidCategory),
-          label(0),
-          layout(0),
           radioNP(0),
           radioButtons(0),
           freeInput(0),
@@ -56,9 +55,11 @@ public:
 
     QString      property;
 
+    // the two externally accessible structures (layout will hold all other widgets)
+    QPointer<QLabel>      label;
+    QPointer<QHBoxLayout> layout;
+
     PathologyPropertyInfo::ValueTypeCategory mode;
-    QLabel       *label;
-    QHBoxLayout  *layout;
     QRadioButton *radioNP;
     QButtonGroup *radioButtons;
     QList<QSpinBox*> spinBoxes;
