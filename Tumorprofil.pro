@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql xml widgets
+QT       += core gui sql xml widgets svg
 
 TARGET = Tumorprofil
 TEMPLATE = app
@@ -75,7 +75,12 @@ SOURCES += main.cpp\
     util/analysisgenerator.cpp \
     util/historyvalidator.cpp \
     settings/mainsettings.cpp \
-    menubar.cpp
+    menubar.cpp \
+    storage/pathologypropertiestablemodel.cpp \
+    ui/pathologypropertiestableview.cpp \
+    ui/entityselectionwidgetv2.cpp \
+    ui/modelfilterlineedit.cpp \
+    medical/pathologyparser.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -145,7 +150,13 @@ HEADERS  += mainwindow.h \
     util/analysisgenerator.h \
     util/historyvalidator.h \
     settings/mainsettings.h \
-    menubar.h
+    menubar.h \
+    storage/pathologypropertiestablemodel.h \
+    ui/pathologypropertiestableview.h \
+    ui/entityselectionwidgetv2.h \
+    ui/modelfilterlineedit.h \
+    medical/pathologyparser.h
+
 
 INCLUDEPATH += datamodel/ \
     ui/ \
@@ -162,4 +173,8 @@ OTHER_FILES += \
 
 RESOURCES += \
     icons/icontheme-silk.qrc \
-    storage/dbconfig.qrc
+    storage/dbconfig.qrc \
+    medical/regexps.qrc
+
+DISTFILES += \
+    medical/pathology-regexps
