@@ -1,4 +1,5 @@
 #include "menubar.h"
+#include "settings/mainsettings.h"
 
 
 class MenuBar::Private
@@ -26,5 +27,14 @@ MenuBar::MenuBar(QWidget* parent)
     this->addMenu(d->fileMenu);
     this->addMenu(d->extraMenu);
 
+    connect(d->settingsAction, SIGNAL(triggered()), this, SLOT(slotShowSettings()));
+
+}
+
+void MenuBar::slotShowSettings()
+{
+    MainSettings* settingsDialog = new MainSettings();
+
+    settingsDialog->exec();
 }
 

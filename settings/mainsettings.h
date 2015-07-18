@@ -5,8 +5,14 @@
 
 class MainSettings : public QDialog
 {
+    Q_OBJECT
 public:
     MainSettings(QWidget* parent = 0);
+    ~MainSettings();
+
+private:
+    class Private;
+    Private* d;
 };
 
 #endif // MAINSETTINGS_H

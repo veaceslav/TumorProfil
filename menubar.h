@@ -9,6 +9,8 @@ class MenuBar : public QMenuBar
 public:
     MenuBar(QWidget* parent = 0);
 
+private slots:
+    void slotShowSettings();
 private:
     class Private;
     Private* d;
