@@ -11,6 +11,7 @@ public:
 
 private Q_SLOTS:
     void slotHandleDBTypeIndexChanged(int index);
+    void slotSetDatabasePath();
 
 private:
 
@@ -18,6 +19,8 @@ private:
     void setupSQLiteOptions();
     void setupMySQLOPtions();
     void setDatabaseInputFields(const QString& currentIndexStr);
+
+
     class Private;
     Private *d;
 };

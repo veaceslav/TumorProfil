@@ -10,6 +10,7 @@
 #include <QSpinBox>
 #include <QCheckBox>
 #include <QLineEdit>
+#include <QFileDialog>
 
 #include "databaseparameters.h"
 
@@ -21,11 +22,11 @@ public:
     {
 
     }
-    QComboBox* dbType;
-    QLineEdit* sqlitePath;
-    QPushButton* sqliteBrowse;
+    QLineEdit*      sqlitePath;
+    QPushButton*    sqliteBrowse;
+
     QGroupBox*      expertSettings;
-    QLabel*     databasePathLabel;
+    QLabel*         databasePathLabel;
 
     QString        originalDbPath;
     QString        originalDbType;
@@ -47,21 +48,7 @@ public:
 DatabaseSettings::DatabaseSettings(QWidget* parent)
     : QWidget(parent), d(new Private())
 {
-
-//    QGridLayout* gridLayout = new QGridLayout(this);
-
-//    QLabel* mainTitle =  new QLabel(tr("Database Options"), this);
-
     setupMainArea();
-
-    slotHandleDBTypeIndexChanged(d->databaseType->currentIndex());
-//    d->dbType = new QComboBox(this);
-//    d->dbType->addItem(QList<QString>() << tr("SQLite") << tr("MYSQL"));
-
-//    d->sqlitePath = new QLineEdit(this);
-//    d->sqliteBrowse = new QPushButton(this);
-
-    //    setupSQLiteOptions();
 }
 
 void DatabaseSettings::slotHandleDBTypeIndexChanged(int index)
@@ -85,6 +72,11 @@ void DatabaseSettings::setupMainArea()
                                                  "<p>Note: a remote file system, such as NFS, cannot be used here.</p><p></p>"),
                                             dbPathBox);
     d->databasePathLabel->setWordWrap(true);
+    d->sqlitePath = new QLineEdit(this);
+    d->sqliteBrowse = new QPushButton(tr("Browse"),this);
+    QHBoxLayout* pathLayout = new QHBoxLayout();
+    pathLayout->addWidget(d->sqlitePath,8);
+    pathLayout->addWidget(d->sqliteBrowse,2);
 
 
     QLabel* const databaseTypeLabel                  = new QLabel(tr("Type"));
@@ -117,9 +109,6 @@ void DatabaseSettings::setupMainArea()
     QFormLayout* const expertSettinglayout           = new QFormLayout();
     d->expertSettings->setLayout(expertSettinglayout);
 
-//#if defined(HAVE_MYSQLSUPPORT) && defined(HAVE_INTERNALMYSQL)
-//    expertSettinglayout->addRow(internalServerLabel, internalServer);
-//#endif
 
     expertSettinglayout->addRow(hostNameLabel, d->hostName);
     expertSettinglayout->addRow(hostPortLabel, d->hostPort);
@@ -135,6 +124,7 @@ void DatabaseSettings::setupMainArea()
     vlay->addWidget(d->databaseType);
     vlay->addWidget(d->databasePathLabel);
 //    vlay->addWidget(d->databasePathEdit);
+    vlay->addLayout(pathLayout);
     vlay->addWidget(d->expertSettings);
     vlay->setSpacing(0);
     vlay->setMargin(QApplication::style()->pixelMetric(QStyle::PM_DefaultLayoutSpacing));
@@ -161,7 +151,7 @@ void DatabaseSettings::setupMainArea()
                                   "Be careful: this one it is still in experimental stage.</p>"
                                  ));
 
-//    setDatabaseInputFields(DatabaseParameters::SQLiteDatabaseType());
+    setDatabaseInputFields(DatabaseParameters::SQLiteDatabaseType());
 
     // --------------------------------------------------------
 
@@ -192,9 +182,12 @@ void DatabaseSettings::setDatabaseInputFields(const QString &currentIndexStr)
     if (currentIndexStr == QString(DatabaseParameters::SQLiteDatabaseType()))
     {
         d->databasePathLabel->setVisible(true);
+        d->sqlitePath->setVisible(true);
+        d->sqliteBrowse->setVisible(true);
 //        d->databasePathEdit->setVisible(true);
         d->expertSettings->setVisible(false);
 
+        connect(d->sqliteBrowse, SIGNAL(clicked(bool)), this, SLOT(slotSetDatabasePath()));
 //        connect(databasePathEdit->fileDialog(), SIGNAL(urlSelected(QUrl)),
 //                this, SLOT(slotChangeDatabasePath(QUrl)));
 
@@ -205,8 +198,11 @@ void DatabaseSettings::setDatabaseInputFields(const QString &currentIndexStr)
     {
         d->databasePathLabel->setVisible(false);
 //        databasePathEdit->setVisible(false);
+        d->sqlitePath->setVisible(false);
+        d->sqliteBrowse->setVisible(false);
         d->expertSettings->setVisible(true);
 
+        disconnect(d->sqliteBrowse, SIGNAL(clicked(bool)), this, SLOT(slotSetDatabasePath()));
 //        disconnect(databasePathEdit->fileDialog(), SIGNAL(urlSelected(QUrl)),
 //                   this, SLOT(slotChangeDatabasePath(QUrl)));
 
@@ -214,6 +210,14 @@ void DatabaseSettings::setDatabaseInputFields(const QString &currentIndexStr)
 //                   this, SLOT(slotDatabasePathEditedDelayed()));
     }
 
-    adjustSize();
+}
+
+void DatabaseSettings::slotSetDatabasePath()
+{
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+                                                    "/home",
+                                                    QFileDialog::ShowDirsOnly
+                                                    | QFileDialog::DontResolveSymlinks);
+    d->sqlitePath->setText(dir);
 }
 
