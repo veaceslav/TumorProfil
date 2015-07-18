@@ -11,6 +11,9 @@
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QFileDialog>
+#include <QMessageBox>
+#include <QSqlDatabase>
+#include <QSqlError>
 
 #include "databaseparameters.h"
 
@@ -49,6 +52,11 @@ DatabaseSettings::DatabaseSettings(QWidget* parent)
     : QWidget(parent), d(new Private())
 {
     setupMainArea();
+}
+
+QString DatabaseSettings::currentDatabaseType()
+{
+    return d->databaseType->itemData(d->databaseType->currentIndex()).toString();
 }
 
 void DatabaseSettings::slotHandleDBTypeIndexChanged(int index)
@@ -159,23 +167,11 @@ void DatabaseSettings::setupMainArea()
             this, SLOT(slotHandleDBTypeIndexChanged(int)));
 
     connect(checkDatabaseConnectionButton, SIGNAL(clicked()),
-            this, SLOT(checkDatabaseConnection()));
+            this, SLOT(slotCheckDatabaseConnection()));
 
     setLayout(layout);
 }
 
-void DatabaseSettings::setupSQLiteOptions()
-{
-//    whcFile = QFileDialog::getOpenFileName(this,
-//                                           tr("Open WHC project"),
-//                                           "",
-//                                           tr("WHC Project File (*.whc)"));
-}
-
-void DatabaseSettings::setupMySQLOPtions()
-{
-
-}
 
 void DatabaseSettings::setDatabaseInputFields(const QString &currentIndexStr)
 {
@@ -212,6 +208,40 @@ void DatabaseSettings::setDatabaseInputFields(const QString &currentIndexStr)
 
 }
 
+DatabaseParameters DatabaseSettings::getDatabaseParameters()
+{
+    DatabaseParameters parameters;
+
+    if (currentDatabaseType() == QString(DatabaseParameters::SQLiteDatabaseType()))
+    {
+        parameters.connectOptions = d->connectionOptions->text();
+        parameters.databaseType   = currentDatabaseType();
+        parameters.hostName       = d->hostName->text();
+        parameters.password       = d->password->text();
+        parameters.port           = d->hostPort->text().toInt();
+        parameters.userName       = d->userName->text();
+
+        if (parameters.databaseType == QString(DatabaseParameters::SQLiteDatabaseType()))
+        {
+            // TODO: fix this
+            parameters.databaseName = QDir::cleanPath(d->sqlitePath->text() + QLatin1Char('/') + QLatin1String("digikam4.db"));
+            parameters.databaseNameThumbnails = parameters.databaseName;
+        }
+        else
+        {
+            parameters.databaseName = d->databaseName->text();
+            parameters.databaseNameThumbnails = d->databaseNameThumbnails->text();
+        }
+    }
+    else
+    {
+        parameters = DatabaseParameters::defaultParameters(currentDatabaseType());
+//        DatabaseServerStarter::startServerManagerProcess(currentDatabaseType());
+    }
+
+    return parameters;
+}
+
 void DatabaseSettings::slotSetDatabasePath()
 {
     QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
@@ -219,5 +249,40 @@ void DatabaseSettings::slotSetDatabasePath()
                                                     QFileDialog::ShowDirsOnly
                                                     | QFileDialog::DontResolveSymlinks);
     d->sqlitePath->setText(dir);
+}
+
+void DatabaseSettings::slotCheckDatabaseConnection()
+{
+    // TODO : if check DB connection operations can be threaded, use DBusyDlg dialog there...
+
+    qApp->setOverrideCursor(Qt::WaitCursor);
+
+    QString databaseID(QLatin1String("ConnectionTest"));
+    QSqlDatabase testDatabase     = QSqlDatabase::addDatabase(currentDatabaseType(), databaseID);
+    DatabaseParameters parameters = getDatabaseParameters();
+    testDatabase.setHostName(parameters.hostName);
+    testDatabase.setPort(parameters.port);
+    testDatabase.setUserName(parameters.userName);
+    testDatabase.setPassword(parameters.password);
+    testDatabase.setConnectOptions(parameters.connectOptions);
+
+    qApp->restoreOverrideCursor();
+
+    bool result = testDatabase.open();
+
+    if (result)
+    {
+        QMessageBox::information(qApp->activeWindow(), tr("Database connection test"),
+                                 tr("Database connection test successful."));
+    }
+    else
+    {
+        QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
+                              tr("Database connection test was not successful. <p>Error was:" +
+                                   testDatabase.lastError().text().toLatin1() +  "</p>") );
+    }
+
+    testDatabase.close();
+    QSqlDatabase::removeDatabase(databaseID);
 }
 

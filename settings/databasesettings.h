@@ -3,22 +3,25 @@
 
 #include <QWidget>
 
+#include "databaseparameters.h"
+
 class DatabaseSettings : public QWidget
 {
     Q_OBJECT
 public:
     DatabaseSettings(QWidget *parent = 0);
 
+    QString currentDatabaseType();
 private Q_SLOTS:
     void slotHandleDBTypeIndexChanged(int index);
     void slotSetDatabasePath();
+    void slotCheckDatabaseConnection();
+
 
 private:
-
     void setupMainArea();
-    void setupSQLiteOptions();
-    void setupMySQLOPtions();
     void setDatabaseInputFields(const QString& currentIndexStr);
+    DatabaseParameters getDatabaseParameters();
 
 
     class Private;
