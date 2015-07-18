@@ -80,7 +80,8 @@ SOURCES += main.cpp\
     ui/pathologypropertiestableview.cpp \
     ui/entityselectionwidgetv2.cpp \
     ui/modelfilterlineedit.cpp \
-    medical/pathologyparser.cpp
+    medical/pathologyparser.cpp \
+    settings/databasesettings.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -155,7 +156,8 @@ HEADERS  += mainwindow.h \
     ui/pathologypropertiestableview.h \
     ui/entityselectionwidgetv2.h \
     ui/modelfilterlineedit.h \
-    medical/pathologyparser.h
+    medical/pathologyparser.h \
+    settings/databasesettings.h
 
 
 INCLUDEPATH += datamodel/ \

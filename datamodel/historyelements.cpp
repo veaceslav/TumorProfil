@@ -20,6 +20,7 @@
  * ============================================================ */
 
 #include "historyelements.h"
+#include <QObject>
 
 HistoryElement::HistoryElement()
     : m_parent(0)

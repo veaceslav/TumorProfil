@@ -26,6 +26,7 @@
 
 #include <QString>
 #include <QStringList>
+#include <QVariant>
 
 class TNMData
 {

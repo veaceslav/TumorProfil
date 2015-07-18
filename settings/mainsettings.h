@@ -11,6 +11,8 @@ public:
     ~MainSettings();
 
 private:
+
+    void setContent();
     class Private;
     Private* d;
 };
