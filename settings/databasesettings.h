@@ -12,6 +12,9 @@ public:
     DatabaseSettings(QWidget *parent = 0);
 
     QString currentDatabaseType();
+
+    void loadSettings();
+    void applySettings();
 private Q_SLOTS:
     void slotHandleDBTypeIndexChanged(int index);
     void slotSetDatabasePath();

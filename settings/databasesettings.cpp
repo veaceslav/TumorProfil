@@ -14,8 +14,10 @@
 #include <QMessageBox>
 #include <QSqlDatabase>
 #include <QSqlError>
+#include <QSettings>
 
 #include "databaseparameters.h"
+#include "constants.h"
 
 
 class DatabaseSettings::Private
@@ -35,7 +37,7 @@ public:
     QString        originalDbType;
 
     QLineEdit*     databaseName;
-    QLineEdit*     databaseNameThumbnails;
+    QLineEdit*     databaseNameUsers;
     QLineEdit*     hostName;
     QLineEdit*     connectionOptions;
     QLineEdit*     userName;
@@ -43,9 +45,6 @@ public:
 
     QComboBox*     databaseType;
     QSpinBox*      hostPort;
-    QCheckBox*     internalServer;
-
-//    RFileSelector* databasePathEdit;
 };
 
 DatabaseSettings::DatabaseSettings(QWidget* parent)
@@ -59,6 +58,43 @@ QString DatabaseSettings::currentDatabaseType()
     return d->databaseType->itemData(d->databaseType->currentIndex()).toString();
 }
 
+void DatabaseSettings::loadSettings()
+{
+    QSettings qs(ORGANIZATION, APPLICATION);
+
+    qs.beginGroup(QLatin1String("Database"));
+    QString value = qs.value("type","SQLITE").toString();
+    value == QLatin1String("SQLITE") ? d->databaseType->setCurrentIndex(0) : d->databaseType->setCurrentIndex(1);
+
+    d->databaseName->setText(qs.value("database_name").toString());
+    d->databaseNameUsers->setText(qs.value("database_name_users").toString());
+    d->hostName->setText(qs.value("hostname").toString());
+    d->connectionOptions->setText(qs.value("connection_options").toString());
+    d->userName->setText(qs.value("username").toString());
+    d->password->setText(qs.value("password").toString());
+    d->sqlitePath->setText(qs.value("sqlite_path", QDir::currentPath()).toString());
+    d->hostPort->setValue(qs.value("host_port","0").toInt());
+    qs.endGroup();
+}
+
+void DatabaseSettings::applySettings()
+{
+    QSettings qs(ORGANIZATION, APPLICATION);
+
+    qs.beginGroup(QLatin1String("Database"));
+    qs.setValue("type", currentDatabaseType());
+    qs.setValue("database_name", d->databaseName->text());
+    qs.setValue("database_name_users", d->databaseNameUsers->text());
+    qs.setValue("hostname", d->hostName->text());
+    qs.setValue("connection_options", d->connectionOptions->text());
+    qs.setValue("username", d->userName->text());
+    qs.setValue("password", d->password->text());
+    qs.setValue("sqlite_path", d->sqlitePath->text());
+    qs.setValue("host_port", d->hostPort->value());
+    qs.endGroup();
+
+}
+
 void DatabaseSettings::slotHandleDBTypeIndexChanged(int index)
 {
     const QString& dbType = d->databaseType->itemData(index).toString();
@@ -68,7 +104,6 @@ void DatabaseSettings::slotHandleDBTypeIndexChanged(int index)
 void DatabaseSettings::setupMainArea()
 {
     QVBoxLayout* const layout  = new QVBoxLayout();
-
 
     // --------------------------------------------------------
 
@@ -92,8 +127,8 @@ void DatabaseSettings::setupMainArea()
 
     QLabel* const databaseNameLabel                  = new QLabel(tr("Schema Name"));
     d->databaseName                                     = new QLineEdit();
-    QLabel* const databaseNameThumbnailsLabel        = new QLabel(tr("Username<br>Schema Name"));
-    d->databaseNameThumbnails                           = new QLineEdit();
+    QLabel* const databaseNameUsersLabel        = new QLabel(tr("Username<br>Schema Name"));
+    d->databaseNameUsers                           = new QLineEdit();
     QLabel* const hostNameLabel                      = new QLabel(tr("Host Name"));
     d->hostName                                         = new QLineEdit();
     QLabel* const hostPortLabel                      = new QLabel(tr("Port"));
@@ -121,7 +156,7 @@ void DatabaseSettings::setupMainArea()
     expertSettinglayout->addRow(hostNameLabel, d->hostName);
     expertSettinglayout->addRow(hostPortLabel, d->hostPort);
     expertSettinglayout->addRow(databaseNameLabel, d->databaseName);
-    expertSettinglayout->addRow(databaseNameThumbnailsLabel, d->databaseNameThumbnails);
+    expertSettinglayout->addRow(databaseNameUsersLabel, d->databaseNameUsers);
     expertSettinglayout->addRow(userNameLabel, d->userName);
     expertSettinglayout->addRow(passwordLabel, d->password);
     expertSettinglayout->addRow(connectionOptionsLabel, d->connectionOptions);
@@ -131,7 +166,6 @@ void DatabaseSettings::setupMainArea()
     vlay->addWidget(databaseTypeLabel);
     vlay->addWidget(d->databaseType);
     vlay->addWidget(d->databasePathLabel);
-//    vlay->addWidget(d->databasePathEdit);
     vlay->addLayout(pathLayout);
     vlay->addWidget(d->expertSettings);
     vlay->setSpacing(0);
@@ -180,29 +214,21 @@ void DatabaseSettings::setDatabaseInputFields(const QString &currentIndexStr)
         d->databasePathLabel->setVisible(true);
         d->sqlitePath->setVisible(true);
         d->sqliteBrowse->setVisible(true);
-//        d->databasePathEdit->setVisible(true);
         d->expertSettings->setVisible(false);
 
         connect(d->sqliteBrowse, SIGNAL(clicked(bool)), this, SLOT(slotSetDatabasePath()));
-//        connect(databasePathEdit->fileDialog(), SIGNAL(urlSelected(QUrl)),
-//                this, SLOT(slotChangeDatabasePath(QUrl)));
-
 //        connect(databasePathEdit->lineEdit(), SIGNAL(textChanged(QString)),
 //                this, SLOT(slotDatabasePathEditedDelayed()));
     }
     else
     {
         d->databasePathLabel->setVisible(false);
-//        databasePathEdit->setVisible(false);
         d->sqlitePath->setVisible(false);
         d->sqliteBrowse->setVisible(false);
         d->expertSettings->setVisible(true);
 
         disconnect(d->sqliteBrowse, SIGNAL(clicked(bool)), this, SLOT(slotSetDatabasePath()));
-//        disconnect(databasePathEdit->fileDialog(), SIGNAL(urlSelected(QUrl)),
-//                   this, SLOT(slotChangeDatabasePath(QUrl)));
-
-//        disconnect(databasePathEdit->lineEdit(), SIGNAL(textChanged(QString)),
+//      disconnect(databasePathEdit->lineEdit(), SIGNAL(textChanged(QString)),
 //                   this, SLOT(slotDatabasePathEditedDelayed()));
     }
 
@@ -212,8 +238,8 @@ DatabaseParameters DatabaseSettings::getDatabaseParameters()
 {
     DatabaseParameters parameters;
 
-    if (currentDatabaseType() == QString(DatabaseParameters::SQLiteDatabaseType()))
-    {
+//    if (currentDatabaseType() == QString(DatabaseParameters::SQLiteDatabaseType()))
+//    {
         parameters.connectOptions = d->connectionOptions->text();
         parameters.databaseType   = currentDatabaseType();
         parameters.hostName       = d->hostName->text();
@@ -230,14 +256,14 @@ DatabaseParameters DatabaseSettings::getDatabaseParameters()
         else
         {
             parameters.databaseName = d->databaseName->text();
-            parameters.databaseNameThumbnails = d->databaseNameThumbnails->text();
+            parameters.databaseNameThumbnails = d->databaseNameUsers->text();
         }
-    }
-    else
-    {
-        parameters = DatabaseParameters::defaultParameters(currentDatabaseType());
-//        DatabaseServerStarter::startServerManagerProcess(currentDatabaseType());
-    }
+//    }
+//    else
+//    {
+//        parameters = DatabaseParameters::defaultParameters(currentDatabaseType());
+////        DatabaseServerStarter::startServerManagerProcess(currentDatabaseType());
+//    }
 
     return parameters;
 }
@@ -260,6 +286,16 @@ void DatabaseSettings::slotCheckDatabaseConnection()
     QString databaseID(QLatin1String("ConnectionTest"));
     QSqlDatabase testDatabase     = QSqlDatabase::addDatabase(currentDatabaseType(), databaseID);
     DatabaseParameters parameters = getDatabaseParameters();
+
+    if(!parameters.isValid())
+    {
+        qApp->restoreOverrideCursor();
+        QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
+                              tr("Database connection test was not successful. <p>Error was:" +
+                                  QString("Database parameters are invalid").toLatin1() +  "</p>") );
+
+        return;
+    }
     testDatabase.setHostName(parameters.hostName);
     testDatabase.setPort(parameters.port);
     testDatabase.setUserName(parameters.userName);
@@ -285,4 +321,3 @@ void DatabaseSettings::slotCheckDatabaseConnection()
     testDatabase.close();
     QSqlDatabase::removeDatabase(databaseID);
 }
-

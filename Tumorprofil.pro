@@ -157,7 +157,8 @@ HEADERS  += mainwindow.h \
     ui/entityselectionwidgetv2.h \
     ui/modelfilterlineedit.h \
     medical/pathologyparser.h \
-    settings/databasesettings.h
+    settings/databasesettings.h \
+    constants.h
 
 
 INCLUDEPATH += datamodel/ \
