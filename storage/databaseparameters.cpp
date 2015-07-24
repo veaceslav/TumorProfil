@@ -135,6 +135,20 @@ bool DatabaseParameters::isValid() const
         return !databaseName.isEmpty();
     }
 
+    if(isMySQL())
+    {
+        bool check = true;
+
+        check &= !databaseName.isEmpty();
+        check &= !databaseNameThumbnails.isEmpty();
+        check &= (port != 0);
+        check &= !hostName.isEmpty();
+        check &= !userName.isEmpty();
+        check &= !password.isEmpty();
+
+        return check;
+    }
+
     return false;
 }
 
