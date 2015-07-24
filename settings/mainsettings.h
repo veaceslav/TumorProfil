@@ -10,6 +10,8 @@ public:
     MainSettings(QWidget* parent = 0);
     ~MainSettings();
 
+public slots:
+    virtual void accept();
 private:
 
     void setContent();

@@ -51,6 +51,7 @@ DatabaseSettings::DatabaseSettings(QWidget* parent)
     : QWidget(parent), d(new Private())
 {
     setupMainArea();
+    loadSettings();
 }
 
 QString DatabaseSettings::currentDatabaseType()
@@ -63,8 +64,9 @@ void DatabaseSettings::loadSettings()
     QSettings qs(ORGANIZATION, APPLICATION);
 
     qs.beginGroup(QLatin1String("Database"));
-    QString value = qs.value("type","SQLITE").toString();
-    value == QLatin1String("SQLITE") ? d->databaseType->setCurrentIndex(0) : d->databaseType->setCurrentIndex(1);
+    QString value = qs.value("type",DatabaseParameters::SQLiteDatabaseType()).toString();
+    if(value == DatabaseParameters::MySQLDatabaseType())
+        d->databaseType->setCurrentIndex(1);
 
     d->databaseName->setText(qs.value("database_name").toString());
     d->databaseNameUsers->setText(qs.value("database_name_users").toString());
@@ -92,6 +94,8 @@ void DatabaseSettings::applySettings()
     qs.setValue("sqlite_path", d->sqlitePath->text());
     qs.setValue("host_port", d->hostPort->value());
     qs.endGroup();
+
+    qs.sync();
 
 }
 
@@ -122,27 +126,27 @@ void DatabaseSettings::setupMainArea()
     pathLayout->addWidget(d->sqliteBrowse,2);
 
 
-    QLabel* const databaseTypeLabel                  = new QLabel(tr("Type"));
-    d->databaseType                                     = new QComboBox();
+    QLabel* const databaseTypeLabel     = new QLabel(tr("Type"));
+    d->databaseType                     = new QComboBox();
 
-    QLabel* const databaseNameLabel                  = new QLabel(tr("Schema Name"));
-    d->databaseName                                     = new QLineEdit();
-    QLabel* const databaseNameUsersLabel        = new QLabel(tr("Username<br>Schema Name"));
-    d->databaseNameUsers                           = new QLineEdit();
-    QLabel* const hostNameLabel                      = new QLabel(tr("Host Name"));
-    d->hostName                                         = new QLineEdit();
-    QLabel* const hostPortLabel                      = new QLabel(tr("Port"));
-    d->hostPort                                         = new QSpinBox();
+    QLabel* const databaseNameLabel     = new QLabel(tr("Schema Name"));
+    d->databaseName                     = new QLineEdit();
+    QLabel* const databaseNameUsersLabel= new QLabel(tr("Username<br>Schema Name"));
+    d->databaseNameUsers                = new QLineEdit();
+    QLabel* const hostNameLabel         = new QLabel(tr("Host Name"));
+    d->hostName                         = new QLineEdit();
+    QLabel* const hostPortLabel         = new QLabel(tr("Port"));
+    d->hostPort                         = new QSpinBox();
     d->hostPort->setMaximum(65535);
 
-    QLabel* const connectionOptionsLabel             = new QLabel(tr("Database<br>Connection<br>Options"));
-    d->connectionOptions                                = new QLineEdit();
+    QLabel* const connectionOptionsLabel= new QLabel(tr("Database<br>Connection<br>Options"));
+    d->connectionOptions                = new QLineEdit();
 
-    QLabel* const userNameLabel                      = new QLabel(tr("User"));
-    d->userName                                         = new QLineEdit();
+    QLabel* const userNameLabel         = new QLabel(tr("User"));
+    d->userName                         = new QLineEdit();
 
-    QLabel* const passwordLabel                      = new QLabel(tr("Password"));
-    d->password                                         = new QLineEdit();
+    QLabel* const passwordLabel         = new QLabel(tr("Password"));
+    d->password                         = new QLineEdit();
     d->password->setEchoMode(QLineEdit::Password);
 
     QPushButton* const checkDatabaseConnectionButton = new QPushButton(tr("Check DB Connection"));
@@ -181,8 +185,8 @@ void DatabaseSettings::setupMainArea()
 
     // --------- fill with default values ---------------------
 
-    d->databaseType->addItem(tr("SQLite"),               DatabaseParameters::SQLiteDatabaseType());
-    d->databaseType->addItem(tr("MYSQL"),               DatabaseParameters::MySQLDatabaseType());
+    d->databaseType->addItem(tr("SQLite"), DatabaseParameters::SQLiteDatabaseType());
+    d->databaseType->addItem(tr("MYSQL"), DatabaseParameters::MySQLDatabaseType());
 
 
     d->databaseType->setToolTip(tr("<p>Select here the type of database backend.</p>"

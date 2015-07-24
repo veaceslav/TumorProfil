@@ -20,6 +20,8 @@ public:
     QListWidget* menuItems;
     QStackedWidget* menuContent;
     QDialogButtonBox* buttons;
+
+    DatabaseSettings* dbSettings;
 };
 MainSettings::MainSettings(QWidget *parent)
     : QDialog(parent), d(new Private())
@@ -54,10 +56,16 @@ MainSettings::~MainSettings()
 
 }
 
+void MainSettings::accept()
+{
+    d->dbSettings->applySettings();
+    QDialog::accept();
+}
+
 void MainSettings::setContent()
 {
-    QWidget* databasePage = new DatabaseSettings(d->menuContent);
-    d->menuContent->addWidget(databasePage);
+    d->dbSettings = new DatabaseSettings(d->menuContent);
+    d->menuContent->addWidget(d->dbSettings);
     d->menuItems->addItem(new QListWidgetItem(tr("Database Options")));
 }
 
