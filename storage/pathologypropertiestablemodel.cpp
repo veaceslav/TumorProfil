@@ -25,19 +25,81 @@
 
 #include "pathologypropertyinfo.h"
 
+template <class ListType, class IteratorType, class PropertyType>
+PropertyType& segmentedPropertiesListElement(ListType& list, int index)
+{
+    for (IteratorType it = list.begin(); /* stopped by index, or crash if index is invalid*/; ++it)
+    {
+        const int propertiesSize = it->properties.size();
+        if (index < propertiesSize)
+        {
+            return it->properties[index];
+        }
+        index -= propertiesSize;
+    }
+}
+
+template <class ListType, class IteratorType, class PropertyType>
+IteratorType segmentedPropertiesListSegmentIterator(ListType& list, int index)
+{
+    for (IteratorType it = list.begin(); /* stopped by index, or crash if index is invalid*/; ++it)
+    {
+        const int propertiesSize = it->properties.size();
+        if (index < propertiesSize)
+        {
+            return it;
+        }
+        index -= propertiesSize;
+    }
+}
+
+
 class PathologyPropertiesTableModel::PathologyPropertiesTableModelPriv
 {
 public:
 
-    PropertyList properties;
+    QList<Pathology> pathologies;
+
+    Property& property(int index)
+    {
+        return segmentedPropertiesListElement<QList<Pathology>, QList<Pathology>::iterator, Property>(pathologies, index);
+    }
+    const Property& property(int index) const
+    {
+        return segmentedPropertiesListElement<const QList<Pathology>, QList<Pathology>::const_iterator, const Property>(pathologies, index);
+    }
+
+    Pathology& pathology(int index)
+    {
+        return *segmentedPropertiesListSegmentIterator<QList<Pathology>, QList<Pathology>::iterator, Property>(pathologies, index);
+    }
+    const Pathology& pathology(int index) const
+    {
+        return *segmentedPropertiesListSegmentIterator<const QList<Pathology>, QList<Pathology>::const_iterator, const Property>(pathologies, index);
+    }
+
+    int propertiesSize() const
+    {
+        int size = 0;
+        for (QList<Pathology>::const_iterator it = pathologies.cbegin(); it != pathologies.end(); ++it)
+        {
+            size += it->properties.size();
+        }
+        return size;
+    }
+
+    bool         editingEnabled;
 
     bool hasInvalidProperties() const
     {
-        foreach (const Property& prop, properties)
+        foreach (const Pathology& pathology, pathologies)
         {
-            if (!prop.isValid())
+            foreach (const Property& prop, pathology.properties)
             {
-                return true;
+                if (!prop.isValid())
+                {
+                    return true;
+                }
             }
         }
         return false;
@@ -47,9 +109,10 @@ public:
 namespace {
     enum Columns
     {
-        PropertyNameColumn  = 0,
-        PropertyValueColumn = 1,
-        ColumnCount         = 2
+        PropertyNameColumn,
+        PathologyDateColumn,
+        PropertyValueColumn,
+        ColumnCount
     };
 }
 
@@ -64,32 +127,37 @@ PathologyPropertiesTableModel::~PathologyPropertiesTableModel()
     delete d;
 }
 
-PropertyList PathologyPropertiesTableModel::properties() const
+QList<Pathology> PathologyPropertiesTableModel::pathologies() const
 {
-    return d->properties;
+    return d->pathologies;
 }
 
-PropertyList PathologyPropertiesTableModel::validProperties() const
+QList<Pathology> PathologyPropertiesTableModel::pathologiesConsolidated() const
 {
     if (!d->hasInvalidProperties())
     {
-        return d->properties;
+        return d->pathologies;
     }
-    PropertyList props;
-    foreach (const Property& prop, d->properties)
+    QList<Pathology> cleanPaths;
+    foreach (const Pathology& pathology, d->pathologies)
     {
-        if (prop.isValid())
+        cleanPaths << pathology;
+        cleanPaths.last().properties.clear();
+        foreach (const Property& prop, pathology.properties)
         {
-            props << prop;
+            if (prop.isValid())
+            {
+                cleanPaths.last().properties << prop;
+            }
         }
     }
-    return props;
+    return cleanPaths;
 }
 
-void PathologyPropertiesTableModel::setProperties(const PropertyList& properties)
+void PathologyPropertiesTableModel::setPathologies(const QList<Pathology>& pathologies)
 {
     beginResetModel();
-    d->properties = properties;
+    d->pathologies = pathologies;
     endResetModel();
 }
 
@@ -100,7 +168,7 @@ QVariant PathologyPropertiesTableModel::data(const QModelIndex& index, int role)
         return QVariant();
     }
 
-    const Property& prop = d->properties[index.row()];
+    const Property& prop = d->property(index.row());
     PathologyPropertyInfo info = PathologyPropertyInfo::info(prop.property);
     ValueTypeCategoryInfo catInfo(info);
 
@@ -110,13 +178,22 @@ QVariant PathologyPropertiesTableModel::data(const QModelIndex& index, int role)
         switch (index.column()) {
         case PropertyNameColumn:
             return info.label;
+        case PathologyDateColumn:
+        {
+            const QDate& date = d->pathology(index.row()).date;
+            if (date.isValid())
+            {
+                return date;
+            }
+            return QVariant();
+        }
         case PropertyValueColumn:
             return catInfo.toLongDisplayString(prop);
         }
     case Qt::EditRole:
         if (index.column() == PropertyValueColumn)
         {
-            return QVariant::fromValue(d->properties[index.row()]);
+            return QVariant::fromValue(d->property(index.row()));
         }
     case Qt::DecorationRole:
         break;
@@ -137,6 +214,8 @@ QVariant PathologyPropertiesTableModel::headerData(int section, Qt::Orientation 
         {
         case PropertyNameColumn:
             return tr("Befund");
+        case PathologyDateColumn:
+            return tr("Datum");
         case PropertyValueColumn:
             return tr("Ergebnis");
         }
@@ -146,7 +225,7 @@ QVariant PathologyPropertiesTableModel::headerData(int section, Qt::Orientation 
 
 int PathologyPropertiesTableModel::rowCount(const QModelIndex&) const
 {
-    return d->properties.size();
+    return d->propertiesSize();
 }
 
 int PathologyPropertiesTableModel::columnCount(const QModelIndex&) const
@@ -157,7 +236,7 @@ int PathologyPropertiesTableModel::columnCount(const QModelIndex&) const
 Qt::ItemFlags PathologyPropertiesTableModel::flags(const QModelIndex& index) const
 {
     Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemNeverHasChildren;
-    if (index.column() == PropertyValueColumn)
+    if (d->editingEnabled && index.column() == PropertyValueColumn)
     {
         flags |= Qt::ItemIsEditable;
     }
@@ -166,15 +245,34 @@ Qt::ItemFlags PathologyPropertiesTableModel::flags(const QModelIndex& index) con
 
 bool PathologyPropertiesTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (!index.isValid() || role != Qt::EditRole || index.column() != PropertyValueColumn)
+    if (!d->editingEnabled || !index.isValid() || role != Qt::EditRole || index.column() != PropertyValueColumn)
     {
         return false;
     }
     Property newProp = value.value<Property>();
-    qDebug() << "setData" << value << newProp.property;
-    d->properties[index.row()] = newProp;
+    Property& oldProp = d->property(index.row());
+    if (oldProp == newProp)
+    {
+        return true;
+    }
+    Property& propRef = d->property(index.row());
+    propRef = newProp;
     emit dataChanged(index, index);
+    emit propertyEdited(d->pathology(index.row()), propRef);
     return true;
+}
+
+void PathologyPropertiesTableModel::setEditingEnabled(bool enabled)
+{
+    if (d->editingEnabled == enabled)
+    {
+        return;
+    }
+    d->editingEnabled = enabled;
+    if (rowCount())
+    {
+        emit dataChanged(index(0,0), index(rowCount()-1, columnCount()-1));
+    }
 }
 
 PathologyPropertiesTableFilterModel::PathologyPropertiesTableFilterModel(QObject* parent)
@@ -191,4 +289,3 @@ PathologyPropertiesTableModel* PathologyPropertiesTableFilterModel::sourceModel(
 {
     return static_cast<PathologyPropertiesTableModel*>(QSortFilterProxyModel::sourceModel());
 }
-

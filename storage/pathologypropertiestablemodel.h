@@ -25,7 +25,7 @@
 #include <QAbstractTableModel>
 #include <QSortFilterProxyModel>
 
-#include "property.h"
+#include "pathology.h"
 
 
 class PathologyPropertiesTableModel : public QAbstractTableModel
@@ -43,17 +43,18 @@ public:
     PathologyPropertiesTableModel(QObject* parent = 0);
     ~PathologyPropertiesTableModel();
 
-    PropertyList properties() const;
-    // Returns properties() without any invalid (empty / removed) properties
-    PropertyList validProperties() const;
+    QList<Pathology> pathologies() const;
+    // Returns pathologies() without any invalid (empty / removed) properties
+    QList<Pathology> pathologiesConsolidated() const;
 
 public slots:
 
-    void setProperties(const PropertyList& properties);
+    void setPathologies(const QList<Pathology>& pathologies);
+    void setEditingEnabled(bool enabled);
 
 signals:
 
-    void propertyEdited(const Property& prop);
+    void propertyEdited(const Pathology& path, const Property& prop);
 
 public:
 
