@@ -397,7 +397,7 @@ QList<Property> PathologyParser::parseNGSText(const QString& protein, const QStr
     }
 
     // mutation positive. Possibly, multiple exons.
-    QRegularExpression exonRegExp("Exon (?<exon>\\d)");
+    QRegularExpression exonRegExp("Exon (\\d+(?:\\s*,\\s*\\d+)+)");
     QRegularExpressionMatchIterator it = exonRegExp.globalMatch(text);
     while (it.hasNext())
     {
@@ -406,17 +406,37 @@ QList<Property> PathologyParser::parseNGSText(const QString& protein, const QStr
         QString mutationText = text.mid(match.capturedEnd(), it.hasNext() ? (it.peekNext().capturedStart() - match.capturedEnd()) : -1);
         // Remove exon listing from beginning
         mutationText.remove(QRegularExpression("^[\\d, ]+\n"));
-        // consolidate whitespace and \n's
-        mutationText.replace(QRegularExpression("\\s+"), " ");
-        mutationText.replace(" %", "%");
-        mutationText = mutationText.trimmed();
-        Property& prop = d->propertyForExon(props, protein, match.captured("exon").toInt());
-        ValueTypeCategoryInfo typeInfo(PathologyPropertyInfo::Mutation);
-        prop.value = typeInfo.toPropertyValue(true);
-        // HGVS code is well defined, parsable, but this is non-trivial.
-        // There is a python library (called HGVS) available if needed.
-        // For now, we copy.
-        prop.detail = mutationText;
+
+        QStringList exonNumber = match.captured().split(',');
+        for (int i=0; i<exonNumber.size(); ++i)
+        {
+            Property& prop = d->propertyForExon(props, protein, exonNumber[i].toInt());
+            ValueTypeCategoryInfo typeInfo(PathologyPropertyInfo::Mutation);
+            prop.value = typeInfo.toPropertyValue(true);
+            // HGVS code is well defined, parsable, but this is non-trivial.
+            // There is a python library (called HGVS) available if needed.
+            // For now, we copy.
+            if (exonNumber.size() <= 1)
+            {
+                prop.detail = mutationText;
+            }
+            else
+            {
+                QString line;
+                // If there are n exons, each exon has text every n'th line:
+                for (int l=0; !(line = mutationText.section('\n', l, l, QString::SectionSkipEmpty | QString::SectionIncludeTrailingSep)).isNull();
+                     l += exonNumber.size())
+                {
+                    prop.detail += line;
+                }
+
+            }
+            // consolidate whitespace and \n's
+            prop.detail.replace(QRegularExpression("\\s+"), " ");
+            prop.detail.replace(" %", "%");
+            prop.detail = mutationText.trimmed();
+
+        }
     }
     return props;
 }
