@@ -49,7 +49,6 @@ public:
     PathologyPropertiesTableViewEditorWidget(PathologyPropertyInfo::Property property, QWidget* parent)
         : QWidget(parent)
     {
-        qDebug() << "Creating widget for" << property;
         widget = new PathologyPropertyWidget(property, this);
         QFormLayout* layout = new QFormLayout;
         widget->addToLayout(layout);
@@ -86,7 +85,6 @@ void PathologyPropertiesTableView::setModels(PathologyPropertiesTableModel* mode
 QWidget* PathologyPropertiesTableViewDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &, const QModelIndex &index) const
 {
     PathologyPropertyInfo info = index.data(PathologyPropertiesTableModel::PathologyPropertyInfoRole).value<PathologyPropertyInfo>();
-    qDebug() << "createEditor" << info.label << index;
     return new PathologyPropertiesTableViewEditorWidget(info.property, parent);
 }
 

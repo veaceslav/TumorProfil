@@ -93,7 +93,7 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
     case IHC_PTEN:
         return PathologyPropertyInfo(property, IHCTwoDim, "ihc/pten", QObject::tr("PTEN"));
     case IHC_pAKT:
-        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-akt?p=s473", QObject::tr("<qt>p-AKT<sup>S473</sup></qt>"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-akt?p=s473", QObject::tr("p-AKTₛ₄₇₃"));
     case IHC_pERK:
         return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-erk", QObject::tr("p-ERK"));
     case IHC_ALK:

@@ -43,6 +43,8 @@
 #include "diseasehistory.h"
 #include "reportwindow.h"
 #include "historyvalidator.h"
+#include "pathologyparser.h"
+#include "pathologypropertiestableview.h"
 
 /*
 void myMsgHandler(QtMsgType, const char * text)
@@ -99,10 +101,22 @@ int main(int argc, char *argv[])
     }
     PatientManager::instance()->readDatabase();
 
-    /*
+/*
     AnalysisGenerator generator;
-    generator.cmetListe();
+    generator.nsclcSNCNTrialFinalFromCSV();
     return 0;
+*/
+/*    PathologyParser parser;
+    parser.parseFile("/home/marcel/Dokumente/Tumorprofil/Pathobefunde als Text/Pathobefunde 02.07.2015 sample.txt");
+    PathologyPropertiesTableModel model;
+    PathologyPropertiesTableFilterModel filterModel;
+    PathologyPropertiesTableView view;
+    view.setModels(&model, &filterModel);
+    model.setProperties(parser.results().first().properties);
+    view.resize(600, 500);
+    view.resizeColumnsToContents();
+    view.show();
+    return a.exec();
     */
 
     MainWindow w;

@@ -82,6 +82,8 @@ SOURCES += main.cpp\
     ui/modelfilterlineedit.cpp \
     medical/pathologyparser.cpp \
     settings/databasesettings.cpp
+    ui/propertiestabletab.cpp \
+    ui/extrainformationtab.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -157,6 +159,9 @@ HEADERS  += mainwindow.h \
     ui/entityselectionwidgetv2.h \
     ui/modelfilterlineedit.h \
     medical/pathologyparser.h \
+    ui/propertiestabletab.h \
+    ui/extrainformationtab.h \
+    ui/mainviewtabinterface.h
     settings/databasesettings.h \
     constants.h
 
