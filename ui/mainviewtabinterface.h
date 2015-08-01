@@ -22,5 +22,20 @@
 #ifndef MAINVIEWTABINTERFACE_H
 #define MAINVIEWTABINTERFACE_H
 
+#include <QString>
+
+#include "patient.h"
+
+class MainViewTabInterface
+{
+public:
+    virtual ~MainViewTabInterface() {}
+
+    virtual QString tabLabel() const = 0;
+    virtual void setEditingEnabled(bool enabled) = 0;
+    virtual void setDisease(const Patient::Ptr& p, int diseaseIndex) = 0;
+    virtual void save() = 0;
+};
+
 #endif // MAINVIEWTABINTERFACE_H
 
