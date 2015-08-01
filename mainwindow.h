@@ -43,7 +43,6 @@ public slots:
     void setPatient(const Patient::Ptr& p);
 
     void save();
-    void discardChanges();
     void showReport();
     void showHistory();
 

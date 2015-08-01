@@ -34,17 +34,19 @@
 #include <QKeyEvent>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QScrollArea>
 #include <QSortFilterProxyModel>
 #include <QSplitter>
 #include <QStackedLayout>
 #include <QStatusBar>
+#include <QTabWidget>
 #include <QTextEdit>
 #include <QToolBar>
 
 // Local includes
 
 #include "databaseparameters.h"
-#include "diseasetabwidget.h"
+#include "extrainformationtab.h"
 #include "historywindow.h"
 #include "modelfilterlineedit.h"
 #include "patientdisplay.h"
@@ -53,6 +55,7 @@
 #include "patientmanager.h"
 #include "patientmodel.h"
 #include "pathologywidgetgenerator.h"
+#include "propertiestabletab.h"
 #include "reporttableview.h"
 #include "reportwindow.h"
 #include "tnmwidget.h"
@@ -71,7 +74,7 @@ public:
     QSplitter        *splitter;
     PatientListView  *listView;
     PatientDisplay   *patientDisplay;
-    DiseaseTabWidget *tabWidget;
+    QTabWidget       *tabWidget;
     PatientEnterForm *patientEnterForm;
     QVBoxLayout      *displayWorkLayout;
     QStackedLayout   *workLayout;
@@ -80,6 +83,10 @@ public:
 
     QToolBar         *toolBar;
     QStatusBar       *statusBar;
+
+    PropertiesTableTab  *tableTab;
+    ExtraInformationTab *extraTab;
+    QList<MainViewTabInterface*> tabs;
 
     bool              historyEnabled;
     bool              editingEnabled;
@@ -129,14 +136,9 @@ void MainWindow::setupToolbar()
                                                 tr("Neuer Patient"),
                                                 this, SLOT(enterNewPatient()));
 
-    QAction* delPAction = d->toolBar->addAction(QIcon::fromTheme("cancel"),
-                                                tr("Änderungen verwerfen"),
-                                                this, SLOT(discardChanges()));
-
     if (!d->editingEnabled)
     {
         addPAction->setEnabled(false);
-        delPAction->setEnabled(false);
     }
 
     d->toolBar->addSeparator();
@@ -194,15 +196,25 @@ void MainWindow::setupUI()
 
     d->workLayout        = new QStackedLayout;
     d->patientEnterForm  = new PatientEnterForm;
-    d->tabWidget         = new DiseaseTabWidget;
-    d->tabWidget->setEditingEnabled(d->editingEnabled);
+    d->tabWidget         = new QTabWidget;
+
+    d->tableTab            = new PropertiesTableTab;
+    QScrollArea* tableArea = new QScrollArea;
+    tableArea->setWidget(d->tableTab);
+    tableArea->setWidgetResizable(true);
+    d->tabs << d->tableTab;
+    d->tabWidget->addTab(tableArea, d->tableTab->tabLabel());
+
+    d->extraTab          = new ExtraInformationTab;
+    d->tabs << d->extraTab;
+    d->tabWidget->addTab(d->extraTab, d->extraTab->tabLabel());
+
     d->workLayout->addWidget(d->patientEnterForm);
     d->workLayout->addWidget(d->tabWidget);
     d->workLayout->setCurrentWidget(d->patientEnterForm);
 
     d->displayWorkLayout->addWidget(d->patientDisplay);
-    d->displayWorkLayout->addLayout(d->workLayout);
-    d->displayWorkLayout->addStretch();
+    d->displayWorkLayout->addLayout(d->workLayout, 1);
     rightWidget->setLayout(d->displayWorkLayout);
 
     d->splitter->addWidget(leftSidebarWidget);
@@ -219,8 +231,8 @@ void MainWindow::setupUI()
     connect(d->listView, SIGNAL(activated(Patient::Ptr)),
             this, SLOT(setPatient(Patient::Ptr)));
 
-    connect(d->tabWidget, SIGNAL(editingFinished()),
-            this, SLOT(enterNewPatient()));
+    /*connect(d->tabWidget, SIGNAL(editingFinished()),
+            this, SLOT(enterNewPatient()));*/
 
     connect(d->searchBar, SIGNAL(selected(QModelIndex)),
             this, SLOT(selectFilteredPatient()));
@@ -244,14 +256,17 @@ void MainWindow::setPatient(const Patient::Ptr& p)
         return;
     }
 
-    save();
     d->currentPatient = p;
+    foreach (MainViewTabInterface* tab, d->tabs)
+    {
+        // for now, always use (only) the first disease
+        tab->setDisease(p, 0);
+    }
 
     if (d->currentPatient)
     {
         d->patientDisplay->setPatient(p);
         d->workLayout->setCurrentWidget(d->tabWidget);
-        d->tabWidget->setPatient(p);
         d->listView->setCurrentPatient(p);
     }
     else
@@ -264,34 +279,16 @@ void MainWindow::setPatient(const Patient::Ptr& p)
 
 void MainWindow::save()
 {
-    if (!d->currentPatient || !d->editingEnabled)
+    foreach (MainViewTabInterface* tab, d->tabs)
     {
-        return;
+        tab->save();
     }
-    d->tabWidget->save(d->currentPatient);
-    PatientManager::instance()->updateData(d->currentPatient,
-                                           PatientManager::ChangedPathologyData |
-                                           PatientManager::ChangedDiseaseMetadata |
-                                           PatientManager::ChangedPatientProperties |
-                                           PatientManager::ChangedDiseaseProperties);
 }
 
 void MainWindow::newPatientEntered(const Patient& p)
 {
     Patient::Ptr ptr = PatientManager::instance()->addPatient(p);
     setPatient(ptr);
-}
-
-void MainWindow::discardChanges()
-{
-    if (QMessageBox::warning(this, tr("Änderungen verwerfen"),
-                              tr("Möchten Sie allen Änderungen zu diesem Patienten verwerfen?"),
-                              QMessageBox::Discard | QMessageBox::No, QMessageBox::Discard)
-            == QMessageBox::Discard)
-    {
-        d->currentPatient = Patient::Ptr();
-        setPatient(d->currentPatient);
-    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
