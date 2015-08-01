@@ -28,6 +28,7 @@
 #include <QDateEdit>
 #include <QDebug>
 #include <QFormLayout>
+#include <QGroupBox>
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QVBoxLayout>
@@ -38,7 +39,7 @@
 // Local includes
 
 #include "databaseconstants.h"
-#include "entityselectionwidget.h"
+#include "entityselectionwidgetv2.h"
 #include "patient.h"
 #include "pathologymetadatawidget.h"
 #include "pathologypropertyinfo.h"
@@ -174,7 +175,7 @@ public:
     }
 
     QWidget               *diseaseTab;
-    EntitySelectionWidget *entityWidget;
+    EntitySelectionWidgetV2 *entityWidget;
     QDateEdit             *initialDiagnosisEdit;
     QButtonGroup          *otherPathologyGroup;
     QHBoxLayout           *otherButtonsLayout;
@@ -216,8 +217,11 @@ DiseaseTabWidget::DiseaseTabWidget(QWidget *parent) :
     d->diseaseTab = new QWidget;
     QFormLayout * diseaseLayout = new QFormLayout;
 
-    d->entityWidget = new EntitySelectionWidget;
-    diseaseLayout->addRow(d->entityWidget);
+    d->entityWidget = new EntitySelectionWidgetV2;
+    QHBoxLayout* entityLayout = new QHBoxLayout;
+    entityLayout->addWidget(d->entityWidget->createGroupBox());
+    entityLayout->addStretch();
+    diseaseLayout->addRow(entityLayout);
 
     d->initialDiagnosisEdit = new QDateEdit;
     diseaseLayout->addRow(tr("Erstdiagnose:"), d->initialDiagnosisEdit);
@@ -241,10 +245,8 @@ DiseaseTabWidget::DiseaseTabWidget(QWidget *parent) :
     addTab(trialTab);
     d->specialTabs << trialTab;
 
-    connect(d->entityWidget, SIGNAL(selectionChanged(Pathology::Entity)),
-            this, SLOT(slotEntitySelectionChanged(Pathology::Entity)));
-    connect(d->entityWidget, SIGNAL(entityChanged(Pathology::Entity)),
-            this, SLOT(slotEntityChanged(Pathology::Entity)));
+    connect(d->entityWidget, &EntitySelectionWidgetV2::entityChanged,
+            this, &DiseaseTabWidget::slotEntityChanged);
     connect(d->initialDiagnosisEdit, SIGNAL(dateChanged(QDate)),
             this, SLOT(slotInitialDiagnosisDateChanged(QDate)));
     connect(d->otherPathologyGroup, SIGNAL(buttonClicked(int)),
@@ -354,7 +356,7 @@ void DiseaseTabWidget::save(const Patient::Ptr& p)
 
     if (p->diseases.isEmpty())
     {
-        if (d->entityWidget->currentEntity() == Pathology::UnknownEntity)
+        if (d->entityWidget->entity() == Pathology::UnknownEntity)
         {
             return;
         }
@@ -366,16 +368,17 @@ void DiseaseTabWidget::save(const Patient::Ptr& p)
 
     foreach (PathologyTab* tab, d->tabs)
     {
-        tab->save(p, disease, d->entityWidget->currentEntity());
+        tab->save(p, disease, d->entityWidget->entity());
     }
 
     // NOTE: Setting SampleOrigin per-pathology is not supported by the UI
     for (int i=0; i<disease.pathologies.size(); ++i)
     {
-        disease.pathologies[i].entity = d->entityWidget->currentEntity();
+        disease.pathologies[i].entity = d->entityWidget->entity();
     }
 }
 
+/*
 void DiseaseTabWidget::slotEntitySelectionChanged(Pathology::Entity)
 {
     if (d->hasValidPathology)
@@ -399,6 +402,7 @@ void DiseaseTabWidget::slotEntitySelectionChanged(Pathology::Entity)
     d->entityWidget->applySelectionChange();
     // will emit entityChanged, will call updatePathologyTab
 }
+*/
 
 void DiseaseTabWidget::slotEntityChanged(Pathology::Entity entity)
 {
@@ -423,7 +427,7 @@ void DiseaseTabWidget::updatePathologyTabs()
 {
     foreach (PathologyTab* tab, d->tabs)
     {
-        tab->switchEntity(d->entityWidget->currentEntity());
+        tab->switchEntity(d->entityWidget->entity());
         setTabEnabled(indexOf(tab), tab->enabled);
     }
 }

@@ -51,7 +51,6 @@ public slots:
 
 protected slots:
 
-    void slotEntitySelectionChanged(Pathology::Entity);
     void slotEntityChanged(Pathology::Entity);
     void slotInitialDiagnosisDateChanged(const QDate&);
     PathologyTab* addPathologyTab(int context);
