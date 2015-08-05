@@ -260,7 +260,7 @@ void MainWindow::setPatient(const Patient::Ptr& p)
     foreach (MainViewTabInterface* tab, d->tabs)
     {
         // for now, always use (only) the first disease
-        tab->setDisease(p, 0);
+        tab->setDisease(p, (p && p->hasDisease() ? 0 : -1));
     }
 
     if (d->currentPatient)
