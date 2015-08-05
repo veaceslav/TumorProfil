@@ -37,6 +37,8 @@
 
 // Local includes
 
+#define DATABASEPARAMETERS_DEBUG 1
+
 //#include "dbconfigversion.h"
 namespace
 {
