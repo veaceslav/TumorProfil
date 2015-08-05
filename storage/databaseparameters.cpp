@@ -36,11 +36,15 @@
 #include <QDir>
 #include <QFile>
 #include <QUrlQuery>
+#include <QSettings>
+
 
 namespace
 {
-/*static const char* configGroupDatabase = "Database Settings";
-static const char* configInternalDatabaseServer = "Internal Database Server";
+/**
+ * Database options for QSettings
+ */
+static const char* configGroupDatabase = "Database Settings";
 static const char* configDatabaseType = "Database Type";
 static const char* configDatabaseName = "Database Name";
 static const char* configDatabaseNameThumbnails = "Database Name Thumbnails";
@@ -49,12 +53,11 @@ static const char* configDatabasePort = "Database Port";
 static const char* configDatabaseUsername = "Database Username";
 static const char* configDatabasePassword = "Database Password";
 static const char* configDatabaseConnectOptions = "Database Connectoptions";
-// legacy
-static const char* configDatabaseFilePathEntry = "Database File Path";
-static const char* configAlbumPathEntry = "Album Path";*/
 
-static const char* digikam4db = "digikam4.db";
-static const char* thumbnails_digikamdb = "thumbnails-digikam.db";
+static const char* configDatabaseFilePathEntry = "Database File Path";
+
+static const char* tumorprofildb = "tumorprofil.db";
+static const char* tumorprofilusersdb = "tumorprofilusers.db";
 }
 
 
@@ -203,69 +206,49 @@ DatabaseParameters DatabaseParameters::parametersFromConfig(KSharedConfig::Ptr c
     return parameters;
 }
 
-void DatabaseParameters::readFromConfig(KSharedConfig::Ptr config, const QString& configGroup)
+*/
+void DatabaseParameters::readFromConfig(const QString& programName, const QString& organizationName)
 {
-    KConfigGroup group;
+    QSettings qs(organizationName, programName);
 
-    if (configGroup.isNull())
-    {
-        group = config->group(configGroupDatabase);
-    }
-    else
-    {
-        group = config->group(configGroup);
-    }
+    qs.beginGroup(QLatin1String(configGroupDatabase));
 
-    databaseType             = group.readEntry(configDatabaseType, QString());
-    databaseName             = group.readEntry(configDatabaseName, QString());
-    databaseNameThumbnails   = group.readEntry(configDatabaseNameThumbnails, QString());
-    hostName                 = group.readEntry(configDatabaseHostName, QString());
-    port                     = group.readEntry(configDatabasePort, -1);
-    userName                 = group.readEntry(configDatabaseUsername, QString());
-    password                 = group.readEntry(configDatabasePassword, QString());
-    connectOptions           = group.readEntry(configDatabaseConnectOptions, QString());
-#ifdef HAVE_INTERNALMYSQL
-    internalServer           = group.readEntry(configInternalDatabaseServer, false);
-#else
-    internalServer           = false;
-#endif // HAVE_INTERNALMYSQL
+    databaseType = qs.value(configDatabaseType,DatabaseParameters::SQLiteDatabaseType()).toString();
+    databaseName            = qs.value(configDatabaseName, QString()).toString();
+    databaseNameThumbnails  = qs.value(configDatabaseNameThumbnails, QString()).toString();
+    hostName                = qs.value(configDatabaseHostName, QString()).toString();
+    userName                = qs.value(configDatabaseUsername, QString()).toString();
+    password                = qs.value(configDatabasePassword, QString()).toString();
+    connectOptions          = qs.value(configDatabaseConnectOptions, QString()).toString();
+    sqliteDatabasePath      = qs.value(configDatabaseFilePathEntry, QDir::current().absolutePath()).toString();
+    port                    = qs.value(configDatabasePort, -1).toInt();
 
     if (isSQLite() && !databaseName.isNull())
     {
-        QString orgName = databaseName;
+        QString orgName = sqliteDatabasePath;
         setDatabasePath(orgName);
         setThumbsDatabasePath(orgName);
     }
 }
 
-void DatabaseParameters::writeToConfig(KSharedConfig::Ptr config, const QString& configGroup) const
+void DatabaseParameters::writeToConfig(const QString &programName, const QString& organizationName) const
 {
-    KConfigGroup group;
+    QSettings qs(organizationName, programName);
 
-    if (configGroup.isNull())
-    {
-        group = config->group(configGroupDatabase);
-    }
-    else
-    {
-        group = config->group(configGroup);
-    }
+    qs.beginGroup(QLatin1String(configGroupDatabase));
 
-    QString dbName = getDatabaseNameOrDir();
-    QString dbNameThumbs = getThumbsDatabaseNameOrDir();
+    qs.setValue(configDatabaseType, databaseType);
+    qs.setValue(configDatabaseName, databaseName);
+    qs.setValue(configDatabaseNameThumbnails, databaseNameThumbnails);
+    qs.setValue(configDatabaseHostName, hostName);
+    qs.setValue(configDatabaseUsername, userName);
+    qs.setValue(configDatabasePassword, password);
+    qs.setValue(configDatabaseConnectOptions, connectOptions);
+    qs.setValue(configDatabaseFilePathEntry, sqliteDatabasePath);
+    qs.setValue(configDatabasePort, port);
 
-    group.writeEntry(configDatabaseType, databaseType);
-    group.writeEntry(configDatabaseName, dbName);
-    group.writeEntry(configDatabaseNameThumbnails, dbNameThumbs);
-    group.writeEntry(configDatabaseHostName, hostName);
-    group.writeEntry(configDatabasePort, port);
-    group.writeEntry(configDatabaseUsername, userName);
-    group.writeEntry(configDatabasePassword, password);
-    group.writeEntry(configDatabaseConnectOptions, connectOptions);
-    group.writeEntry(configInternalDatabaseServer, internalServer);
 }
 
-*/
 
 void DatabaseParameters::setDatabasePath(const QString& folderOrFileOrName)
 {
@@ -297,7 +280,7 @@ QString DatabaseParameters::databaseFileSQLite(const QString& folderOrFile)
 
     if (fileInfo.isDir())
     {
-        return QDir::cleanPath(fileInfo.filePath() + QDir::separator() + digikam4db);
+        return QDir::cleanPath(fileInfo.filePath() + QDir::separator() + tumorprofildb);
     }
 
     return QDir::cleanPath(folderOrFile);
@@ -309,7 +292,7 @@ QString DatabaseParameters::thumbnailDatabaseFileSQLite(const QString& folderOrF
 
     if (fileInfo.isDir())
     {
-        return QDir::cleanPath(fileInfo.filePath() + QDir::separator() + thumbnails_digikamdb);
+        return QDir::cleanPath(fileInfo.filePath() + QDir::separator() + tumorprofilusersdb);
     }
 
     return QDir::cleanPath(folderOrFile);
@@ -337,10 +320,10 @@ QString DatabaseParameters::getThumbsDatabaseNameOrDir() const
 
 QString DatabaseParameters::databaseDirectorySQLite(const QString& path)
 {
-    if (path.endsWith(digikam4db))
+    if (path.endsWith(tumorprofildb))
     {
         QString chopped(path);
-        chopped.chop(QString(digikam4db).length());
+        chopped.chop(QString(tumorprofildb).length());
         return chopped;
     }
 
@@ -349,10 +332,10 @@ QString DatabaseParameters::databaseDirectorySQLite(const QString& path)
 
 QString DatabaseParameters::thumbnailDatabaseDirectorySQLite(const QString& path)
 {
-    if (path.endsWith(thumbnails_digikamdb))
+    if (path.endsWith(tumorprofilusersdb))
     {
         QString chopped(path);
-        chopped.chop(QString(thumbnails_digikamdb).length());
+        chopped.chop(QString(tumorprofilusersdb).length());
         return chopped;
     }
 
@@ -400,7 +383,7 @@ DatabaseParameters DatabaseParameters::parametersForSQLite(const QString& databa
 
 DatabaseParameters DatabaseParameters::parametersForSQLiteDefaultFile(const QString& directory)
 {
-    return parametersForSQLite(QDir::cleanPath(directory + QDir::separator() + digikam4db));
+    return parametersForSQLite(QDir::cleanPath(directory + QDir::separator() + tumorprofildb));
 }
 
 void DatabaseParameters::insertInUrl(QUrl& url) const

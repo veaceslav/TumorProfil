@@ -63,42 +63,26 @@ QString DatabaseSettings::currentDatabaseType()
 
 void DatabaseSettings::loadSettings()
 {
-    QSettings qs(ORGANIZATION, APPLICATION);
+    DatabaseParameters dp;
+    dp.readFromConfig();
 
-    qs.beginGroup(QLatin1String("Database"));
-    QString value = qs.value("type",DatabaseParameters::SQLiteDatabaseType()).toString();
-    if(value == DatabaseParameters::MySQLDatabaseType())
+    if(dp.isMySQL())
         d->databaseType->setCurrentIndex(1);
 
-    d->databaseName->setText(qs.value("database_name").toString());
-    d->databaseNameUsers->setText(qs.value("database_name_users").toString());
-    d->hostName->setText(qs.value("hostname").toString());
-    d->connectionOptions->setText(qs.value("connection_options").toString());
-    d->userName->setText(qs.value("username").toString());
-    d->password->setText(qs.value("password").toString());
-    d->sqlitePath->setText(qs.value("sqlite_path", QDir::currentPath()).toString());
-    d->hostPort->setValue(qs.value("host_port","0").toInt());
-    qs.endGroup();
+    d->databaseName->setText(dp.databaseName);
+    d->databaseNameUsers->setText(dp.databaseNameThumbnails);
+    d->hostName->setText(dp.hostName);
+    d->connectionOptions->setText(dp.connectOptions);
+    d->userName->setText(dp.userName);
+    d->password->setText(dp.password);
+    d->sqlitePath->setText(dp.sqliteDatabasePath);
+    d->hostPort->setValue(dp.port);
 }
 
 void DatabaseSettings::applySettings()
 {
-    QSettings qs(ORGANIZATION, APPLICATION);
-
-    qs.beginGroup(QLatin1String("Database"));
-    qs.setValue("type", currentDatabaseType());
-    qs.setValue("database_name", d->databaseName->text());
-    qs.setValue("database_name_users", d->databaseNameUsers->text());
-    qs.setValue("hostname", d->hostName->text());
-    qs.setValue("connection_options", d->connectionOptions->text());
-    qs.setValue("username", d->userName->text());
-    qs.setValue("password", d->password->text());
-    qs.setValue("sqlite_path", d->sqlitePath->text());
-    qs.setValue("host_port", d->hostPort->value());
-    qs.endGroup();
-
-    qs.sync();
-
+    DatabaseParameters dp = getDatabaseParameters();
+    dp.writeToConfig();
 }
 
 void DatabaseSettings::slotHandleDBTypeIndexChanged(int index)

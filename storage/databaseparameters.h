@@ -33,6 +33,7 @@
 // Local includes
 
 #include "databaseconfigelement.h"
+#include "constants.h"
 
 class DatabaseParameters
 {
@@ -68,6 +69,7 @@ public:
     QString password;
 
     QString databaseNameThumbnails;
+    QString sqliteDatabasePath;
 
     void insertInUrl(QUrl& url) const;
     bool operator==(const DatabaseParameters& other) const;
@@ -104,8 +106,10 @@ public:
      * Read and write parameters from config. You can specify the group,
      * or use the default value.
      */
-    //void readFromConfig(KSharedConfig::Ptr config = KGlobal::config(), const QString& configGroup = QString());
-    //void writeToConfig(KSharedConfig::Ptr config = KGlobal::config(), const QString& configGroup = QString()) const;
+    void readFromConfig(const QString& programName = QLatin1String(APPLICATION),
+                        const QString& organizationName = QLatin1String(ORGANIZATION));
+    void writeToConfig(const QString& programName = QLatin1String(APPLICATION),
+                       const QString& organizationName = QLatin1String(ORGANIZATION)) const;
 
     /**
      * In case of SQLite, the databaseName typically is a file.
