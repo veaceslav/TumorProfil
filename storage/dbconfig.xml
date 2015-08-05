@@ -173,31 +173,34 @@
 
             <dbaction name="CreateDBIndices">
                 <statement mode="plain">
-                CREATE INDEX nameIndex ON Patients (surname);
+                CREATE INDEX nameIndex ON Patients (surname(40));
                 </statement>
                 <statement mode="plain">
                 CREATE INDEX dateOfBirthIndex ON Patients (dateOfBirth);
                 </statement>
                 <statement mode="plain">
-                CREATE INDEX pathologyPropertiesIndex ON PathologyProperties (property);
+                CREATE INDEX pathologyPropertiesIndex ON PathologyProperties (property(40));
                 </statement>
             </dbaction>
             <dbaction name="CreateDBTrigger">
                 <statement mode="plain">
-                CREATE TRIGGER delete_patient DELETE ON Patients
+                CREATE TRIGGER delete_patient AFTER DELETE ON Patients
+                FOR EACH ROW
                 BEGIN
                     DELETE FROM Diseases          WHERE patientid=OLD.id;
                     DELETE FROM PatientProperties WHERE patientid=OLD.id;
                 END;
                 </statement>
                 <statement mode="plain">
-                CREATE TRIGGER delete_disease DELETE ON Diseases
+                CREATE TRIGGER delete_disease AFTER DELETE ON Diseases
+                FOR EACH ROW
                 BEGIN
                     DELETE FROM Pathologies       WHERE diseaseid=OLD.id;
                 END;
                 </statement>
                 <statement mode="plain">
-                CREATE TRIGGER delete_pathology DELETE ON Pathologies
+                CREATE TRIGGER delete_pathology AFTER DELETE ON Pathologies
+                FOR EACH ROW
                 BEGIN
                     DELETE FROM PathologyProperties WHERE pathologyid=OLD.id;
                 END;

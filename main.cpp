@@ -70,30 +70,6 @@ int main(int argc, char *argv[])
     //}
     a.setWindowIcon(QIcon::fromTheme("folder_table"));
 
-//    qDebug() << QDir::currentPath();
-//    QFileInfo info("tumorprofil.db");
-//    QString dbFile;
-//    if (info.exists())
-//    {
-//        dbFile = info.filePath();
-//        qDebug() << "Using local database" << dbFile;
-//    }
-//    else
-//    {
-//        dbFile = "//ikt-hpstorage/wiesweg_DB/tumorprofil.db";
-
-//        if(!QFileInfo(dbFile).exists())
-//        {
-//            dbFile = info.filePath();
-//        }
-//        else
-//        {
-//            qDebug() << "Using main database" << dbFile;
-//        }
-//    }
-
-//    DatabaseParameters params =
-//            DatabaseParameters::parametersForSQLite(dbFile);
     DatabaseParameters params;
     params.readFromConfig();
 

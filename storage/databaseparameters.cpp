@@ -225,6 +225,9 @@ void DatabaseParameters::readFromConfig(const QString& programName, const QStrin
 
     if (isSQLite() && !databaseName.isNull())
     {
+        if(sqliteDatabasePath.isEmpty())
+            sqliteDatabasePath = QDir::current().absolutePath();
+
         QString orgName = sqliteDatabasePath;
         setDatabasePath(orgName);
         setThumbsDatabasePath(orgName);
