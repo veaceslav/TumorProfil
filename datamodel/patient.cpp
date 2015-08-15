@@ -32,6 +32,7 @@ Patient::Patient()
 Patient::Patient(const Patient &copy)
 {
     setPatientData(copy);
+    this->id = copy.id;
 }
 
 Patient::~Patient()
