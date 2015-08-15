@@ -29,6 +29,11 @@ Patient::Patient()
 {
 }
 
+Patient::Patient(const Patient &copy)
+{
+    setPatientData(copy);
+}
+
 Patient::~Patient()
 {
 }

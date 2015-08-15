@@ -38,6 +38,7 @@ class Patient
 {
 public:
     Patient();
+    Patient(const Patient& copy);
     ~Patient();
 
     enum Gender
