@@ -53,11 +53,12 @@ static const char* configDatabasePort = "Database Port";
 static const char* configDatabaseUsername = "Database Username";
 static const char* configDatabasePassword = "Database Password";
 static const char* configDatabaseConnectOptions = "Database Connectoptions";
-
-static const char* configDatabaseFilePathEntry = "Database File Path";
-
 static const char* tumorprofildb = "tumorprofil.db";
 static const char* tumorprofilusersdb = "tumorprofilusers.db";
+
+static const char* configDatabaseFilePathEntry = "Database File Path";
+static const char* configSqliteDatabaseName = "Sqlite Database Name";
+static const char* configSqliteUserDatabaseName = "Sqlite User Database Name";
 }
 
 
@@ -220,10 +221,13 @@ void DatabaseParameters::readFromConfig(const QString& programName, const QStrin
     userName                = qs.value(configDatabaseUsername, QString()).toString();
     password                = qs.value(configDatabasePassword, QString()).toString();
     connectOptions          = qs.value(configDatabaseConnectOptions, QString()).toString();
-    sqliteDatabasePath      = qs.value(configDatabaseFilePathEntry, QDir::current().absolutePath()).toString();
     port                    = qs.value(configDatabasePort, -1).toInt();
 
-    if (isSQLite() && !databaseName.isNull())
+    sqliteDatabasePath      = qs.value(configDatabaseFilePathEntry, QDir::current().absolutePath()).toString();
+    sqliteDatabaseName      = qs.value(configSqliteDatabaseName, QString()).toString();
+    sqliteUserDatabaseName  = qs.value(configSqliteUserDatabaseName, QString()).toString();
+
+    if (isSQLite() && sqliteDatabaseName.isEmpty() && sqliteUserDatabaseName.isEmpty())
     {
         if(sqliteDatabasePath.isEmpty())
             sqliteDatabasePath = QDir::current().absolutePath();
@@ -247,8 +251,12 @@ void DatabaseParameters::writeToConfig(const QString &programName, const QString
     qs.setValue(configDatabaseUsername, userName);
     qs.setValue(configDatabasePassword, password);
     qs.setValue(configDatabaseConnectOptions, connectOptions);
-    qs.setValue(configDatabaseFilePathEntry, sqliteDatabasePath);
     qs.setValue(configDatabasePort, port);
+
+    // SQLITE values
+    qs.setValue(configDatabaseFilePathEntry, sqliteDatabasePath);
+    qs.setValue(configSqliteDatabaseName, sqliteDatabaseName);
+    qs.setValue(configSqliteUserDatabaseName,sqliteUserDatabaseName);
 
 }
 
