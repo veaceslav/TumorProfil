@@ -59,6 +59,7 @@ public:
     DatabaseParameters(const QUrl& url);
     DatabaseParameters();
 
+    // MYSQL Parameters
     QString databaseType;
     QString databaseName;
     QString connectOptions;
@@ -69,6 +70,10 @@ public:
     QString password;
 
     QString databaseNameThumbnails;
+
+    // SQLITE parameters
+    QString sqliteUserDatabaseName;
+    QString sqliteDatabaseName;
     QString sqliteDatabasePath;
 
     void insertInUrl(QUrl& url) const;
@@ -116,7 +121,7 @@ public:
      * With getDatabasePath, you can get the folder.
      */
     QString getDatabaseNameOrDir() const;
-    QString getThumbsDatabaseNameOrDir() const;
+    QString getUsersDatabaseNameOrDir() const;
 
     /**
      * In case of SQLite, the databaseName typically is a file.

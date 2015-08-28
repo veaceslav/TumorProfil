@@ -71,7 +71,6 @@ public:
         while ((index = regexpT.indexIn(s)) != -1)
         {
             TNMData& tnm = relevantData(regexpT.cap(2));
-#pragma message "See toAscii conversion"
             tnm.flags = regexpT.cap(1).toLower().toLatin1();
             tnm.T = regexpT.cap(3).toLower();
             s.remove(index, regexpT.matchedLength());

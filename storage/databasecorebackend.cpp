@@ -201,7 +201,7 @@ bool DatabaseCoreBackendPrivate::open(QSqlDatabase& db)
         connectOptions += toAdd.join(";");
     }
 
-    db.setDatabaseName(parameters.databaseName);
+    db.setDatabaseName(parameters.getDatabaseNameOrDir());
     db.setConnectOptions(connectOptions);
     db.setHostName(parameters.hostName);
     db.setPort(parameters.port);

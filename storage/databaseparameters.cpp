@@ -257,7 +257,7 @@ void DatabaseParameters::setDatabasePath(const QString& folderOrFileOrName)
 {
     if (isSQLite())
     {
-        databaseName = databaseFileSQLite(folderOrFileOrName);
+        sqliteDatabaseName = databaseFileSQLite(folderOrFileOrName);
     }
     else
     {
@@ -269,7 +269,7 @@ void DatabaseParameters::setThumbsDatabasePath(const QString& folderOrFileOrName
 {
     if (isSQLite())
     {
-        databaseNameThumbnails = thumbnailDatabaseFileSQLite(folderOrFileOrName);
+        sqliteUserDatabaseName = thumbnailDatabaseFileSQLite(folderOrFileOrName);
     }
     else
     {
@@ -305,17 +305,17 @@ QString DatabaseParameters::getDatabaseNameOrDir() const
 {
     if (isSQLite())
     {
-        return databaseDirectorySQLite(databaseName);
+        return sqliteDatabaseName;
     }
 
     return databaseName;
 }
 
-QString DatabaseParameters::getThumbsDatabaseNameOrDir() const
+QString DatabaseParameters::getUsersDatabaseNameOrDir() const
 {
     if (isSQLite())
     {
-        return thumbnailDatabaseDirectorySQLite(databaseNameThumbnails);
+        return sqliteUserDatabaseName;
     }
 
     return databaseNameThumbnails;
