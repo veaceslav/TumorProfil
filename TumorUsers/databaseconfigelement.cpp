@@ -70,6 +70,10 @@ DatabaseConfigElementLoader::DatabaseConfigElementLoader()
     {
         qWarning() << errorMessage;
     }
+    else
+    {
+        qDebug() << "Valid config";
+    }
 }
 
 DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& databaseElement)

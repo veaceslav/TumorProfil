@@ -10,6 +10,11 @@
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QApplication>
+#include <QFileDialog>
+#include <QSqlDatabase>
+#include <QMessageBox>
+#include <QSqlError>
+#include <QSqlQuery>
 
 #include "databaseconfigelement.h"
 
@@ -39,16 +44,109 @@ public:
 
     QComboBox*     databaseType;
     QSpinBox*      hostPort;
+    DatabaseConfigElement conf;
 };
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), d(new Private())
 {
     setupUi();
-    DatabaseConfigElement* conf = new DatabaseConfigElement();
+    d->conf = DatabaseConfigElement::element("QMYSQL");
+    setupParameters();
+    d->databaseType->setCurrentIndex(1); // Make MqSql Default
+    slotHandleDBTypeIndexChanged();
 }
 
 MainWindow::~MainWindow()
 {
+}
+
+void MainWindow::slotHandleDBTypeIndexChanged()
+{
+    if (d->databaseType->currentData() == QLatin1String("QSQLITE"))
+    {
+        d->sqlitePath->setVisible(true);
+        d->sqliteBrowse->setVisible(true);
+        d->expertSettings->setVisible(false);
+
+        connect(d->sqliteBrowse, SIGNAL(clicked(bool)), this, SLOT(slotSetDatabasePath()));
+    }
+    else
+    {
+        d->sqlitePath->setVisible(false);
+        d->sqliteBrowse->setVisible(false);
+        d->expertSettings->setVisible(true);
+
+        disconnect(d->sqliteBrowse, SIGNAL(clicked(bool)), this, SLOT(slotSetDatabasePath()));
+    }
+}
+
+void MainWindow::slotSetDatabasePath()
+{
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+                                                    "/home",
+                                                    QFileDialog::ShowDirsOnly
+                                                    | QFileDialog::DontResolveSymlinks);
+    d->sqlitePath->setText(dir);
+}
+
+void MainWindow::slotCheckDatabaseConnection()
+{
+    qApp->setOverrideCursor(Qt::WaitCursor);
+    QString databaseID(QLatin1String("TumorDbConnectionTest"));
+
+    {
+
+        QSqlDatabase testDatabase     = QSqlDatabase::addDatabase(d->databaseType->currentData().toString(),
+                                                                  databaseID);
+
+        if(!testDatabase.isValid())
+        {
+            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
+                                  tr("Database connection test was not successful. <p>Error was:" +
+                                       testDatabase.lastError().text().toLatin1() +  "</p>") );
+
+            return;
+        }
+
+        testDatabase.setHostName(d->hostName->text());
+        testDatabase.setPort(d->hostPort->value());
+        testDatabase.setUserName(d->userName->text());
+        testDatabase.setPassword(d->password->text());
+        testDatabase.setConnectOptions(d->connectionOptions->text());
+
+        qApp->restoreOverrideCursor();
+
+        testDatabase.setDatabaseName(d->databaseNameUsers->text());
+
+        bool result = testDatabase.open();
+
+        if (!result)
+        {
+            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
+                                  tr("Database connection test was not successful. <p>Error was:" +
+                                       testDatabase.lastError().text().toLatin1() +  "</p>") );
+        }
+
+        QSqlQuery* testQuery = new QSqlQuery(testDatabase);
+        testQuery->prepare(QLatin1String("show tables"));
+
+        result = testQuery->exec();
+
+        if (result)
+        {
+            QMessageBox::information(qApp->activeWindow(), tr("Database connection test"),
+                                     tr("Database connection test successful."));
+        }
+        else
+        {
+            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
+                                  tr("Database connection test was not successful. <p>Error was:" +
+                                       testQuery->lastError().text().toLatin1() +  "</p>") );
+        }
+
+        testDatabase.close();
+    }
+    QSqlDatabase::removeDatabase(databaseID);
 }
 
 void MainWindow::setupUi()
@@ -59,12 +157,6 @@ void MainWindow::setupUi()
 
     QGroupBox* dbPathBox = new QGroupBox(tr("Database File Path"), this);
     QVBoxLayout* const vlay    = new QVBoxLayout(dbPathBox);
-    d->databasePathLabel       = new QLabel(tr("<p>The location where the database file will be stored on your system. "
-                                                 "There is one common database file for all root albums.<br/>"
-                                                 "Write access is required to be able to edit image properties.</p>"
-                                                 "<p>Note: a remote file system, such as NFS, cannot be used here.</p><p></p>"),
-                                            dbPathBox);
-    d->databasePathLabel->setWordWrap(true);
     d->sqlitePath = new QLineEdit(this);
     d->sqliteBrowse = new QPushButton(tr("Browse"),this);
     QHBoxLayout* pathLayout = new QHBoxLayout();
@@ -115,7 +207,6 @@ void MainWindow::setupUi()
 
     vlay->addWidget(databaseTypeLabel);
     vlay->addWidget(d->databaseType);
-    vlay->addWidget(d->databasePathLabel);
     vlay->addLayout(pathLayout);
     vlay->addWidget(d->expertSettings);
     vlay->setSpacing(0);
@@ -131,8 +222,8 @@ void MainWindow::setupUi()
 
     // --------- fill with default values ---------------------
 
-    d->databaseType->addItem(tr("SQLite"));//, DatabaseParameters::SQLiteDatabaseType());
-    d->databaseType->addItem(tr("MYSQL"));//, DatabaseParameters::MySQLDatabaseType());
+    d->databaseType->addItem(tr("SQLite"), "QSQLITE");
+    d->databaseType->addItem(tr("MYSQL"), "QMYSQL");
 
 
     d->databaseType->setToolTip(tr("<p>Select here the type of database backend.</p>"
@@ -146,11 +237,11 @@ void MainWindow::setupUi()
 
     // --------------------------------------------------------
 
-//    connect(d->databaseType, SIGNAL(currentIndexChanged(int)),
-//            this, SLOT(slotHandleDBTypeIndexChanged(int)));
+    connect(d->databaseType, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(slotHandleDBTypeIndexChanged()));
 
-//    connect(checkDatabaseConnectionButton, SIGNAL(clicked()),
-//            this, SLOT(slotCheckDatabaseConnection()));
+    connect(checkDatabaseConnectionButton, SIGNAL(clicked()),
+            this, SLOT(slotCheckDatabaseConnection()));
 
     QWidget* wg = new QWidget(this);
     wg->setLayout(layout);
@@ -160,5 +251,9 @@ void MainWindow::setupUi()
 
 void MainWindow::setupParameters()
 {
-
+    d->databaseNameUsers->setText(d->conf.databaseName);
+    d->hostName->setText(d->conf.hostName);
+    d->hostPort->setValue(d->conf.port.toInt());
+    d->userName->setText(d->conf.userName);
+    d->password->setText(d->conf.password);
 }
