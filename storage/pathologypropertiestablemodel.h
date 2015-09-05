@@ -50,6 +50,7 @@ public:
 public slots:
 
     void setPathologies(const QList<Pathology>& pathologies);
+    void setPathology(const Pathology& pathology); // convenience, equivalent to calling setPathologies with a list of one pathology
     void setEditingEnabled(bool enabled);
 
 signals:

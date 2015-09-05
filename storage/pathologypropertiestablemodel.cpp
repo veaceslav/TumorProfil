@@ -154,6 +154,13 @@ QList<Pathology> PathologyPropertiesTableModel::pathologiesConsolidated() const
     return cleanPaths;
 }
 
+void PathologyPropertiesTableModel::setPathology(const Pathology& pathology)
+{
+    QList<Pathology> paths;
+    paths << pathology;
+    setPathologies(paths);
+}
+
 void PathologyPropertiesTableModel::setPathologies(const QList<Pathology>& pathologies)
 {
     beginResetModel();
