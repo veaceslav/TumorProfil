@@ -126,18 +126,20 @@ void PropertiesTableTab::setDisease(const Patient::Ptr& p, int diseaseIndex)
     d->edited = false;
     if (!p)
     {
+        d->diseaseIndex = -1;
         return;
     }
 
     if (d->hasValidDisease())
     {
         d->entitySelectionWidget->setEntity(d->currentDisease().entity());
+        d->entitySelectionWidget->setMode(EntitySelectionWidgetV2::DisplayMode);
         d->model->setPathologies(d->currentDisease().pathologies);
     }
     else
     {
+        d->entitySelectionWidget->setMode(EntitySelectionWidgetV2::EditMode);
         // Enable when an entity was selected (see entityChanged)
-        d->entitySelectionWidget->setEnabled(false);
         d->view->setEnabled(false);
     }
 }
@@ -170,7 +172,6 @@ void PropertiesTableTab::entityChanged(Pathology::Entity entity)
         {
             d->currentPatient->diseases << Disease();
             d->diseaseIndex = 0;
-            d->entitySelectionWidget->setEnabled(true);
             d->view->setEnabled(true);
         }
     }
