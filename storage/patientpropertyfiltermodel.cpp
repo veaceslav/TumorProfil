@@ -108,6 +108,10 @@ void PatientPropertyFilterModel::filterByTrialParticipation(const QString& prope
 
 bool PatientPropertyFilterSettings::matchesEntities(Patient::Ptr p) const
 {
+    if (!p || !p->hasDisease())
+    {
+        return false;
+    }
     foreach (const Pathology& path, p->firstDisease().pathologies)
     {
         if (entities.contains(path.entity))
