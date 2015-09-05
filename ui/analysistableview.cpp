@@ -154,7 +154,7 @@ void AnalysisTableView::copy()
         {
         case QVariant::Double:
             // so that Excel accepts it's a number
-            stringValue = QLocale::system().toString(value.toDouble());
+            stringValue = QLocale().toString(value.toDouble());
             break;
         case QVariant::Int:
         default:
@@ -279,7 +279,7 @@ QString AnalysisTableView::toCSV(const QList<bool>& columns) const
         {
         case QVariant::Double:
             // so that Excel accepts it's a number
-            stringValue = QLocale::system().toString(value.toDouble());
+            stringValue = QLocale().toString(value.toDouble());
             break;
         case QVariant::Int:
         default:

@@ -22,6 +22,7 @@
 // Qt includes
 
 #include <QDebug>
+#include <QLocale>
 #include <QRegExp>
 
 // Local includes
@@ -53,7 +54,8 @@ static float textCENRatioToFloat(const QString& ratio)
         s.remove(0, 1);
     }
     bool ok = false;
-    float f = s.toFloat(&ok);
+    QLocale locale;
+    float f = locale.toFloat(s, &ok);
     if (ok)
     {
         return f;
