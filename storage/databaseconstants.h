@@ -39,4 +39,13 @@ public:
     static QLatin1String diseaseHistory();
 };
 
+class PathologyPropertyName
+{
+public:
+
+    // Note: Most pathology property names are defined in pathologypropertyinfo.cpp
+    // Here come only those with a "special" meaning
+    static QLatin1String pathologyReportId();
+};
+
 #endif // DATABASECONSTANTS_H

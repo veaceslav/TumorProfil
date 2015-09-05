@@ -30,3 +30,8 @@ QLatin1String DiseasePropertyName::diseaseHistory()
 {
     return QLatin1String("Disease History");
 }
+
+QLatin1String PathologyPropertyName::pathologyReportId()
+{
+    return QLatin1String("text/pathology-report");
+}

@@ -31,6 +31,7 @@
 // Local includes
 
 #include "databaseaccess.h"
+#include "databaseconstants.h"
 #include "databasetransaction.h"
 #include "databaseinitializationobserver.h"
 #include "databaseoperationgroup.h"
@@ -402,6 +403,11 @@ void PatientManager::storeData(const Patient::Ptr& patient, ChangeFlags flags)
                     DatabaseAccess().db()->addProperty(PatientDB::PathologyProperties, pathology.id,
                                                        property.property, property.value, property.detail);
                 }
+                foreach (const QString& text, pathology.reports)
+                {
+                    DatabaseAccess().db()->addProperty(PatientDB::PathologyProperties, pathology.id,
+                                                       PathologyPropertyName::pathologyReportId(), text, QString());
+                }
             }
         }
     }
@@ -426,6 +432,19 @@ void PatientManager::loadData(const Patient::Ptr& p)
         {
             Pathology& pathology = disease.pathologies[u];
             pathology.properties = DatabaseAccess().db()->properties(PatientDB::PathologyProperties, pathology.id);
+            // Sort out pathology report properties to separate list
+            for (PropertyList::iterator it = pathology.properties.begin(); it != pathology.properties.end(); )
+            {
+                if (it->property == PathologyPropertyName::pathologyReportId())
+                {
+                    pathology.reports += it->value;
+                    it = pathology.properties.erase(it);
+                }
+                else
+                {
+                    ++it;
+                }
+            }
         }
     }
 }

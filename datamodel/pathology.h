@@ -27,6 +27,7 @@
 #include <QDate>
 #include <QList>
 #include <QSharedPointer>
+#include <QStringList>
 
 // Local includes
 
@@ -81,6 +82,7 @@ public:
     QString         context;
     QDate           date;
     PropertyList    properties;
+    QStringList     reports;
 
     int             id;
 };
