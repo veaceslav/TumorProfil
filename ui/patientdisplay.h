@@ -42,6 +42,7 @@ public:
 public slots:
 
     void setPatient(const Patient::Ptr& patient);
+    void setPatient(const Patient& patientData);
     void clear();
 
 private:

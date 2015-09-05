@@ -72,14 +72,26 @@ void PatientDisplay::setShowGender(bool show)
     d->gender->setVisible(show);
 }
 
-void PatientDisplay::setPatient(const Patient::Ptr& patient)
+void PatientDisplay::setPatient(const Patient::Ptr &p)
 {
-    if (patient && patient->isValid())
+    if (p)
+    {
+        setPatient(*p);
+    }
+    else
+    {
+        clear();
+    }
+}
+
+void PatientDisplay::setPatient(const Patient& patient)
+{
+    if (patient.isValid())
     {
         //: Name display, Surname, first name
-        d->name->setText(tr("%1, %2").arg(patient->surname).arg(patient->firstName));
-        d->gender->setText(patient->gender == Patient::Male ? tr("Männlich") : tr("Weiblich"));
-        d->dateOfBirth->setText(patient->dateOfBirth.toString("dd.MM.yyyy"));
+        d->name->setText(tr("%1, %2").arg(patient.surname).arg(patient.firstName));
+        d->gender->setText(patient.gender == Patient::Male ? tr("Männlich") : tr("Weiblich"));
+        d->dateOfBirth->setText(patient.dateOfBirth.toString("dd.MM.yyyy"));
     }
     else
     {
