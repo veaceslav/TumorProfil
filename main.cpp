@@ -24,10 +24,12 @@
 #include <QApplication>
 #include <QDir>
 #include <QDebug>
+#include <QFile>
 #include <QFileInfo>
 #include <QIcon>
 #include <QMessageBox>
 #include <QRegExp>
+#include <QTextStream>
 #include <QVariant>
 #include <QUrl>
 
@@ -84,8 +86,20 @@ int main(int argc, char *argv[])
     generator.nsclcSNCNTrialFinalFromCSV();
     return 0;
 */
-/*    PathologyParser parser;
-    parser.parseFile("/home/marcel/Dokumente/Tumorprofil/Pathobefunde als Text/Pathobefunde 02.07.2015 sample.txt");
+    PathologyParser parser;
+    QList<PatientParseResults> results =
+    parser.parseFile("/home/marcel/Dokumente/Tumorprofil/Pathobefunde als Text/Pathobefunde 25.6.15 - 27.8.15.txt");
+    QFile file("/home/marcel/Dokumente/Tumorprofil/Pathobefunde als Text/nichterkannt.txt");
+    file.open(QFile::WriteOnly | QFile::Truncate);
+    QTextStream stream(&file);
+    foreach (const PatientParseResults& result, results)
+    {
+        stream << result.unrecognizedText;
+        stream << "\n\n";
+    }
+
+    return 0;
+    /*
     PathologyPropertiesTableModel model;
     PathologyPropertiesTableFilterModel filterModel;
     PathologyPropertiesTableView view;

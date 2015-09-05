@@ -83,7 +83,12 @@ SOURCES += main.cpp\
     medical/pathologyparser.cpp \
     settings/databasesettings.cpp \
     ui/propertiestabletab.cpp \
-    ui/extrainformationtab.cpp
+    ui/extrainformationtab.cpp \
+    ui/pathologyreporttab.cpp \
+    ui/import/importwizard.cpp \
+    ui/import/rawtextenterpage.cpp \
+    ui/import/rawtextsummarypage.cpp \
+    ui/import/patientparsepage.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -163,7 +168,12 @@ HEADERS  += mainwindow.h \
     ui/extrainformationtab.h \
     ui/mainviewtabinterface.h \
     settings/databasesettings.h \
-    constants.h
+    constants.h \
+    ui/pathologyreporttab.h \
+    ui/import/importwizard.h \
+    ui/import/rawtextenterpage.h \
+    ui/import/rawtextsummarypage.h \
+    ui/import/patientparsepage.h
 
 
 INCLUDEPATH += datamodel/ \

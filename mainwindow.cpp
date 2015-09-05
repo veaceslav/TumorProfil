@@ -48,6 +48,7 @@
 #include "databaseparameters.h"
 #include "extrainformationtab.h"
 #include "historywindow.h"
+#include "import/importwizard.h"
 #include "modelfilterlineedit.h"
 #include "patientdisplay.h"
 #include "patiententerform.h"
@@ -132,12 +133,17 @@ void MainWindow::setupToolbar()
     d->toolBar = addToolBar(tr("Aktionen"));
     d->toolBar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
-    QAction* addPAction = d->toolBar->addAction(QIcon::fromTheme("add"),
+    QAction* importWizardAction = d->toolBar->addAction(QIcon::fromTheme("add"),
+                                                        tr("Befundeingabe"),
+                                                        this, SLOT(importWizard()));
+
+    QAction* addPAction = d->toolBar->addAction(QIcon::fromTheme("user_add"),
                                                 tr("Neuer Patient"),
                                                 this, SLOT(enterNewPatient()));
 
     if (!d->editingEnabled)
     {
+        importWizardAction->setEnabled(false);
         addPAction->setEnabled(false);
     }
 
@@ -283,6 +289,13 @@ void MainWindow::save()
     {
         tab->save();
     }
+}
+
+void MainWindow::importWizard()
+{
+    ImportWizard* wizard = new ImportWizard;
+    wizard->setAttribute(Qt::WA_DeleteOnClose);
+    wizard->show();
 }
 
 void MainWindow::newPatientEntered(const Patient& p)

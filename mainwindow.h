@@ -39,6 +39,7 @@ public:
 public slots:
 
     void enterNewPatient();
+    void importWizard();
     void newPatientEntered(const Patient& p);
     void setPatient(const Patient::Ptr& p);
 
