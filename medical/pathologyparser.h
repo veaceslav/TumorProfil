@@ -36,12 +36,14 @@ public:
     PatientParseResults(Patient::Ptr p);
 
     Patient patientData;
-    Patient::Ptr p;
+    Patient::Ptr patient;
     QDate resultsDate;
     QStringList referenceNumbers;
     QString text;
+    QStringList textPassages;
     PropertyList properties;
     QString unrecognizedText;
+    Pathology::Entity guessedEntity;
 
     bool operator==(const Patient& otherPatientData) const;
 };

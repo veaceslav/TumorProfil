@@ -44,15 +44,15 @@ PatientParseResults::PatientParseResults(const Patient& data)
 
 PatientParseResults::PatientParseResults(Patient::Ptr p)
     : patientData(*p),
-      p(p)
+      patient(p)
 {
 }
 
 bool PatientParseResults::operator==(const Patient& other) const
 {
-    if (p)
+    if (patient)
     {
-        return *p == patientData;
+        return *patient == other;
     }
     return patientData == other;
 }
@@ -69,7 +69,9 @@ public:
         RegExpIHC,
         RegExpIHCcMET,
         RegExpNGSTableHeader,
-        RegExpNGSTableProtein
+        RegExpNGSTableProtein,
+        RegExpFISH,
+        RegExpIgnore
     };
 
     QList<QRegularExpression>& expressions(RegExpVariant var)
@@ -89,6 +91,8 @@ void RegExpContainer::load()
     keywords.insert("ihc-cmet", RegExpIHCcMET);
     keywords.insert("ngs-table-header", RegExpNGSTableHeader);
     keywords.insert("ngs-table-protein", RegExpNGSTableProtein);
+    keywords.insert("fish", RegExpFISH);
+    keywords.insert("ignore", RegExpIgnore);
 
     // allow override with updated regexps in the current dir
     QFile file(QDir::currentPath() + "/pathology-regexps");
@@ -117,6 +121,10 @@ void RegExpContainer::load()
                 qDebug() << "Regexp" << line << "is invalid" << re.errorString() << re.patternErrorOffset() << line.mid(re.patternErrorOffset());
                 continue;
             }
+            if (currentVariant == RegExpFISH)
+            {
+                re.setPatternOptions(re.patternOptions() | QRegularExpression::DotMatchesEverythingOption);
+            }
             regexps[currentVariant] << re;
         }
         else
@@ -139,6 +147,7 @@ public:
     PathologyPropertyInfo::Property textToIHCProperty(const QString& protein);
     QList<Property> propertiesForProtein(const QString& protein);
     Property& propertyForExon(QList<Property>& properties, const QString& protein, int exon);
+    PathologyPropertyInfo::Property textToFISHProperty(const QString& protein);
 
     RegExpContainer regExpContainer;
     QList<PatientParseResults> results;
@@ -295,6 +304,7 @@ void PathologyParser::parseText(PatientParseResults& results)
         while (it.hasNext())
         {
             QRegularExpressionMatch match = it.next();
+            // the capture is empty for "Keine", which then correctly amounts to 0.
             HScore score(match.captured("strong").toInt(), match.captured("medium").toInt(), match.captured("weak").toInt());
             PathologyPropertyInfo id = PathologyPropertyInfo::info(PathologyPropertyInfo::IHC_cMET);
             ValueTypeCategoryInfo typeInfo(id);
@@ -363,6 +373,34 @@ void PathologyParser::parseText(PatientParseResults& results)
             excerpts += boost::icl::interval<int>::right_open(match.capturedStart(), end);
         }
     }
+    foreach (const QRegularExpression& re, d->regExpContainer.expressions(RegExpContainer::RegExpFISH))
+    {
+        QRegularExpressionMatchIterator it = re.globalMatch(results.text);
+        while (it.hasNext())
+        {
+            QRegularExpressionMatch match = it.next();
+            PathologyPropertyInfo id = d->textToFISHProperty(match.captured("protein"));
+            ValueTypeCategoryInfo typeInfo(id);
+            Property prop;
+            prop.property = id.id;
+            QString positivityClause = match.captured("positivity");
+            bool isPositive = (positivityClause == "positiv" || positivityClause == "mehr" || positivityClause == "eine" || positivityClause == "eine grenzwertige");
+            prop.value      = typeInfo.toPropertyValue(isPositive);
+            prop.detail     = match.captured("ratio");
+            results.properties << prop;
+
+            excerpts += boost::icl::interval<int>::right_open(match.capturedStart(), match.capturedEnd());
+        }
+    }
+    foreach (const QRegularExpression& re, d->regExpContainer.expressions(RegExpContainer::RegExpIgnore))
+    {
+        QRegularExpressionMatchIterator it = re.globalMatch(results.text);
+        while (it.hasNext())
+        {
+            QRegularExpressionMatch match = it.next();
+            excerpts += boost::icl::interval<int>::right_open(match.capturedStart(), match.capturedEnd());
+        }
+    }
 
     /*qDebug() << results.patientData.firstName << results.patientData.surname << results.resultsDate << results.referenceNumbers;
     foreach (const Property& prop, results.properties)
@@ -379,6 +417,22 @@ void PathologyParser::parseText(PatientParseResults& results)
         unrecognizedParts << results.text.mid(eit->lower(), eit->upper() - eit->lower()).trimmed();
     }
     results.unrecognizedText = unrecognizedParts.join('\n');
+
+    results.guessedEntity = Pathology::UnknownEntity;
+    QMap<PathologyPropertyInfo::Property, Pathology::Entity> diseaseDefiningProperties;
+    diseaseDefiningProperties.insert(PathologyPropertyInfo::IHC_ALK, Pathology::PulmonaryAdeno);
+    diseaseDefiningProperties.insert(PathologyPropertyInfo::IHC_ROS1, Pathology::PulmonaryAdeno);
+    diseaseDefiningProperties.insert(PathologyPropertyInfo::IHC_pP70S6K, Pathology::ColorectalAdeno);
+    diseaseDefiningProperties.insert(PathologyPropertyInfo::Fish_FGFR1, Pathology::PulmonarySquamous);
+    foreach (const Property& prop, results.properties)
+    {
+        PathologyPropertyInfo info = PathologyPropertyInfo::info(prop.property);
+        if (diseaseDefiningProperties.contains(info.property))
+        {
+            results.guessedEntity = diseaseDefiningProperties.value(info.property);
+            break;
+        }
+    }
 }
 
 QList<Property> PathologyParser::parseNGSText(const QString& protein, const QString& text)
@@ -470,6 +524,7 @@ void PathologyParser::PathologyParserPriv::appendPatientText(PatientParseResults
     if (results && !results->text.contains(chunk))
     {
         results->text += chunk;
+        results->textPassages += chunk;
     }
 }
 
@@ -679,7 +734,7 @@ PathologyPropertyInfo::Property PathologyParser::PathologyParserPriv::textToIHCP
     {
         return PathologyPropertyInfo::IHC_HER2;
     }
-    if (protein == "p-p70S6-Kinase")
+    if (protein == "p-p70S6-Kinase" || protein == "p-p70s6-Kinase")
     {
         return PathologyPropertyInfo::IHC_pP70S6K;
     }
@@ -687,4 +742,25 @@ PathologyPropertyInfo::Property PathologyParser::PathologyParserPriv::textToIHCP
     return PathologyPropertyInfo::InvalidProperty;
 }
 
-
+PathologyPropertyInfo::Property PathologyParser::PathologyParserPriv::textToFISHProperty(const QString& protein)
+{
+    // three different regexps for four FISHes
+    if (protein == "HER2")
+    {
+        return PathologyPropertyInfo::Fish_HER2;
+    }
+    if (protein == "ALK")
+    {
+        return PathologyPropertyInfo::Fish_ALK;
+    }
+    if (protein == "ROS1")
+    {
+        return PathologyPropertyInfo::Fish_ROS1;
+    }
+    if (protein == "FGFR1")
+    {
+        return PathologyPropertyInfo::Fish_FGFR1;
+    }
+    qDebug() << "Unhandled FISH" << protein << "in scanner";
+    return PathologyPropertyInfo::InvalidProperty;
+}
