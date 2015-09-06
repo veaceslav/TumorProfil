@@ -230,6 +230,7 @@ class TherapyElementList : public GenericElementList<TherapyElement>
 public:
     TherapyElementList(HistoryElement* parent);
     QStringList substances() const;
+    bool hasSubstance(const QString& substance) const;
     /// Convenience method: adjust the element's parent.
     /// You must do that yourself if you use append, prepend, or insert.
     TherapyElementList& operator<<(TherapyElement* elem);
