@@ -81,11 +81,12 @@ int main(int argc, char *argv[])
     }
     PatientManager::instance()->readDatabase();
 
-/*
+    /*
     AnalysisGenerator generator;
-    generator.nsclcSNCNTrialFinalFromCSV();
+    generator.ros1Project();
     return 0;
-*/
+    */
+    /*
     PathologyParser parser;
     QList<PatientParseResults> results =
     parser.parseFile("/home/marcel/Dokumente/Tumorprofil/Pathobefunde als Text/Pathobefunde 25.6.15 - 27.8.15.txt");
@@ -98,10 +99,15 @@ int main(int argc, char *argv[])
         stream << "\n\n";
     }
 
+<<<<<<< HEAD
     // Veaceslav NOTE: Why there is a return zero here?
     // return 0;
 
 
+=======
+    return 0;
+    */
+>>>>>>> Remove test code that was committed by mistake
     /*
     PathologyPropertiesTableModel model;
     PathologyPropertiesTableFilterModel filterModel;
