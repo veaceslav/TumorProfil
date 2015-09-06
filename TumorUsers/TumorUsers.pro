@@ -14,10 +14,14 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    databaseconfigelement.cpp
+    databaseconfigelement.cpp \
+    userwidget.cpp \
+    databaseguioptions.cpp
 
 HEADERS  += mainwindow.h \
-    databaseconfigelement.h
+    databaseconfigelement.h \
+    userwidget.h \
+    databaseguioptions.h
 
 FORMS    +=
 
