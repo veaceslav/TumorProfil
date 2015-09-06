@@ -23,4 +23,5 @@ Error while executing DBAction [ "CreateDBTrigger" ] Statement [ "\n            
 you must do this:
 
 mysql -u USERNAME -p
+
 set global log_bin_trust_function_creators=1;

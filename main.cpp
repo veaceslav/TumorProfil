@@ -98,7 +98,10 @@ int main(int argc, char *argv[])
         stream << "\n\n";
     }
 
-    return 0;
+    // Veaceslav NOTE: Why there is a return zero here?
+    // return 0;
+
+
     /*
     PathologyPropertiesTableModel model;
     PathologyPropertiesTableFilterModel filterModel;
