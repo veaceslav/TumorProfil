@@ -23,6 +23,7 @@
 
 #include <QDateEdit>
 #include <QLabel>
+#include <QHBoxLayout>
 #include <QPushButton>
 #include <QTextEdit>
 #include <QVBoxLayout>
@@ -81,8 +82,12 @@ PatientParsePage::PatientParsePage(const PatientParseResults& results)
 
     if (!results.patient)
     {
+        QHBoxLayout* idLayout = new QHBoxLayout;
+        idLayout->addWidget(new QLabel(tr("Erstdiagnose:")));
         initialDiagnosisEdit = new QDateEdit;
-        layout->addWidget(initialDiagnosisEdit);
+        idLayout->addWidget(initialDiagnosisEdit);
+        idLayout->addStretch(1);
+
         QDate date;
         date.setDate(results.resultsDate.year(), results.resultsDate.month(), 1);
         if (date.daysTo(results.resultsDate) < 10)
@@ -90,6 +95,8 @@ PatientParsePage::PatientParsePage(const PatientParseResults& results)
             date = date.addMonths(-1);
         }
         initialDiagnosisEdit->setDate(date);
+
+        layout->addLayout(idLayout);
     }
 
     model = new PathologyPropertiesTableModel(this);
@@ -100,6 +107,7 @@ PatientParsePage::PatientParsePage(const PatientParseResults& results)
 
     Pathology path;
     path.properties = results.properties;
+    path.date       = results.resultsDate;
     model->setPathology(path);
 
     QLabel* unknownTextLabel = new QLabel(tr("Nicht erkannte Passagen aus den Befunden:"));
@@ -149,6 +157,7 @@ void PatientParsePage::saveData()
         Pathology newPath;
         newPath.context = PathologyContextInfo(PathologyContextInfo::Tumorprofil).id;
         newPath.date = results.resultsDate;
+        newPath.entity = entitySelectionWidget->entity();
         disease.pathologies << newPath;
         path = &disease.pathologies.last();
     }
