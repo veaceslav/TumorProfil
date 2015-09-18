@@ -183,6 +183,7 @@ INCLUDEPATH += datamodel/ \
     util/ \
     medical/ \
     C:/Users/wiesweg/Software/boost_1_50_0/ \
+    C:/Users/Klaus/Documents/Software/boost_1_58_0/ \
     usr/include/mysql
 
 OTHER_FILES += \
