@@ -21,6 +21,9 @@
 
 #include "importwizard.h"
 
+#include <QApplication>
+
+#include "databaseoperationgroup.h"
 #include "patientparsepage.h"
 #include "rawtextenterpage.h"
 #include "rawtextsummarypage.h"
@@ -35,6 +38,8 @@ ImportWizard::ImportWizard()
 
 void ImportWizard::wizardFinished()
 {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    DatabaseOperationGroup group;
     foreach (int id, pageIds())
     {
         PatientParsePage* parsePage = qobject_cast<PatientParsePage*>(page(id));
@@ -42,6 +47,8 @@ void ImportWizard::wizardFinished()
         {
             parsePage->saveData();
         }
+        group.allowLift();
     }
+    QApplication::restoreOverrideCursor();
 }
 
