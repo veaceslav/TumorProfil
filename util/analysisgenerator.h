@@ -42,6 +42,7 @@ public:
     void fishRatioListe();
     void crc2015();
     void nsclcSNCNTrialFinalFromCSV();
+    void ros1Project();
 
 protected:
 

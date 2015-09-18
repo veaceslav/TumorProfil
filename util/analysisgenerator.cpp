@@ -996,6 +996,249 @@ void AnalysisGenerator::nsclcSNCNTrialFinalFromCSV()
     m_file.finishWriting();
 }
 
+void AnalysisGenerator::ros1Project()
+{
+    PatientPropertyModelViewAdapter models;
+    models.setReportType(PatientPropertyModelViewAdapter::PulmonaryAdenoIHCMut);
+
+    const int reportedLines = 5;
+
+    QList<Patient::Ptr> ros1patients = patientsFromCSV("/home/marcel/Dokumente/Tumorprofil/ROS1-Projekt/ROS1-Patientenliste.csv");
+
+    m_file.openForWriting("/home/marcel/Dokumente/Tumorprofil/ROS1-Projekt/Datenbankauswertung.csv");
+    m_file << "id";
+    m_file << "Nachname";
+    m_file << "Vorname";
+    m_file << "Geburtsdatum";
+    m_file << "AlterBeiDiagnose";
+    m_file << "T";
+    m_file << "N";
+    m_file << "M";
+    m_file << "ROS1_IHC";
+    m_file << "ROS1_pos";
+    m_file << "ROS1_FISH_ratio";
+    m_file << "EGFR";
+    m_file << "KRAS";
+    m_file << "PIK3CA";
+    m_file << "BRAF";
+    m_file << "ALK_pos";
+    m_file << "pERK";
+    m_file << "pAKT";
+    m_file << "PTEN";
+    m_file << "PTEN_pos";
+    m_file << "HER2_IHC";
+    m_file << "HER2_pos.";
+    m_file << "HER2_DAKO";
+    m_file << "HER2_FISH";
+    m_file << "MET_overexp";
+    m_file << "MET_Hscore";
+    m_file << "OS";
+    m_file << "OSerreicht";
+    m_file << "Anz_Therapielinien";
+    for (int i=0; i<reportedLines; i++)
+    {
+        m_file << QString("TTF") + QString::number(i+1);
+        m_file << QString("TTF") + QString::number(i+1) + QString("erreicht");
+    }
+    m_file << "Pemetrexed_OS";
+    m_file << "Pemetrexed_OSerreicht";
+    m_file << "Pemetrexed_TTF";
+    m_file << "Pemetrexed_TTFerreicht";
+    m_file.newLine();
+
+    QList<Patient::Ptr> patients;
+    patients += ros1patients;
+    const int size = models.filterModel()->rowCount();
+    for (int i=0; i<size; i++)
+    {
+        Patient::Ptr p = PatientModel::retrievePatient(models.filterModel()->index(i, 0));
+        if (!ros1patients.contains(p))
+        {
+            patients << p;
+        }
+    }
+
+    foreach (const Patient::Ptr& p, patients)
+    {
+        m_currentPatient = p;
+        const Disease& disease = p->firstDisease();
+        const DiseaseHistory& history = disease.history();
+
+        if (p->surname.contains("Dktk"))
+        {
+            continue;
+        }
+
+        /// Metadata
+        m_file << p->id;
+        m_file << p->surname;
+        m_file << p->firstName;
+        m_file << p->dateOfBirth;
+        m_file << (p->dateOfBirth.daysTo(disease.initialDiagnosis) / 365.0);
+        m_file << disease.initialTNM.Tnumber();
+        m_file << disease.initialTNM.Nnumber();
+        TNM::MStatus m = disease.initialTNM.mstatus();
+        if (m == TNM::Mx)
+        {
+            qDebug() << "Mx status for" << p->surname << p->firstName << disease.initialTNM.toText();
+        }
+        if (disease.initialTNM.toText().contains("Mx", Qt::CaseInsensitive))
+        {
+            qDebug() << "Real Mx status for" << p->surname << p->firstName << disease.initialTNM.toText();
+        }
+        m_file << (m == TNM::Mx ? QVariant() : QVariant(int(m)));
+
+        writePathologyProperty(disease, PathologyPropertyInfo::IHC_ROS1);
+        writePathologyProperty(disease, PathologyPropertyInfo::Fish_ROS1);
+        writeDetailValue(disease, PathologyPropertyInfo::Fish_ROS1);
+
+        writePathologyProperty(disease, PathologyPropertyInfo::Mut_EGFR_19_21);
+        writePathologyProperty(disease, PathologyPropertyInfo::Mut_KRAS_2);
+        writePathologyProperty(disease, PathologyPropertyInfo::Mut_PIK3CA_10_21);
+        writePathologyProperty(disease, PathologyPropertyInfo::Mut_BRAF_15);
+        writePathologyProperty(disease, PathologyPropertyInfo::Fish_ALK);
+        writePathologyProperty(disease, PathologyPropertyInfo::IHC_pERK);
+        writePathologyProperty(disease, PathologyPropertyInfo::IHC_pAKT);
+        writePathologyProperty(disease, PathologyPropertyInfo::IHC_PTEN);
+        writeIHCIsPositive(disease, PathologyPropertyInfo::IHC_PTEN);
+
+        writePathologyProperty(disease, PathologyPropertyInfo::IHC_HER2);
+        CombinedValue her2comb(PathologyPropertyInfo::Comb_HER2);
+        her2comb.combine(disease);
+        m_file << her2comb.toValue();
+        QVariant her2Dako = writePathologyProperty(disease, PathologyPropertyInfo::IHC_HER2_DAKO);
+        m_file << her2comb.fishResult(disease);
+
+        CombinedValue metComb(PathologyPropertyInfo::Comb_cMetActivation);
+        metComb.combine(disease);
+        m_file << metComb.toValue();
+        writePathologyProperty(disease, PathologyPropertyInfo::IHC_cMET);
+        /// OS
+        OSIterator osit(disease);
+        osit.setProofreader(this);
+        m_file << osit.days(OSIterator::FromFirstTherapy);
+        m_file << (int)osit.endpointReached();
+
+        if (history.isEmpty())
+        {
+            m_file << QVariant();
+            m_file << QVariant();
+            m_file << QVariant();
+            for (int i=0; i<reportedLines; i++)
+            {
+                m_file << QVariant();
+                m_file << QVariant();
+            }
+            m_file << QVariant();
+            m_file << QVariant();
+            m_file.newLine();
+            continue;
+        }
+
+        NewTreatmentLineIterator treatmentLinesIterator;
+        treatmentLinesIterator.set(history);
+        treatmentLinesIterator.iterateToEnd();
+        QDate lastEndDate = history.begin();
+        QList<QDate> lineDates, ctxLineDates;
+        HistoryElement* firstPemetrexedTherapy = 0;
+        int firstPemetrexedTherapyLine = -1;
+        foreach (const TherapyGroup& group, treatmentLinesIterator.therapies())
+        {
+            if (group.hasChemotherapy())
+            {
+                ctxLineDates << group.beginDate();
+            }
+
+            if (group.hasSubstance("Pemetrexed") && !firstPemetrexedTherapy)
+            {
+                foreach (Therapy*t, group)
+                {
+                    if (t->elements.hasSubstance("Pemetrexed"))
+                    {
+                        firstPemetrexedTherapy = t;
+                        break;
+                    }
+                }
+                firstPemetrexedTherapyLine = ctxLineDates.size() - 1;
+            }
+
+            // skip groups fully contained in another group
+            if (group.effectiveEndDate() > lastEndDate || lastEndDate == history.begin())
+            {
+                lineDates << group.beginDate();
+            }
+            lastEndDate = group.effectiveEndDate();
+        }
+        m_file << ctxLineDates.size();
+        CurrentStateIterator currentStateIterator(history);
+        currentStateIterator.setProofreader(this);
+        QList<int> ttfList; QList<bool> ttfEndpointReachedList;
+        int firstPemTTF = -1; bool firstPemTTFEndpointReached = false;
+        for (int line = 0; line<ctxLineDates.size(); line++)
+        {
+            QDate begin = ctxLineDates[line];
+            QDate end;
+            int reachedEndpoint = 0;
+            if (ctxLineDates.size() > line+1)
+            {
+                end = ctxLineDates[line+1];
+                reachedEndpoint = 1;
+            }
+            else
+            {
+                end = currentStateIterator.effectiveHistoryEnd();
+                if (currentStateIterator.effectiveState() == DiseaseState::Deceased)
+                {
+                    reachedEndpoint = 1;
+                }
+                else
+                {
+                    reachedEndpoint = 0;
+                }
+            }
+            ttfList << begin.daysTo(end);
+            ttfEndpointReachedList << reachedEndpoint;
+
+            if (line == firstPemetrexedTherapyLine)
+            {
+                firstPemTTF = firstPemetrexedTherapy->date.daysTo(end);
+                firstPemTTFEndpointReached = reachedEndpoint;
+            }
+        }
+        for (int line=0; line < reportedLines; line++)
+        {
+            if (line < ttfList.size())
+            {
+                m_file << ttfList[line];
+                m_file << ttfEndpointReachedList[line];
+            }
+            else
+            {
+                m_file << QVariant();
+                m_file << QVariant();
+            }
+        }
+
+        if (firstPemetrexedTherapy)
+        {
+            m_file << osit.days(firstPemetrexedTherapy);
+            m_file << (int)osit.endpointReached();
+            m_file << firstPemTTF;
+            m_file << firstPemTTFEndpointReached;
+        }
+        else
+        {
+            m_file << QVariant();
+            m_file << QVariant();
+            m_file << QVariant();
+            m_file << QVariant();
+        }
+
+        m_file.newLine();
+    }
+
+    m_file.finishWriting();
+}
 
 void AnalysisGenerator::problem(const HistoryElement *, const QString &problem)
 {
