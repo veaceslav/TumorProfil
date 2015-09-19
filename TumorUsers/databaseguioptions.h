@@ -14,6 +14,7 @@ private Q_SLOTS:
     void slotHandleDBTypeIndexChanged();
     void slotSetDatabasePath();
     void slotCheckDatabaseConnection();
+    void slotPopulateTable();
 
 private:
     void setupUi();

@@ -16,12 +16,16 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     databaseconfigelement.cpp \
     userwidget.cpp \
-    databaseguioptions.cpp
+    databaseguioptions.cpp \
+    schemaupdater.cpp \
+    databaseaccess.cpp
 
 HEADERS  += mainwindow.h \
     databaseconfigelement.h \
     userwidget.h \
-    databaseguioptions.h
+    databaseguioptions.h \
+    schemaupdater.h \
+    databaseaccess.h
 
 FORMS    +=
 

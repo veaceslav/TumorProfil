@@ -34,7 +34,7 @@ public:
     QString        originalDbPath;
     QString        originalDbType;
 
-    QLineEdit*     databaseName;
+    QLineEdit*     adminPassword;
     QLineEdit*     databaseNameUsers;
     QLineEdit*     hostName;
     QLineEdit*     connectionOptions;
@@ -148,6 +148,11 @@ void DatabaseGuiOptions::slotCheckDatabaseConnection()
     QSqlDatabase::removeDatabase(databaseID);
 }
 
+void DatabaseGuiOptions::slotPopulateTable()
+{
+
+}
+
 void DatabaseGuiOptions::setupUi()
 {
     QVBoxLayout* const layout  = new QVBoxLayout();
@@ -166,8 +171,8 @@ void DatabaseGuiOptions::setupUi()
     QLabel* const databaseTypeLabel     = new QLabel(tr("Type"));
     d->databaseType                     = new QComboBox();
 
-    QLabel* const databaseNameLabel     = new QLabel(tr("Schema Name"));
-    d->databaseName                     = new QLineEdit();
+    QLabel* const adminPasswordLabel     = new QLabel(tr("Admin Password"));
+    d->adminPassword                     = new QLineEdit();
     QLabel* const databaseNameUsersLabel= new QLabel(tr("Username<br>Schema Name"));
     d->databaseNameUsers                = new QLineEdit();
     QLabel* const hostNameLabel         = new QLabel(tr("Host Name"));
@@ -187,6 +192,7 @@ void DatabaseGuiOptions::setupUi()
     d->password->setEchoMode(QLineEdit::Password);
 
     QPushButton* const checkDatabaseConnectionButton = new QPushButton(tr("Check DB Connection"));
+    QPushButton* const connectAndListUsers = new QPushButton(tr("List Users"));
 
     d->expertSettings                                = new QGroupBox();
     d->expertSettings->setFlat(true);
@@ -196,20 +202,21 @@ void DatabaseGuiOptions::setupUi()
 
     expertSettinglayout->addRow(hostNameLabel, d->hostName);
     expertSettinglayout->addRow(hostPortLabel, d->hostPort);
-    expertSettinglayout->addRow(databaseNameLabel, d->databaseName);
+    expertSettinglayout->addRow(adminPasswordLabel, d->adminPassword);
     expertSettinglayout->addRow(databaseNameUsersLabel, d->databaseNameUsers);
     expertSettinglayout->addRow(userNameLabel, d->userName);
     expertSettinglayout->addRow(passwordLabel, d->password);
     expertSettinglayout->addRow(connectionOptionsLabel, d->connectionOptions);
 
     expertSettinglayout->addWidget(checkDatabaseConnectionButton);
+    expertSettinglayout->addWidget(connectAndListUsers);
 
     vlay->addWidget(databaseTypeLabel);
     vlay->addWidget(d->databaseType);
     vlay->addLayout(pathLayout);
     vlay->addWidget(d->expertSettings);
-    vlay->setSpacing(0);
-    vlay->setMargin(QApplication::style()->pixelMetric(QStyle::PM_DefaultLayoutSpacing));
+//    vlay->setSpacing(0);
+//    vlay->setMargin(QApplication::style()->pixelMetric(QStyle::PM_DefaultLayoutSpacing));
     dbPathBox->setLayout(vlay);
 
     // --------------------------------------------------------
