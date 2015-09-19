@@ -116,6 +116,18 @@ QStringList TherapyElementList::substances() const
     return substances;
 }
 
+bool TherapyElementList::hasSubstance(const QString& substance) const
+{
+    foreach (const Chemotherapy* ctx, filtered<Chemotherapy>())
+    {
+        if (ctx->substance.compare(substance, Qt::CaseInsensitive) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 TherapyElementList& TherapyElementList::operator<<(TherapyElement* elem)
 {
     elem->setParent(m_parent);

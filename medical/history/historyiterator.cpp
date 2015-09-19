@@ -272,10 +272,19 @@ int OSIterator::days(Definition definition) const
         }
         break;
     }
+    return days(begin);
+}
+
+int OSIterator::days(HistoryElement* from) const
+{
+    return days(from->date);
+}
+
+int OSIterator::days(const QDate& begin) const
+{
     if (!begin.isValid())
     {
         reportProblem(0, QString("Invalid begin date")
-                       + QString::number(definition)
                        + initialDiagnosis.toString());
         return -1;
     }
@@ -309,6 +318,10 @@ int OSIterator::days(Definition definition) const
     else
     {
         reportProblem(0, "Empty history, no OS");
+    }
+    if (end < begin)
+    {
+        reportProblem(0, "The given begin date is beyond the endpoint");
     }
     return begin.daysTo(end);
 }
@@ -704,6 +717,18 @@ QSet<QString> TherapyGroup::substances() const
         }
     }
     return therapies;
+}
+
+bool TherapyGroup::hasSubstance(const QString& substance) const
+{
+    foreach (const Therapy*t, *this)
+    {
+        if (t->elements.hasSubstance(substance))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 QDate TherapyGroup::beginDate() const

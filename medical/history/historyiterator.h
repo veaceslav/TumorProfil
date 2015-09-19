@@ -129,12 +129,16 @@ public:
     };
 
     int days(Definition definition = FromInitialDiagnosis) const;
+    int days(HistoryElement* from) const;
     bool endpointReached() const;
     float months(Definition definition = FromInitialDiagnosis) const;
 
     virtual bool isInterested(HistoryElement* element);
     virtual bool visit(HistoryElement* element);
+
 protected:
+
+    int days(const QDate& begin) const;
     virtual void restarting();
 
     QDate initialDiagnosis;
@@ -211,6 +215,7 @@ public:
     QDate effectiveEndDate() const;
     QSet<QString> substances() const;
     bool hasChemotherapy() const;
+    bool hasSubstance(const QString& substance) const;
 
 protected:
 

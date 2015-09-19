@@ -624,7 +624,7 @@ QVariant ValueTypeCategoryInfo::toVariantData(const Property& prop) const
         {
             return QVariant();
         }
-        else if (score == QVariant::Int)
+        else if (score.type() == QVariant::Int)
         {
             return score;
         }

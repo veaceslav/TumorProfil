@@ -3,7 +3,7 @@ ihc-global
 ihc-cmet
 (?|(?<strong>\d+)\s*%ige|(?<strong>)Keine) starke(?|, (?<medium>\d+)\s*%ige mäßige|(?<medium>), keine mäßige)?(?| und (?<weak>\d+)\s*%ige schwache|(?<weak>) und keine schwache)? zytoplasmatische und membranöse Reaktivität mit dem Antikörper gegen\s+c-MET\s+\(H-Score:\s*(?<score>\d+)\)
 patient-id
-^(?<name>[\w -äöüÄÖÜß]+),\s*(?<firstName>[\w -äöüÄÖÜß]+)(?:, UE \*| \*)(?<day>\d\d).(?<month>\d\d).(?<year>\d\d\d\d)\s+(?<refNumber>[RE]\d+\/\d+)\ vom\s+(?<refday>\d\d).(?<refmonth>\d\d).(?<refyear>\d\d\d\d)$
+^(?<name>[\w \-äöüÄÖÜß]+),\s*(?<firstName>[\w \-äöüÄÖÜß]+)(?:, UE \*| \*)(?<day>\d\d).(?<month>\d\d).(?<year>\d\d\d\d)\s+(?<refNumber>[RE]\d+\/\d+)\ vom\s+(?<refday>\d\d).(?<refmonth>\d\d).(?<refyear>\d\d\d\d)$
 ngs-table-header
 Gen\s+Untersuchte Exone\s+Mutation\s+DNA-Ebene\s+Protein-Ebene\s+Frequenz
 ngs-table-protein
