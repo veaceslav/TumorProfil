@@ -16,13 +16,9 @@ public:
     ~MainWindow();
 
 private Q_SLOTS:
-    void slotHandleDBTypeIndexChanged();
-    void slotSetDatabasePath();
-    void slotCheckDatabaseConnection();
 
 private:
     void setupUi();
-    void setupParameters();
     class Private;
     Private* d;
 };
