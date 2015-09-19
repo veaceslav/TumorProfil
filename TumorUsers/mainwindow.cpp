@@ -15,6 +15,7 @@
 #include <QMessageBox>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QDesktopWidget>
 
 #include "databaseconfigelement.h"
 #include "databaseguioptions.h"
@@ -34,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), d(new Private())
 {
     setupUi();
+    resize(QDesktopWidget().availableGeometry(this).size() * 0.7);
 }
 
 MainWindow::~MainWindow()
@@ -47,8 +49,8 @@ void MainWindow::setupUi()
     DatabaseGuiOptions* dbGui = new DatabaseGuiOptions(widget);
     UserWidget* userW         = new UserWidget(widget);
 
-    hbox->addWidget(dbGui);
-    hbox->addWidget(userW);
+    hbox->addWidget(dbGui,2);
+    hbox->addWidget(userW,6);
     this->setCentralWidget(widget);
 }
 

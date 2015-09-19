@@ -11,6 +11,10 @@ GRANT ALL ON wpblog.* TO wpuser@localhost IDENTIFIED BY 'foobar';
 
 mysql -u wpuser -p wpblog
 
+create user:
+
+CREATE USER 'jeffrey'@'localhost' IDENTIFIED BY 'mypass';
+
 ##Troubleshooting:
 
 Error when TumorProfil creates tables:

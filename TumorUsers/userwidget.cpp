@@ -14,6 +14,7 @@ public:
     }
     QTableWidget* tableView;
     QStandardItemModel* tableModel;
+    QStringList headerLabelsList;
 
 };
 
@@ -35,21 +36,19 @@ void UserWidget::setupUi()
     d->tableView = new QTableWidget(this);
     d->tableView->setColumnCount(5);
     lay->addWidget(d->tableView);
-//    d->tableModel = new QStandardItemModel(this);
-    //    d->tableView->setModel(d->tableModel);
 }
 
 void UserWidget::setTableHeader()
 {
     QStringList lst;
 
-    lst << "Name"
-        << "Group"
-        << "Password Hash"
-        << "Salt"
-        << "Encrypted Key";
-    d->tableView->setHorizontalHeaderLabels(lst);
+    d->headerLabelsList << tr("Number")
+                        << tr("Name")
+                        << tr("Group")
+                        << tr("Password Hash")
+                        << tr("Salt")
+                        << tr("Encrypted Key");
 
-
+    d->tableView->setHorizontalHeaderLabels(d->headerLabelsList);
 }
 
