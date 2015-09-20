@@ -48,7 +48,6 @@ private:
     bool createDatabase();
     bool createTables();
     bool createIndices();
-    bool createTriggers();
     bool updateV1ToV2();
 
 private:

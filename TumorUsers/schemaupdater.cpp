@@ -196,8 +196,7 @@ bool SchemaUpdater::makeUpdates()
 bool SchemaUpdater::createDatabase()
 {
     if ( createTables()
-         && createIndices()
-         && createTriggers())
+         && createIndices())
     {
         m_currentVersion = schemaVersion();
         m_currentRequiredVersion = 1;
@@ -211,7 +210,7 @@ bool SchemaUpdater::createDatabase()
 
 bool SchemaUpdater::createTables()
 {
-//    return m_access->backend()->execDBAction(m_access->backend()->getDBAction(QString("CreateDB")));
+//    return DatabaseAccess::instance()->execDBAction(m_access->backend()->getDBAction(QString("CreateDB")));
 }
 
 bool SchemaUpdater::createIndices()
@@ -219,10 +218,6 @@ bool SchemaUpdater::createIndices()
 //    return m_access->backend()->execDBAction(m_access->backend()->getDBAction("CreateDBIndices"));
 }
 
-bool SchemaUpdater::createTriggers()
-{
-//    return m_access->backend()->execDBAction(m_access->backend()->getDBAction("CreateDBTrigger"));
-}
 
 bool SchemaUpdater::updateV1ToV2()
 {
