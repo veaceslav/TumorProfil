@@ -16,6 +16,7 @@
 #include <QSqlQuery>
 
 #include "databaseconfigelement.h"
+#include "databaseparameters.h"
 
 
 class DatabaseGuiOptions::Private
@@ -43,13 +44,13 @@ public:
 
     QComboBox*     databaseType;
     QSpinBox*      hostPort;
-    DatabaseConfigElement conf;
+    DatabaseParameters conf;
 };
 DatabaseGuiOptions::DatabaseGuiOptions(QWidget *parent) :
     QWidget(parent), d(new Private())
 {
     setupUi();
-    d->conf = DatabaseConfigElement::element("QMYSQL");
+//    d->conf.defaultParameters(QLatin1String("QMYSQL"));
     setupParameters();
     d->databaseType->setCurrentIndex(1); // Make MqSql Default
     slotHandleDBTypeIndexChanged();
@@ -257,9 +258,11 @@ void DatabaseGuiOptions::setupUi()
 
 void DatabaseGuiOptions::setupParameters()
 {
+    d->conf = d->conf.defaultParameters(QLatin1String("QMYSQL"));
+
     d->databaseNameUsers->setText(d->conf.databaseName);
     d->hostName->setText(d->conf.hostName);
-    d->hostPort->setValue(d->conf.port.toInt());
+    d->hostPort->setValue(d->conf.port);
     d->userName->setText(d->conf.userName);
     d->password->setText(d->conf.password);
 }
