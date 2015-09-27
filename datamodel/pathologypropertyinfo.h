@@ -135,6 +135,9 @@ public:
 
     static PathologyPropertyInfo info(Property property);
     static PathologyPropertyInfo info(const QString& id);
+    static QList<PathologyPropertyInfo> allInfosWithType(ValueTypeCategory category);
+    static QList<PathologyPropertyInfo> allMutations() { return allInfosWithType(Mutation); }
+    static QList<PathologyPropertyInfo> allFish() { return allInfosWithType(Fish); }
 };
 
 class ValueTypeCategoryInfo
