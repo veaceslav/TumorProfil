@@ -74,41 +74,38 @@ QList<Property> ActionableResultChecker::fields(const PathologyPropertyInfo& inf
 
 void ActionableResultChecker::fillFields(const Disease &disease)
 {
-    positiveFields << PathologyPropertyInfo::Mut_PIK3CA_10_21
-                   << PathologyPropertyInfo::Mut_PTEN
-                   << PathologyPropertyInfo::Fish_HER2
-                   << PathologyPropertyInfo::Fish_PIK3CA
-                   << PathologyPropertyInfo::Comb_cMetActivation
-                   << PathologyPropertyInfo::Fish_ROS1
-                   << PathologyPropertyInfo::Fish_FGFR1;
+    positiveFields << PathologyPropertyInfo::Comb_cMetActivation
+                   << PathologyPropertyInfo::Comb_HER2;
+
     if (flags & IncludePTEN)
     {
         negativeFields << PathologyPropertyInfo::IHC_PTEN;
     }
 
+    QList<PathologyPropertyInfo> alwaysActionable = PathologyPropertyInfo::allMutations() + PathologyPropertyInfo::allFish();
+    foreach (const PathologyPropertyInfo& info, alwaysActionable)
+    {
+        if (!flags & IncludeRAS)
+        {
+            if (info.property == PathologyPropertyInfo::Mut_KRAS_2 ||
+                info.property == PathologyPropertyInfo::Mut_KRAS_3 ||
+                info.property == PathologyPropertyInfo::Mut_KRAS_4 ||
+                info.property == PathologyPropertyInfo::Mut_NRAS_2_4)
+            {
+                continue;
+            }
+        }
+        positiveFields << info.property;
+    }
+
     switch (disease.entity())
     {
     case Pathology::PulmonarySquamous:
-        positiveFields << PathologyPropertyInfo::Mut_DDR2
-                       << PathologyPropertyInfo::Fish_FGFR1;
     case Pathology::PulmonaryAdeno:
     case Pathology::PulmonaryBronchoalveloar:
     case Pathology::PulmonaryAdenosquamous:
-        positiveFields << PathologyPropertyInfo::Comb_HER2;
     case Pathology::ColorectalAdeno:
-        positiveFields << PathologyPropertyInfo::Mut_EGFR_18_20
-                       << PathologyPropertyInfo::Mut_EGFR_19_21
-                       << PathologyPropertyInfo::Mut_BRAF_11
-                       << PathologyPropertyInfo::Mut_BRAF_15
-                       << PathologyPropertyInfo::Fish_ALK;
-        if (flags & IncludeKRAS)
-        {
-            positiveFields
-                    << PathologyPropertyInfo::Mut_KRAS_2
-                    << PathologyPropertyInfo::Mut_KRAS_3
-                    << PathologyPropertyInfo::Mut_KRAS_4
-                    << PathologyPropertyInfo::Mut_NRAS_2_4;
-        }
+        // nothing special to consider
         break;
     case Pathology::Breast:
         if (flags & IncludeReceptorStatus)
