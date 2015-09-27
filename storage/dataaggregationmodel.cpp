@@ -40,7 +40,7 @@ public:
     DataAggregationModelPriv()
         : sourceModel(0),
           recomputeTimer(0),
-          actionableResultsFlags(ActionableResultChecker::IncludeKRAS | ActionableResultChecker::IncludePTEN)
+          actionableResultsFlags(ActionableResultChecker::IncludeRAS | ActionableResultChecker::IncludePTEN)
                              //  | ActionableResultChecker::IncludeReceptorStatus)
     {
     }
