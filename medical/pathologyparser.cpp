@@ -48,13 +48,21 @@ PatientParseResults::PatientParseResults(Patient::Ptr p)
 {
 }
 
+static bool isSamePatient(const Patient& a, const Patient& b)
+{
+    // Ignores gender (may be unknown)
+    return a.surname == b.surname &&
+            a.firstName == b.firstName &&
+            a.dateOfBirth == b.dateOfBirth;
+}
+
 bool PatientParseResults::operator==(const Patient& other) const
 {
     if (patient)
     {
-        return *patient == other;
+        return isSamePatient(*patient, other);
     }
-    return patientData == other;
+    return isSamePatient(patientData, other);
 }
 
 
@@ -451,7 +459,7 @@ QList<Property> PathologyParser::parseNGSText(const QString& protein, const QStr
     }
 
     // mutation positive. Possibly, multiple exons.
-    QRegularExpression exonRegExp("Exon (\\d+(?:\\s*,\\s*\\d+)+)");
+    QRegularExpression exonRegExp("Exon (\\d+(?:\\s*,\\s*\\d+)*)");
     QRegularExpressionMatchIterator it = exonRegExp.globalMatch(text);
     while (it.hasNext())
     {
@@ -486,10 +494,10 @@ QList<Property> PathologyParser::parseNGSText(const QString& protein, const QStr
 
             }
             // consolidate whitespace and \n's
-            prop.detail.replace(QRegularExpression("\\s+"), " ");
+            prop.detail.replace('\n', " ");
+            prop.detail.replace(QRegularExpression("\\s{2,}"), " ");
             prop.detail.replace(" %", "%");
-            prop.detail = mutationText.trimmed();
-
+            prop.detail = prop.detail.trimmed();
         }
     }
     return props;
