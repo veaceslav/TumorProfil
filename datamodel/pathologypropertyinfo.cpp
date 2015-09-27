@@ -213,6 +213,19 @@ PathologyPropertyInfo PathologyPropertyInfo::info(const QString& id)
     return PathologyPropertyInfo();
 }
 
+QList<PathologyPropertyInfo> PathologyPropertyInfo::allInfosWithType(ValueTypeCategory category)
+{
+    QList<PathologyPropertyInfo> infos;
+    for (int i = FirstProperty; i<= LastProperty; i++)
+    {
+        PathologyPropertyInfo obj = info((Property)i);
+        if (obj.valueType == category)
+        {
+            return infos << obj;
+        }
+    }
+    return infos;
+}
 
 ValueTypeCategoryInfo::ValueTypeCategoryInfo(PathologyPropertyInfo::ValueTypeCategory category)
     : category(category)
