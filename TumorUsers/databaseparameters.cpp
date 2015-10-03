@@ -110,7 +110,6 @@ bool DatabaseParameters::isValid() const
         bool check = true;
 
         check &= !databaseName.isEmpty();
-        check &= !databaseNameThumbnails.isEmpty();
         check &= (port != 0);
         check &= !hostName.isEmpty();
         check &= !userName.isEmpty();

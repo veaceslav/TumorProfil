@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QPointer>
 
+#include "databaseparameters.h"
+
 class DatabaseAccess : public QObject
 {
     Q_OBJECT
@@ -28,6 +30,8 @@ public:
     };
 
     static DatabaseAccess* instance();
+
+    bool openDb(DatabaseParameters params);
     bool executeDBAction(QString actionName, QMap<QString, QVariant> bindingMap);
     void setConfigElement(QString type);
 

@@ -17,6 +17,7 @@
 
 #include "databaseconfigelement.h"
 #include "databaseparameters.h"
+#include "databaseaccess.h"
 
 
 class DatabaseGuiOptions::Private
@@ -91,62 +92,26 @@ void DatabaseGuiOptions::slotSetDatabasePath()
 
 void DatabaseGuiOptions::slotCheckDatabaseConnection()
 {
-    qApp->setOverrideCursor(Qt::WaitCursor);
-    QString databaseID(QLatin1String("TumorDbConnectionTest"));
 
+    DatabaseParameters params;
+
+    params.databaseType = d->databaseType->currentData().toString();
+    params.databaseName = d->databaseNameUsers->text();
+    params.hostName = d->hostName->text();
+    params.port     = d->hostPort->value();
+    params.userName = d->userName->text();
+    params.password = d->password->text();
+    params.connectOptions = d->connectionOptions->text();
+
+    if(!params.isValid())
     {
+        QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
+                              tr("Database connection test was not successful. <p>Error was: Parameters are not valid </p>") );
 
-        QSqlDatabase testDatabase     = QSqlDatabase::addDatabase(d->databaseType->currentData().toString(),
-                                                                  databaseID);
-
-        if(!testDatabase.isValid())
-        {
-            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
-                                  tr("Database connection test was not successful. <p>Error was:" +
-                                       testDatabase.lastError().text().toLatin1() +  "</p>") );
-
-            return;
-        }
-
-        testDatabase.setHostName(d->hostName->text());
-        testDatabase.setPort(d->hostPort->value());
-        testDatabase.setUserName(d->userName->text());
-        testDatabase.setPassword(d->password->text());
-        testDatabase.setConnectOptions(d->connectionOptions->text());
-
-        qApp->restoreOverrideCursor();
-
-        testDatabase.setDatabaseName(d->databaseNameUsers->text());
-
-        bool result = testDatabase.open();
-
-        if (!result)
-        {
-            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
-                                  tr("Database connection test was not successful. <p>Error was:" +
-                                       testDatabase.lastError().text().toLatin1() +  "</p>") );
-        }
-
-        QSqlQuery* testQuery = new QSqlQuery(testDatabase);
-        testQuery->prepare(QLatin1String("show tables"));
-
-        result = testQuery->exec();
-
-        if (result)
-        {
-            QMessageBox::information(qApp->activeWindow(), tr("Database connection test"),
-                                     tr("Database connection test successful."));
-        }
-        else
-        {
-            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
-                                  tr("Database connection test was not successful. <p>Error was:" +
-                                       testQuery->lastError().text().toLatin1() +  "</p>") );
-        }
-
-        testDatabase.close();
+        return;
     }
-    QSqlDatabase::removeDatabase(databaseID);
+
+    DatabaseAccess::instance()->openDb(params);
 }
 
 void DatabaseGuiOptions::slotPopulateTable()
