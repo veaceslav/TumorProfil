@@ -10,14 +10,13 @@
 #include <QFormLayout>
 #include <QApplication>
 #include <QFileDialog>
-#include <QSqlDatabase>
 #include <QMessageBox>
-#include <QSqlError>
-#include <QSqlQuery>
+#include <QDebug>
 
 #include "databaseconfigelement.h"
 #include "databaseparameters.h"
 #include "databaseaccess.h"
+#include "schemaupdater.h"
 
 
 class DatabaseGuiOptions::Private
@@ -111,12 +110,15 @@ void DatabaseGuiOptions::slotCheckDatabaseConnection()
         return;
     }
 
-    DatabaseAccess::instance()->openDb(params);
+    bool connected = DatabaseAccess::instance()->openDb(params);
+
+    if(connected)
+        slotPopulateTable();
 }
 
 void DatabaseGuiOptions::slotPopulateTable()
 {
-
+    qDebug() << "Connection is established";
 }
 
 void DatabaseGuiOptions::setupUi()

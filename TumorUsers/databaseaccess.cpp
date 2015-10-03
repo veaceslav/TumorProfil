@@ -10,14 +10,21 @@
 
 QPointer<DatabaseAccess> DatabaseAccess::internalPtr = QPointer<DatabaseAccess>();
 
+namespace
+{
+QString DATABASE_CONNECTION_NAME = QLatin1String("TUMOR_USERS");
+}
+
 class DatabaseAccess::Private
 {
 public:
     Private()
     {
-
+        isActive = false;
     }
     DatabaseConfigElement conf;
+    QSqlDatabase database;
+    bool isActive;
 };
 DatabaseAccess* DatabaseAccess::instance()
 {
@@ -29,43 +36,49 @@ DatabaseAccess* DatabaseAccess::instance()
 
 bool DatabaseAccess::openDb(DatabaseParameters params)
 {
+    d->isActive = false;
     qApp->setOverrideCursor(Qt::WaitCursor);
-    QString databaseID(QLatin1String("TumorDbConnectionTest"));
+    QString databaseID(DATABASE_CONNECTION_NAME);
 
     {
 
-        QSqlDatabase testDatabase     = QSqlDatabase::addDatabase(params.databaseType,
+        d->database = QSqlDatabase::addDatabase(params.databaseType,
                                                                   databaseID);
 
-        if(!testDatabase.isValid())
+        if(!d->database.isValid())
         {
             QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
                                   tr("Database connection test was not successful. <p>Error was:" +
-                                       testDatabase.lastError().text().toLatin1() +  "</p>") );
+                                       d->database.lastError().text().toLatin1() +  "</p>") );
 
+            d->isActive = false;
             return false;
         }
 
-        testDatabase.setHostName(params.hostName);
-        testDatabase.setPort(params.port);
-        testDatabase.setUserName(params.userName);
-        testDatabase.setPassword(params.password);
-        testDatabase.setConnectOptions(params.connectOptions);
+        d->database.setHostName(params.hostName);
+        d->database.setPort(params.port);
+        d->database.setUserName(params.userName);
+        d->database.setPassword(params.password);
+        d->database.setConnectOptions(params.connectOptions);
 
         qApp->restoreOverrideCursor();
 
-        testDatabase.setDatabaseName(params.databaseName);
+        d->database.setDatabaseName(params.databaseName);
 
-        bool result = testDatabase.open();
+        bool result = d->database.open();
 
         if (!result)
         {
             QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
                                   tr("Database connection test was not successful. <p>Error was:" +
-                                       testDatabase.lastError().text().toLatin1() +  "</p>") );
+                                       d->database.lastError().text().toLatin1() +  "</p>") );
+            d->isActive = false;
+            d->database.close();
+            QSqlDatabase::removeDatabase(databaseID);
+
         }
 
-        QSqlQuery* testQuery = new QSqlQuery(testDatabase);
+        QSqlQuery* testQuery = new QSqlQuery(d->database);
         testQuery->prepare(QLatin1String("show tables"));
 
         result = testQuery->exec();
@@ -74,18 +87,19 @@ bool DatabaseAccess::openDb(DatabaseParameters params)
         {
             QMessageBox::information(qApp->activeWindow(), tr("Database connection test"),
                                      tr("Database connection test successful."));
+            d->isActive = true;
         }
         else
         {
             QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
                                   tr("Database connection test was not successful. <p>Error was:" +
                                        testQuery->lastError().text().toLatin1() +  "</p>") );
+            d->isActive = false;
+            d->database.close();
+            QSqlDatabase::removeDatabase(databaseID);
         }
-
-        testDatabase.close();
     }
-    QSqlDatabase::removeDatabase(databaseID);
-    return true;
+    return d->isActive;
 }
 
 bool DatabaseAccess::executeDBAction(QString actionName, QMap<QString, QVariant> bindingMap)

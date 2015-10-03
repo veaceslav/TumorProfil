@@ -79,6 +79,7 @@ bool SchemaUpdater::update()
 
 bool SchemaUpdater::startUpdates()
 {
+
     // First step: do we have an empty database?
 //    QStringList tables = m_access->backend()->tables();
 //    QStringList tables;
