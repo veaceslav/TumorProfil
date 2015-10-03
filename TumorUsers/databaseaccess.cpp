@@ -127,8 +127,9 @@ bool DatabaseAccess::executeDBAction(QString actionName, QMap<QString, QVariant>
     foreach(const DatabaseActionElement& actionElement, action.dbActionElements)
     {
 //        DatabaseCoreBackend::QueryState result;
-        QueryStateEnum result;
+        QueryStateEnum result = DatabaseAccess::NoErrors;
 
+//        qDebug() << "Executing statement " << actionElement.statement << " " << actionElement.mode;
         if (actionElement.mode == QString("query"))
         {
             result = executeSql(actionElement.statement, bindingMap);
@@ -183,6 +184,11 @@ QStringList DatabaseAccess::tables()
     return tableList;
 }
 
+bool DatabaseAccess::setSetting(QString setting, QVariant value)
+{
+
+}
+
 QString DatabaseAccess::setting(QString value)
 {
     QSqlQuery* query = new QSqlQuery(d->database);
@@ -206,10 +212,28 @@ DatabaseAccess::QueryStateEnum DatabaseAccess::executeSql(QString query, QMap<QS
     return DatabaseAccess::NoErrors;
 }
 
-DatabaseAccess::QueryStateEnum DatabaseAccess::executeDirectSql(QString query, QMap<QString, QVariant> bindValues)
+DatabaseAccess::QueryStateEnum DatabaseAccess::executeDirectSql(QString queryString, QMap<QString, QVariant> bindValues)
 {
 
-    return DatabaseAccess::NoErrors;
+    QSqlQuery* query = new QSqlQuery(d->database);
+    query->prepare(queryString);
+
+    for(QMap<QString, QVariant>::iterator it = bindValues.begin(); it !=bindValues.end(); ++it)
+    {
+        query->bindValue(it.key(),it.value());
+    }
+
+    int result = query->exec();
+
+    if(result)
+    {
+        return DatabaseAccess::NoErrors;
+    }
+    else
+    {
+        qDebug() << "Error:" << query->lastError().text().toLatin1();
+        return DatabaseAccess::SQLError;
+    }
 }
 
 DatabaseAccess::DatabaseAccess()

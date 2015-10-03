@@ -241,7 +241,9 @@ bool SchemaUpdater::createDatabase()
 
 bool SchemaUpdater::createTables()
 {
-//    return DatabaseAccess::instance()->execDBAction(m_access->backend()->getDBAction(QString("CreateDB")));
+    QMap<QString, QVariant> bindingMap;
+
+    return DatabaseAccess::instance()->executeDBAction(QLatin1String("CreateDB"),bindingMap);
 }
 
 bool SchemaUpdater::createIndices()

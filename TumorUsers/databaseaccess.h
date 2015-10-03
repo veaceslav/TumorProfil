@@ -37,10 +37,11 @@ public:
     void setConfigElement(QString type);
 
     QStringList tables();
+    bool        setSetting(QString setting, QVariant value);
     QString     setting(QString value);
 
     QueryStateEnum executeSql(QString query, QMap<QString, QVariant> bindValues);
-    QueryStateEnum executeDirectSql(QString query, QMap<QString, QVariant> bindValues);
+    QueryStateEnum executeDirectSql(QString queryString, QMap<QString, QVariant> bindValues);
 
 protected:
     DatabaseAccess();

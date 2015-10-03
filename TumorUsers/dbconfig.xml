@@ -120,7 +120,7 @@
                  CREATE TABLE Users
                  (id INTEGER PRIMARY KEY AUTO_INCREMENT,
                   name TEXT,
-                  group TEXT,
+                  usergroup TEXT,
                   passwordHash TEXT,
                   passwordSalt TEXT,
                   adminUserHash TEXT,
@@ -130,7 +130,7 @@
                 <statement mode="plain">
                  CREATE TABLE Settings
                  (keyword varchar(150) NOT NULL UNIQUE,
-                  value TEXT)
+                  value TEXT);
                 </statement>
             </dbaction>
 
