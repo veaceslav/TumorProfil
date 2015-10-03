@@ -33,6 +33,7 @@
 // Local includes
 
 #include "databaseconfigelement.h"
+#include "databaseaccess.h"
 
 //#include "databasecorebackend.h"
 //#include "databasetransaction.h"
@@ -80,6 +81,35 @@ bool SchemaUpdater::update()
 bool SchemaUpdater::startUpdates()
 {
 
+    if(!DatabaseAccess::instance()->isOpen())
+        return false;
+
+    QStringList tables = DatabaseAccess::instance()->tables();
+    foreach(QString str, tables)
+        qDebug() << "Got table ++++" << str;
+
+    if(tables.contains("Users",Qt::CaseInsensitive)
+       && tables.contains("Settings", Qt::CaseInsensitive))
+    {
+        QString version = DatabaseAccess::instance()->setting("DBVersion");
+        QString versionRequired = DatabaseAccess::instance()->setting("DBVersionRequired");
+
+        if(version.isEmpty())
+        {
+            qWarning() << "DBVersion not available! Giving up schema upgrading.";
+            QString errorMsg = QObject::tr(
+                        "The database is not valid: "
+                        "the \"DBVersion\" setting does not exist. "
+                        "The current database schema version cannot be verified. "
+                        "Try to start with an empty database. "
+                        );
+            return false;
+        }
+    }
+    else
+    {
+        createDatabase();
+    }
     // First step: do we have an empty database?
 //    QStringList tables = m_access->backend()->tables();
 //    QStringList tables;

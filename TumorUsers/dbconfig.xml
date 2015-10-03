@@ -117,53 +117,16 @@
         <dbactions>
             <dbaction name="CreateDB">
                 <statement mode="plain">
-                 CREATE TABLE Patients
+                 CREATE TABLE Users
                  (id INTEGER PRIMARY KEY AUTO_INCREMENT,
-                  firstName TEXT,
-                  surname TEXT,
-                  dateOfBirth DATETIME,
-                  gender INTEGER);
-                </statement>
-                <statement mode="plain">
-                 CREATE TABLE PatientProperties
-                 (patientid INTEGER,
-                  property TEXT,
-                  value TEXT,
-                  detail TEXT);
+                  name TEXT,
+                  group TEXT,
+                  passwordHash TEXT,
+                  passwordSalt TEXT,
+                  adminUserHash TEXT,
+                  encryptedKey  TEXT);
                 </statement>
 
-                <statement mode="plain">
-                 CREATE TABLE Diseases
-                 (id INTEGER PRIMARY KEY AUTO_INCREMENT,
-                  patientid INTEGER,
-                  initialDiagnosis DATETIME,
-                  cTNM TEXT,
-                  pTNM TEXT);
-                </statement>
-                <statement mode="plain">
-                 CREATE TABLE DiseaseProperties
-                 (diseaseid INTEGER,
-                  property TEXT,
-                  value TEXT,
-                  detail TEXT);
-                </statement>
-
-                <statement mode="plain">
-                 CREATE TABLE Pathologies
-                 (id INTEGER PRIMARY KEY AUTO_INCREMENT,
-                  diseaseid INTEGER,
-                  entity INTEGER,
-                  sampleOrigin INTEGER,
-                  context TEXT,
-                  date DATETIME);
-                </statement>
-                <statement mode="plain">
-                 CREATE TABLE PathologyProperties
-                 (pathologyid INTEGER PRIMARY KEY AUTO_INCREMENT,
-                  property TEXT,
-                  value TEXT,
-                  detail TEXT);
-                </statement>
                 <statement mode="plain">
                  CREATE TABLE Settings
                  (keyword varchar(150) NOT NULL UNIQUE,

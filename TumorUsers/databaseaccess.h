@@ -32,8 +32,12 @@ public:
     static DatabaseAccess* instance();
 
     bool openDb(DatabaseParameters params);
+    bool isOpen();
     bool executeDBAction(QString actionName, QMap<QString, QVariant> bindingMap);
     void setConfigElement(QString type);
+
+    QStringList tables();
+    QString     setting(QString value);
 
     QueryStateEnum executeSql(QString query, QMap<QString, QVariant> bindValues);
     QueryStateEnum executeDirectSql(QString query, QMap<QString, QVariant> bindValues);

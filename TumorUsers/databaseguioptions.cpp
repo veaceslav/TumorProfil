@@ -118,6 +118,9 @@ void DatabaseGuiOptions::slotCheckDatabaseConnection()
 
 void DatabaseGuiOptions::slotPopulateTable()
 {
+    SchemaUpdater schemaUpdate(DatabaseAccess::instance());
+
+    schemaUpdate.update();
     qDebug() << "Connection is established";
 }
 

@@ -102,6 +102,11 @@ bool DatabaseAccess::openDb(DatabaseParameters params)
     return d->isActive;
 }
 
+bool DatabaseAccess::isOpen()
+{
+    return d->isActive;
+}
+
 bool DatabaseAccess::executeDBAction(QString actionName, QMap<QString, QVariant> bindingMap)
 {
     DatabaseAction action = d->conf.sqlStatements.value(actionName);
@@ -158,6 +163,41 @@ bool DatabaseAccess::executeDBAction(QString actionName, QMap<QString, QVariant>
 void DatabaseAccess::setConfigElement(QString type)
 {
     d->conf = DatabaseConfigElement::element(type);
+}
+
+QStringList DatabaseAccess::tables()
+{
+    QStringList tableList;
+
+    QSqlQuery* query = new QSqlQuery(d->database);
+    query->prepare(QLatin1String("show tables"));
+
+    int result = query->exec();
+
+    if(result)
+    {
+        while(query->next()){
+            tableList.append(query->value(0).toString());
+        }
+    }
+    return tableList;
+}
+
+QString DatabaseAccess::setting(QString value)
+{
+    QSqlQuery* query = new QSqlQuery(d->database);
+    query->prepare(QLatin1String("Select value from Settings where keyword=?"));
+    query->bindValue(0, value);
+
+    int result = query->exec();
+
+    if(result)
+    {
+        while(query->next()){
+            return QString(query->value(0).toString());
+        }
+    }
+    return QString();
 }
 
 DatabaseAccess::QueryStateEnum DatabaseAccess::executeSql(QString query, QMap<QString, QVariant> bindValues )
