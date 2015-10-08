@@ -113,6 +113,7 @@ void RegExpContainer::load()
         qDebug() << "Failed to open regexp file" << file.fileName() <<" - Parsing will not work!";
     }
     QTextStream stream(&file);
+    stream.setCodec("UTF-8");
     QString line;
     RegExpVariant currentVariant = InvalidRegExp;
     while ( !(line = stream.readLine()).isNull() )
