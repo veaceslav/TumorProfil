@@ -187,12 +187,13 @@ QStringList DatabaseAccess::tables()
 bool DatabaseAccess::setSetting(QString setting, QVariant value)
 {
     QSqlQuery* query = new QSqlQuery(d->database);
-    query->prepare(QLatin1String("UPDATE Settings SET value = ? where keyword=?"));
-    query->bindValue(0, value.toString());
-    query->bindValue(1,setting);
+    query->prepare(QLatin1String("INSERT INTO Settings(keyword, value) VALUES(?, ?) ON DUPLICATE KEY UPDATE keyword=VALUES(keyword), value=VALUES(value)"));
+    query->addBindValue(setting);
+    query->addBindValue(value.toString());
 
     int result = query->exec();
 
+    qDebug() << "Executing setSettings query, result: " << result;
     if(result)
     {
         return true;

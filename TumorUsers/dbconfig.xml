@@ -130,7 +130,7 @@
                 <statement mode="plain">
                  CREATE TABLE Settings
                  (keyword varchar(150) NOT NULL UNIQUE,
-                  value TEXT);
+                  value INTEGER);
                 </statement>
             </dbaction>
 
