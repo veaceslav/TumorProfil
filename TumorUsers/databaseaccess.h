@@ -38,7 +38,7 @@ public:
 
     QStringList tables();
     bool        setSetting(QString setting, QVariant value);
-    QString     setting(QString value);
+    QString setting(QString value);
 
     QueryStateEnum executeSql(QString query, QMap<QString, QVariant> bindValues);
     QueryStateEnum executeDirectSql(QString queryString, QMap<QString, QVariant> bindValues);

@@ -186,7 +186,18 @@ QStringList DatabaseAccess::tables()
 
 bool DatabaseAccess::setSetting(QString setting, QVariant value)
 {
+    QSqlQuery* query = new QSqlQuery(d->database);
+    query->prepare(QLatin1String("UPDATE Settings SET value = ? where keyword=?"));
+    query->bindValue(0, value.toString());
+    query->bindValue(1,setting);
 
+    int result = query->exec();
+
+    if(result)
+    {
+        return true;
+    }
+    return false;
 }
 
 QString DatabaseAccess::setting(QString value)

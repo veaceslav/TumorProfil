@@ -110,6 +110,8 @@ bool SchemaUpdater::startUpdates()
     {
         createDatabase();
     }
+
+    return true;
     // First step: do we have an empty database?
 //    QStringList tables = m_access->backend()->tables();
 //    QStringList tables;
@@ -231,7 +233,7 @@ bool SchemaUpdater::createDatabase()
     {
         m_currentVersion = schemaVersion();
         m_currentRequiredVersion = 1;
-        return true;
+        return writeSettings();
     }
     else
     {
@@ -248,20 +250,17 @@ bool SchemaUpdater::createTables()
 
 bool SchemaUpdater::createIndices()
 {
-//    return m_access->backend()->execDBAction(m_access->backend()->getDBAction("CreateDBIndices"));
-}
-
-
-bool SchemaUpdater::updateV1ToV2()
-{
-    /*if (!m_access->backend()->execDBAction(m_access->backend()->getDBAction("UpdateDBSchemaFromV1ToV2")))
-    {
-        qError() << "Schema upgrade in DB from V1 to V2 failed!";
-        return false;
-    }*/
-
-    m_currentVersion = 2;
-    m_currentRequiredVersion = 1;
+    //    return m_access->backend()->execDBAction(m_access->backend()->getDBAction("CreateDBIndices"));
     return true;
 }
+
+bool SchemaUpdater::writeSettings()
+{
+    bool check = true;
+    check &= DatabaseAccess::instance()->setSetting("DBVersion", m_currentVersion);
+    check &= DatabaseAccess::instance()->setSetting("DBVersionRequired", m_currentRequiredVersion);
+
+    return check;
+}
+
 
