@@ -107,7 +107,7 @@ bool DatabaseAccess::isOpen()
     return d->isActive;
 }
 
-bool DatabaseAccess::executeDBAction(QString actionName, QMap<QString, QVariant> bindingMap)
+bool DatabaseAccess::executeDBAction(QString actionName, QMap<QString, QVariant> bindingMap, QVector<QVector<QVariant> > results)
 {
     DatabaseAction action = d->conf.sqlStatements.value(actionName);
 
@@ -136,7 +136,7 @@ bool DatabaseAccess::executeDBAction(QString actionName, QMap<QString, QVariant>
         }
         else
         {
-            result = executeDirectSql(actionElement.statement, bindingMap);
+            result = executeDirectSql(actionElement.statement, bindingMap, results);
         }
 
         if (result != DatabaseAccess::NoErrors)
@@ -187,7 +187,8 @@ QStringList DatabaseAccess::tables()
 bool DatabaseAccess::setSetting(QString setting, QVariant value)
 {
     QSqlQuery* query = new QSqlQuery(d->database);
-    query->prepare(QLatin1String("INSERT INTO Settings(keyword, value) VALUES(?, ?) ON DUPLICATE KEY UPDATE keyword=VALUES(keyword), value=VALUES(value)"));
+    query->prepare(QLatin1String("INSERT INTO Settings(keyword, value) VALUES(?, ?)"
+                                 " ON DUPLICATE KEY UPDATE keyword=VALUES(keyword), value=VALUES(value)"));
     query->addBindValue(setting);
     query->addBindValue(value.toString());
 
@@ -220,11 +221,12 @@ QString DatabaseAccess::setting(QString value)
 
 DatabaseAccess::QueryStateEnum DatabaseAccess::executeSql(QString query, QMap<QString, QVariant> bindValues )
 {
-
+    Q_UNUSED(query);
+    Q_UNUSED(bindValues);
     return DatabaseAccess::NoErrors;
 }
 
-DatabaseAccess::QueryStateEnum DatabaseAccess::executeDirectSql(QString queryString, QMap<QString, QVariant> bindValues)
+DatabaseAccess::QueryStateEnum DatabaseAccess::executeDirectSql(QString queryString, QMap<QString, QVariant> bindValues, QVector<QVector<QVariant> > results)
 {
 
     QSqlQuery* query = new QSqlQuery(d->database);
@@ -237,8 +239,21 @@ DatabaseAccess::QueryStateEnum DatabaseAccess::executeDirectSql(QString queryStr
 
     int result = query->exec();
 
+
+
     if(result)
     {
+        while(query->next()){
+            QVector<QVariant> lst;
+            int index = 0;
+            QVariant v = query->value(index);
+            while(v.isValid())
+            {
+                lst << v;
+                v = query->value(++index);
+            }
+            results.append(lst);
+        }
         return DatabaseAccess::NoErrors;
     }
     else

@@ -34,12 +34,7 @@
 
 #include "databaseconfigelement.h"
 #include "databaseaccess.h"
-
-//#include "databasecorebackend.h"
-//#include "databasetransaction.h"
-//#include "databaseaccess.h"
-//#include "databaseinitializationobserver.h"
-//#include "patientdb.h"
+#include "queryutils.h"
 
 int SchemaUpdater::schemaVersion()
 {
@@ -59,24 +54,11 @@ bool SchemaUpdater::update()
 {
     bool success = startUpdates();
 
-    // even on failure, try to set current version - it may have incremented
-//    if (m_currentVersion)
-//    {
-//        m_access->db()->setSetting("DBVersion", QString::number(m_currentVersion));
-//    }
-
-//    if (m_currentRequiredVersion)
-//    {
-//        m_access->db()->setSetting("DBVersionRequired", QString::number(m_currentRequiredVersion));
-//    }
+    if(success)
+        checkAndAddAdmin();
 
     return success;
 }
-
-//void SchemaUpdater::setObserver(InitializationObserver* observer)
-//{
-//    m_observer = observer;
-//}
 
 bool SchemaUpdater::startUpdates()
 {
@@ -110,6 +92,7 @@ bool SchemaUpdater::startUpdates()
     {
         createDatabase();
     }
+
 
     return true;
     // First step: do we have an empty database?
@@ -244,8 +227,9 @@ bool SchemaUpdater::createDatabase()
 bool SchemaUpdater::createTables()
 {
     QMap<QString, QVariant> bindingMap;
+    QVector<QVector<QVariant> > results;
 
-    return DatabaseAccess::instance()->executeDBAction(QLatin1String("CreateDB"),bindingMap);
+    return DatabaseAccess::instance()->executeDBAction(QLatin1String("CreateDB"),bindingMap, results);
 }
 
 bool SchemaUpdater::createIndices()
@@ -261,6 +245,25 @@ bool SchemaUpdater::writeSettings()
     check &= DatabaseAccess::instance()->setSetting("DBVersionRequired", m_currentRequiredVersion);
 
     return check;
+}
+
+bool SchemaUpdater::checkAndAddAdmin()
+{
+    QLatin1String queryString("SELECT * from Users WHERE id = 0");
+    QMap<QString, QVariant> bindMap;
+    QVector<QVector<QVariant> > results;
+
+    DatabaseAccess::instance()->executeDirectSql(queryString, bindMap, results);
+
+
+    qDebug() << "Vector is empty " << results.isEmpty();
+
+    if(results.isEmpty())
+    {
+        QueryUtils::addUser(QLatin1String("admin"), QueryUtils::ADMIN, QLatin1String("12345"), QString());
+    }
+
+    return true;
 }
 
 

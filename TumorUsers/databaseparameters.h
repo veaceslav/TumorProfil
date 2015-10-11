@@ -51,7 +51,6 @@ public:
                        const QString& connectOptions = QString(),
                        const QString& hostName = QString(),
                        int   port = -1,
-                       bool  internalServer = false,
                        const QString& userName = QString(),
                        const QString& password = QString(),
                        const QString& databaseNameThumbnails = QString());

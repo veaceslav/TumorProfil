@@ -50,7 +50,6 @@ DatabaseParameters::DatabaseParameters(const QString& type,
                                        const QString& connectOptions,
                                        const QString& hostName,
                                        int port,
-                                       bool internalServer,
                                        const QString& userName,
                                        const QString& password,
                                        const QString& databaseNameThumbnails)

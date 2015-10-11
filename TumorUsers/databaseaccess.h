@@ -33,7 +33,9 @@ public:
 
     bool openDb(DatabaseParameters params);
     bool isOpen();
-    bool executeDBAction(QString actionName, QMap<QString, QVariant> bindingMap);
+    bool executeDBAction(QString actionName,
+                         QMap<QString, QVariant> bindingMap,
+                         QVector<QVector<QVariant> > results);
     void setConfigElement(QString type);
 
     QStringList tables();
@@ -41,7 +43,8 @@ public:
     QString setting(QString value);
 
     QueryStateEnum executeSql(QString query, QMap<QString, QVariant> bindValues);
-    QueryStateEnum executeDirectSql(QString queryString, QMap<QString, QVariant> bindValues);
+    QueryStateEnum executeDirectSql(QString queryString, QMap<QString,
+                                    QVariant> bindValues, QVector<QVector<QVariant> > results);
 
 protected:
     DatabaseAccess();

@@ -49,6 +49,7 @@ private:
     bool createTables();
     bool createIndices();
     bool writeSettings();
+    bool checkAndAddAdmin();
 
 private:
 

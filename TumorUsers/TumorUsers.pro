@@ -11,6 +11,9 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = TumorUsers
 TEMPLATE = app
 
+INCLUDEPATH += /usr/include/cryptopp
+
+LIBS += -lcryptopp
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -19,7 +22,9 @@ SOURCES += main.cpp\
     databaseguioptions.cpp \
     schemaupdater.cpp \
     databaseaccess.cpp \
-    databaseparameters.cpp
+    databaseparameters.cpp \
+    queryutils.cpp \
+    aesutils.cpp
 
 HEADERS  += mainwindow.h \
     databaseconfigelement.h \
@@ -27,7 +32,9 @@ HEADERS  += mainwindow.h \
     databaseguioptions.h \
     schemaupdater.h \
     databaseaccess.h \
-    databaseparameters.h
+    databaseparameters.h \
+    queryutils.h \
+    aesutils.h
 
 FORMS    +=
 
