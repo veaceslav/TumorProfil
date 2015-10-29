@@ -250,7 +250,7 @@ bool SchemaUpdater::writeSettings()
 
 bool SchemaUpdater::checkAndAddAdmin()
 {
-    QLatin1String queryString("SELECT * from Users WHERE id = 1");
+    QLatin1String queryString("SELECT * from Users WHERE name = \"admin\"");
     QMap<QString, QVariant> bindMap;
     QVector<QVector<QVariant> > results;
 

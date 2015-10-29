@@ -44,7 +44,7 @@ public:
 
     QueryStateEnum executeSql(QString query, QMap<QString, QVariant> bindValues);
     QueryStateEnum executeDirectSql(QString queryString, QMap<QString,
-                                    QVariant> bindValues, QVector<QVector<QVariant> > results);
+                                    QVariant> bindValues, QVector<QVector<QVariant> > &results);
 
 protected:
     DatabaseAccess();

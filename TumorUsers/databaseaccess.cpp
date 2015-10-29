@@ -226,7 +226,7 @@ DatabaseAccess::QueryStateEnum DatabaseAccess::executeSql(QString query, QMap<QS
     return DatabaseAccess::NoErrors;
 }
 
-DatabaseAccess::QueryStateEnum DatabaseAccess::executeDirectSql(QString queryString, QMap<QString, QVariant> bindValues, QVector<QVector<QVariant> > results)
+DatabaseAccess::QueryStateEnum DatabaseAccess::executeDirectSql(QString queryString, QMap<QString, QVariant> bindValues, QVector<QVector<QVariant> >& results)
 {
 
     QSqlQuery* query = new QSqlQuery(d->database);
