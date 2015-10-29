@@ -23,7 +23,6 @@ bool QueryUtils::addUser(QString name, QueryUtils::UserType userType, QString pa
    QMap<QString, QVariant> bindValues;
 
 
-
    QString salt = generateRandomString(SALT_SIZE);
 
    // Compute password

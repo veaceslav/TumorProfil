@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     databaseaccess.cpp \
     databaseparameters.cpp \
     queryutils.cpp \
-    aesutils.cpp
+    aesutils.cpp \
+    useradddialog.cpp
 
 HEADERS  += mainwindow.h \
     databaseconfigelement.h \
@@ -34,7 +35,8 @@ HEADERS  += mainwindow.h \
     databaseaccess.h \
     databaseparameters.h \
     queryutils.h \
-    aesutils.h
+    aesutils.h \
+    useradddialog.h
 
 FORMS    +=
 

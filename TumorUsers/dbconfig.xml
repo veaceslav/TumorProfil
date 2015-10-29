@@ -122,7 +122,7 @@
                   name TEXT,
                   userGroup TEXT,
                   passwordSalt TEXT,
-                  passwordHash TEXT,
+                  passwordHash BINARY,
                   aesPrivateKeyFilling TEXT,
                   encryptedKey  TEXT);
                 </statement>

@@ -45,6 +45,7 @@ public:
     QComboBox*     databaseType;
     QSpinBox*      hostPort;
     DatabaseParameters conf;
+    QPushButton*  connectAndListUsers;
 };
 DatabaseGuiOptions::DatabaseGuiOptions(QWidget *parent) :
     QWidget(parent), d(new Private())
@@ -113,14 +114,20 @@ void DatabaseGuiOptions::slotCheckDatabaseConnection()
     bool connected = DatabaseAccess::instance()->openDb(params);
 
     if(connected)
-        slotPopulateTable();
+    {
+        SchemaUpdater schemaUpdate(DatabaseAccess::instance());
+
+        bool result = schemaUpdate.update();
+        if(result)
+        {
+            d->connectAndListUsers->setEnabled(true);
+        }
+    }
 }
 
 void DatabaseGuiOptions::slotPopulateTable()
 {
-    SchemaUpdater schemaUpdate(DatabaseAccess::instance());
 
-    schemaUpdate.update();
     qDebug() << "Connection is established";
 }
 
@@ -163,7 +170,8 @@ void DatabaseGuiOptions::setupUi()
     d->password->setEchoMode(QLineEdit::Password);
 
     QPushButton* const checkDatabaseConnectionButton = new QPushButton(tr("Check DB Connection"));
-    QPushButton* const connectAndListUsers = new QPushButton(tr("List Users"));
+    d->connectAndListUsers = new QPushButton(tr("List Users"));
+    d->connectAndListUsers->setEnabled(false);
 
     d->expertSettings                                = new QGroupBox();
     d->expertSettings->setFlat(true);
@@ -180,7 +188,7 @@ void DatabaseGuiOptions::setupUi()
     expertSettinglayout->addRow(connectionOptionsLabel, d->connectionOptions);
 
     expertSettinglayout->addWidget(checkDatabaseConnectionButton);
-    expertSettinglayout->addWidget(connectAndListUsers);
+    expertSettinglayout->addWidget(d->connectAndListUsers);
 
     vlay->addWidget(databaseTypeLabel);
     vlay->addWidget(d->databaseType);
@@ -219,6 +227,9 @@ void DatabaseGuiOptions::setupUi()
 
     connect(checkDatabaseConnectionButton, SIGNAL(clicked()),
             this, SLOT(slotCheckDatabaseConnection()));
+
+    connect(d->connectAndListUsers, SIGNAL(clicked(bool)),
+            this, SLOT(slotPopulateTable()));
 
     QWidget* wg = new QWidget(this);
     wg->setLayout(layout);

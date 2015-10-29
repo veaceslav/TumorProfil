@@ -35,6 +35,7 @@
 #include "databaseconfigelement.h"
 #include "databaseaccess.h"
 #include "queryutils.h"
+#include "useradddialog.h"
 
 int SchemaUpdater::schemaVersion()
 {
@@ -55,7 +56,7 @@ bool SchemaUpdater::update()
     bool success = startUpdates();
 
     if(success)
-        checkAndAddAdmin();
+        success = checkAndAddAdmin();
 
     return success;
 }
@@ -249,7 +250,7 @@ bool SchemaUpdater::writeSettings()
 
 bool SchemaUpdater::checkAndAddAdmin()
 {
-    QLatin1String queryString("SELECT * from Users WHERE id = 0");
+    QLatin1String queryString("SELECT * from Users WHERE id = 1");
     QMap<QString, QVariant> bindMap;
     QVector<QVector<QVariant> > results;
 
@@ -260,7 +261,10 @@ bool SchemaUpdater::checkAndAddAdmin()
 
     if(results.isEmpty())
     {
-        QueryUtils::addUser(QLatin1String("admin"), QueryUtils::ADMIN, QLatin1String("12345"), QString());
+        UserData data = UserAddDialog::AddUser(true);
+        if(data.userName.isEmpty() || data.password.isEmpty())
+            return false;
+        QueryUtils::addUser(QLatin1String("admin"), QueryUtils::ADMIN, data.password , QString());
     }
 
     return true;
