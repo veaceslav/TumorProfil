@@ -29,7 +29,7 @@ bool QueryUtils::addUser(QString name, QueryUtils::UserType userType, QString pa
    QString saltedPass(password + salt);
    QByteArray passHash = QCryptographicHash::hash(saltedPass.toLatin1(), QCryptographicHash::Sha256);
 
-   qDebug() << "Password hash " << QString(passHash);
+   qDebug() << "Password hash " << passHash;
    // add aes private key filling
    QString aesFilling = generateRandomString(AESKEY_LENGTH);
 
@@ -55,7 +55,7 @@ bool QueryUtils::addUser(QString name, QueryUtils::UserType userType, QString pa
        bindValues[QLatin1String(":usergroup")] = "USER";
 
    bindValues[QLatin1String(":passwordSalt")] = salt;
-   bindValues[QLatin1String(":passwordHash")] = QVariant(QString(passHash));
+   bindValues[QLatin1String(":passwordHash")] = QVariant(passHash);
    bindValues[QLatin1String(":aesPrivateKeyFilling")] = aesFilling;
    bindValues[QLatin1String(":encryptedKey")] = encodedKey;
 

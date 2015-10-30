@@ -17,6 +17,7 @@
 #include "databaseparameters.h"
 #include "databaseaccess.h"
 #include "schemaupdater.h"
+#include "adminuser.h"
 
 
 class DatabaseGuiOptions::Private
@@ -129,6 +130,10 @@ void DatabaseGuiOptions::slotPopulateTable()
 {
 
     qDebug() << "Connection is established";
+
+    AdminUser* admin = AdminUser::instance();
+
+    admin->logIn();
 }
 
 void DatabaseGuiOptions::setupUi()
