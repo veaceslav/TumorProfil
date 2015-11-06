@@ -20,6 +20,7 @@ public:
         isLoggedIn = false;
     }
     QString password;
+    QString masterKey;
     bool    isLoggedIn;
 };
 

@@ -9,6 +9,7 @@ public:
     UserWidget(QWidget* parent = 0);
     ~UserWidget();
 
+    void populateTable();
 signals:
 
 public slots:

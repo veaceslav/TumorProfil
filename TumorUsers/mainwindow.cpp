@@ -46,8 +46,8 @@ void MainWindow::setupUi()
 {
     QWidget* widget = new QWidget(this);
     QHBoxLayout* hbox = new QHBoxLayout(widget);
-    DatabaseGuiOptions* dbGui = new DatabaseGuiOptions(widget);
     UserWidget* userW         = new UserWidget(widget);
+        DatabaseGuiOptions* dbGui = new DatabaseGuiOptions(userW, widget);
 
     hbox->addWidget(dbGui,2);
     hbox->addWidget(userW,6);

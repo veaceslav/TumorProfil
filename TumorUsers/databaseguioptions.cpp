@@ -18,6 +18,7 @@
 #include "databaseaccess.h"
 #include "schemaupdater.h"
 #include "adminuser.h"
+#include "userwidget.h"
 
 
 class DatabaseGuiOptions::Private
@@ -47,10 +48,12 @@ public:
     QSpinBox*      hostPort;
     DatabaseParameters conf;
     QPushButton*  connectAndListUsers;
+    UserWidget*   userWidget;
 };
-DatabaseGuiOptions::DatabaseGuiOptions(QWidget *parent) :
+DatabaseGuiOptions::DatabaseGuiOptions(UserWidget* userWidget, QWidget *parent) :
     QWidget(parent), d(new Private())
 {
+    d->userWidget = userWidget;
     setupUi();
 //    d->conf.defaultParameters(QLatin1String("QMYSQL"));
     setupParameters();
@@ -133,7 +136,12 @@ void DatabaseGuiOptions::slotPopulateTable()
 
     AdminUser* admin = AdminUser::instance();
 
-    admin->logIn();
+    bool result = admin->logIn();
+
+    if(result)
+    {
+        d->userWidget->populateTable();
+    }
 }
 
 void DatabaseGuiOptions::setupUi()

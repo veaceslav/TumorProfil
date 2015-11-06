@@ -3,11 +3,13 @@
 
 #include <QWidget>
 
+class UserWidget;
+
 class DatabaseGuiOptions : public QWidget
 {
     Q_OBJECT
 public:
-    DatabaseGuiOptions(QWidget *parent = 0);
+    DatabaseGuiOptions(UserWidget *userWidget, QWidget *parent = 0);
     ~DatabaseGuiOptions();
 
 private Q_SLOTS:
