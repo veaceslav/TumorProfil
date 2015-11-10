@@ -75,7 +75,7 @@ bool MainWindow::slotAddUser()
     UserData data = UserAddDialog::AddUser(false);
     if(data.userName.isEmpty() || data.password.isEmpty())
         return false;
-    QueryUtils::addUser(data.userName, QueryUtils::USER, data.password , QString());
+    QueryUtils::addUser(data.userName, QueryUtils::USER, data.password , AdminUser::instance()->masterKey());
 
     return true;
 }

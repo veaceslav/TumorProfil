@@ -1,6 +1,4 @@
 #include "adminuser.h"
-#include "useradddialog.h"
-#include "databaseaccess.h"
 
 #include <QMap>
 #include <QVector>
@@ -8,6 +6,11 @@
 #include <QCryptographicHash>
 #include <QMessageBox>
 #include <QApplication>
+
+#include "useradddialog.h"
+#include "databaseaccess.h"
+#include "aesutils.h"
+#include "queryutils.h"
 
 QPointer<AdminUser> AdminUser::internalPtr = QPointer<AdminUser>();
 
@@ -40,6 +43,14 @@ AdminUser::AdminUser() : d(new Private())
 void AdminUser::setData(QString password, QVector<QVector<QVariant> > &queryResult)
 {
     d->password = password;
+
+    QByteArray masterKeyHash = queryResult.first().at(AdminUser::ENCRYPTED_KEY).toByteArray();
+
+    QString filling = queryResult.first().at(AdminUser::AES_FILLING).toString();
+
+    d->masterKey = QueryUtils::decryptMasterKey(d->password, filling, masterKeyHash);
+
+    qDebug() << "Master key is: " << d->masterKey;
 }
 
 bool AdminUser::logIn()
@@ -62,10 +73,10 @@ bool AdminUser::logIn()
             return false;
 
         // Compute password
-        QString saltedPass(data.password + results.first().at(3).toString());
+        QString saltedPass(data.password + results.first().at(AdminUser::PASSWORD_SALT).toString());
         QByteArray passHash = QCryptographicHash::hash(saltedPass.toLatin1(), QCryptographicHash::Sha256);
 
-        QByteArray storedHash = results.first().at(4).toByteArray();
+        QByteArray storedHash = results.first().at(AdminUser::PASS_HASH).toByteArray();
 
         if(passHash != storedHash)
         {
@@ -83,5 +94,10 @@ bool AdminUser::logIn()
             return true;
         }
     }
-        return true;
+    return true;
+}
+
+QString AdminUser::masterKey()
+{
+    return d->masterKey;
 }

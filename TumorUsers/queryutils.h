@@ -18,6 +18,10 @@ public:
 
     static QString generateRandomString(int length);
 
+    static QString encpryptMasterKey(QString password, QString filling, QString masterKey);
+
+    static QString decryptMasterKey(QString password, QString filling, QString masterHash);
+
 
 
 signals:

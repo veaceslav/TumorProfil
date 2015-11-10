@@ -29,18 +29,21 @@ bool QueryUtils::addUser(QString name, QueryUtils::UserType userType, QString pa
    QString saltedPass(password + salt);
    QByteArray passHash = QCryptographicHash::hash(saltedPass.toLatin1(), QCryptographicHash::Sha256);
 
-   qDebug() << "Password hash " << passHash;
    // add aes private key filling
    QString aesFilling = generateRandomString(AESKEY_LENGTH);
 
-   if(userType == QueryUtils::ADMIN && masterKey.isEmpty())
+   if(masterKey.isEmpty())
    {
-       masterKey = generateRandomString(MASTERKEY_SIZE);
-   }
-   else
-   {
-        qDebug() << "Error, not an admin and no masterkey supplied";
-        return false;
+       if(userType == QueryUtils::ADMIN)
+       {
+           masterKey = generateRandomString(MASTERKEY_SIZE);
+           qDebug() << "generated master key" << masterKey;
+       }
+       else
+       {
+           qDebug() << "Error, not an admin and no masterkey supplied";
+           return false;
+       }
    }
 
    QString aesKey = password + aesFilling;
@@ -81,5 +84,19 @@ QString QueryUtils::generateRandomString(int length)
     }
 
     return str;
+}
+
+QString QueryUtils::encpryptMasterKey(QString password, QString filling, QString masterKey)
+{
+    QString aesKey = password + filling;
+    aesKey.truncate(AESKEY_LENGTH);
+    return AesUtils::encrypt(masterKey, aesKey);
+}
+
+QString QueryUtils::decryptMasterKey(QString password, QString filling, QString masterHash)
+{
+    QString decryption = password + filling;
+    decryption.truncate(AESKEY_LENGTH);
+    return AesUtils::decrypt(masterHash, decryption);
 }
 

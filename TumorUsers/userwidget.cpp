@@ -41,7 +41,6 @@ void UserWidget::populateTable()
 
     DatabaseAccess::instance()->executeDirectSql(queryString, bindMap, results);
 
-    qDebug() << "results: " << results.isEmpty();
     if(results.isEmpty())
     {
         return;
@@ -61,17 +60,14 @@ void UserWidget::populateTable()
             if(cellData.type() == QVariant::Int)
             {
                 tableItem = new QTableWidgetItem(QString::number(cellData.toInt()));
-                qDebug() << cellData;
             }
             if(cellData.type() == QVariant::String)
             {
                 tableItem = new QTableWidgetItem(cellData.toString());
-                qDebug() << cellData;
             }
             if(cellData.type() == QVariant::ByteArray)
             {
                 tableItem = new QTableWidgetItem(QString(cellData.toByteArray().toBase64()));
-                qDebug() << cellData;
             }
             if(tableItem == NULL)
                 qDebug() << "Element is NULL" << cellData.type();
