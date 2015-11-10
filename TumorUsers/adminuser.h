@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QPointer>
+#include <QVector>
 
 class AdminUser  : public QObject
 {
@@ -16,6 +17,7 @@ protected:
 
 
 private:
+    void setData(QString password, QVector<QVector<QVariant> >& queryResult);
     class Private;
     Private* d;
 };

@@ -16,10 +16,14 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QDesktopWidget>
+#include <QToolBar>
 
 #include "databaseconfigelement.h"
 #include "databaseguioptions.h"
 #include "userwidget.h"
+#include "useradddialog.h"
+#include "queryutils.h"
+#include "adminuser.h"
 
 
 class MainWindow::Private
@@ -30,11 +34,13 @@ public:
 
     }
 
+    QToolBar* toolBar;
 };
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), d(new Private())
 {
     setupUi();
+    setupToolBar();
     resize(QDesktopWidget().availableGeometry(this).size() * 0.7);
 }
 
@@ -52,5 +58,25 @@ void MainWindow::setupUi()
     hbox->addWidget(dbGui,2);
     hbox->addWidget(userW,6);
     this->setCentralWidget(widget);
+}
+
+void MainWindow::setupToolBar()
+{
+    d->toolBar = addToolBar(tr("Main"));
+
+    d->toolBar->addAction(QIcon::fromTheme("add"),
+                          tr("Add user"),
+                          this, SLOT(slotAddUser()));
+
+}
+
+bool MainWindow::slotAddUser()
+{
+    UserData data = UserAddDialog::AddUser(false);
+    if(data.userName.isEmpty() || data.password.isEmpty())
+        return false;
+    QueryUtils::addUser(data.userName, QueryUtils::USER, data.password , QString());
+
+    return true;
 }
 

@@ -37,6 +37,11 @@ AdminUser::AdminUser() : d(new Private())
 
 }
 
+void AdminUser::setData(QString password, QVector<QVector<QVariant> > &queryResult)
+{
+    d->password = password;
+}
+
 bool AdminUser::logIn()
 {
     QLatin1String queryString("SELECT * from Users WHERE name = \"admin\"");
@@ -74,6 +79,7 @@ bool AdminUser::logIn()
         }
         else
         {
+            setData(data.password, results);
             return true;
         }
     }

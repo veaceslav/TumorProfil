@@ -16,9 +16,11 @@ public:
     ~MainWindow();
 
 private Q_SLOTS:
-
+    bool slotAddUser();
 private:
     void setupUi();
+    void setupToolBar();
+
     class Private;
     Private* d;
 };

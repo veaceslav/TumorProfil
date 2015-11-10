@@ -9,7 +9,7 @@ class QueryUtils : public QObject
 public:
     enum UserType{
         ADMIN  = 0,
-        NORMAL = 1
+        USER = 1
     };
 
     explicit QueryUtils(QObject *parent = 0);
