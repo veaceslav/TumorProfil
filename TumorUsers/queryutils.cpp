@@ -18,7 +18,7 @@ QueryUtils::QueryUtils(QObject *parent) : QObject(parent)
 
 }
 
-bool QueryUtils::addUser(QString name, QueryUtils::UserType userType, QString password, QString masterKey)
+qlonglong QueryUtils::addUser(QString name, QueryUtils::UserType userType, QString password, QString masterKey)
 {
    QMap<QString, QVariant> bindValues;
 
@@ -42,13 +42,13 @@ bool QueryUtils::addUser(QString name, QueryUtils::UserType userType, QString pa
        else
        {
            qDebug() << "Error, not an admin and no masterkey supplied";
-           return false;
+           return -1;
        }
    }
 
-   QString aesKey = password + aesFilling;
-   aesKey.truncate(64);
-   QString encodedKey = AesUtils::encrypt(masterKey, aesKey);
+//   QString aesKey = password + aesFilling;
+//   aesKey.truncate(64);
+//   QString encodedKey = AesUtils::encrypt(masterKey, aesKey);
 
    bindValues[QLatin1String(":name")] = name;
 
@@ -60,18 +60,21 @@ bool QueryUtils::addUser(QString name, QueryUtils::UserType userType, QString pa
    bindValues[QLatin1String(":passwordSalt")] = salt;
    bindValues[QLatin1String(":passwordHash")] = QVariant(passHash);
    bindValues[QLatin1String(":aesPrivateKeyFilling")] = aesFilling;
-   bindValues[QLatin1String(":encryptedKey")] = encodedKey;
+//   bindValues[QLatin1String(":encryptedKey")] = encodedKey;
 
-   QVector<QVector<QVariant> > result;
-   DatabaseAccess::instance()->executeDirectSql(QLatin1String("INSERT into Users(name, usergroup, passwordSalt,"
-                                                              " passwordHash, aesPrivateKeyFilling,encryptedKey)"
+   QVariant id;
+   DatabaseAccess::instance()->executeSql(QLatin1String("INSERT into Users(name, usergroup, passwordSalt,"
+                                                              " passwordHash, aesPrivateKeyFilling)"
                                                               "VALUES(:name, :usergroup, :passwordSalt, :passwordHash,"
-                                                              ":aesPrivateKeyFilling, :encryptedKey)"),
+                                                              ":aesPrivateKeyFilling)"),
                                                 bindValues,
-                                                result);
+                                                id);
 
 
-   return true;
+   qDebug() << "Id of inserted item: " << id;
+
+   addMasterKey(QString("Default"), id.toLongLong(), password, aesFilling);
+   return id.toLongLong();
 }
 
 QString QueryUtils::generateRandomString(int length)
@@ -99,4 +102,28 @@ QString QueryUtils::decryptMasterKey(QString password, QString filling, QString 
     decryption.truncate(AESKEY_LENGTH);
     return AesUtils::decrypt(masterHash, decryption);
 }
+
+qlonglong QueryUtils::addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling)
+{
+
+    QString masterKey = generateRandomString(MASTERKEY_SIZE);
+    QString aesKey = password + aesFilling;
+    aesKey.truncate(64);
+    QString encodedKey = AesUtils::encrypt(masterKey, aesKey);
+
+    QMap<QString, QVariant> bindValues;
+    bindValues[QLatin1String(":keyName")] = name;
+    bindValues[QLatin1String(":userid")] = userid;
+    bindValues[QLatin1String(":encryptedKey")] = encodedKey;
+
+    QVariant id;
+    DatabaseAccess::instance()->executeSql(QLatin1String("INSERT into MasterKeys(keyName, userid, encryptedKey)"
+                                                               "VALUES(:keyName, :userid, :encryptedKey)"),
+                                                 bindValues,
+                                                 id);
+
+    return id.toLongLong();
+}
+
+
 

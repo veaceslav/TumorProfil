@@ -10,6 +10,7 @@ public:
     ~UserWidget();
 
     void populateTable();
+    void addRow(qlonglong id);
 signals:
 
 public slots:

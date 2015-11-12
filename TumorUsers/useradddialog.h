@@ -16,10 +16,13 @@ public:
 
     static UserData AddUser(bool isAdmin);
     static UserData editUser(bool isAdmin, UserData &data);
-    static UserData login();
+    static UserData login(bool isAdmin);
 
     QString username();
     QString password();
+
+public slots:
+    void accept();
 private:
 
     void setupUi(bool isAdmin, bool login);

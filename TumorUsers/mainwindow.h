@@ -16,6 +16,7 @@ public:
     ~MainWindow();
 
 private Q_SLOTS:
+    void slotListUsers();
     bool slotAddUser();
 private:
     void setupUi();

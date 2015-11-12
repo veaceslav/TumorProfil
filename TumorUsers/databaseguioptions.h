@@ -9,14 +9,15 @@ class DatabaseGuiOptions : public QWidget
 {
     Q_OBJECT
 public:
-    DatabaseGuiOptions(UserWidget *userWidget, QWidget *parent = 0);
+    DatabaseGuiOptions(QWidget *parent = 0);
     ~DatabaseGuiOptions();
 
+signals:
+    void signalconnectedToDb();
 private Q_SLOTS:
     void slotHandleDBTypeIndexChanged();
     void slotSetDatabasePath();
     void slotCheckDatabaseConnection();
-    void slotPopulateTable();
 
 private:
     void setupUi();

@@ -80,6 +80,52 @@ void UserWidget::populateTable()
 
 }
 
+void UserWidget::addRow(qlonglong id)
+{
+    QLatin1String queryString("SELECT * from Users WHERE id = :id");
+    QMap<QString, QVariant> bindMap;
+    QVector<QVector<QVariant> > results;
+
+    bindMap[QLatin1String(":id")] = id;
+
+    DatabaseAccess::instance()->executeDirectSql(queryString, bindMap, results);
+
+    if(results.isEmpty())
+    {
+        qDebug() << "No rows for given id";
+        return;
+    }
+
+    int rowcount = d->tableView->rowCount();
+    d->tableView->setRowCount(rowcount+1);
+
+    QVector<QVariant> item = results.first();
+    for(int j = 0; j < item.size(); j++)
+    {
+
+        QVariant cellData = item.at(j);
+
+
+        QTableWidgetItem* tableItem = 0;
+        if(cellData.type() == QVariant::Int)
+        {
+            tableItem = new QTableWidgetItem(QString::number(cellData.toInt()));
+        }
+        if(cellData.type() == QVariant::String)
+        {
+            tableItem = new QTableWidgetItem(cellData.toString());
+        }
+        if(cellData.type() == QVariant::ByteArray)
+        {
+            tableItem = new QTableWidgetItem(QString(cellData.toByteArray().toBase64()));
+        }
+        if(tableItem == NULL)
+            qDebug() << "Element is NULL" << cellData.type();
+
+        d->tableView->setItem(rowcount,j,tableItem);
+    }
+}
+
 void UserWidget::setupUi()
 {
     QVBoxLayout* lay = new QVBoxLayout(this);

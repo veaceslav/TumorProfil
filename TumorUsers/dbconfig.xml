@@ -123,14 +123,21 @@
                   userGroup TEXT,
                   passwordSalt TEXT,
                   passwordHash BLOB,
-                  aesPrivateKeyFilling TEXT,
-                  encryptedKey  TEXT);
+                  aesPrivateKeyFilling TEXT);
                 </statement>
 
                 <statement mode="plain">
                  CREATE TABLE Settings
                  (keyword varchar(150) NOT NULL UNIQUE,
                   value INTEGER);
+                </statement>
+
+                <statement mode="plain">
+                 CREATE TABLE MasterKeys
+                 (id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                  keyName TEXT,
+                  userid INTEGER,
+                  encryptedKey  TEXT);
                 </statement>
             </dbaction>
 

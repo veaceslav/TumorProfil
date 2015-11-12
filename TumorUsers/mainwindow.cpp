@@ -7,16 +7,13 @@
 #include <QSpinBox>
 #include <QPushButton>
 #include <QLabel>
-#include <QVBoxLayout>
-#include <QFormLayout>
 #include <QApplication>
-#include <QFileDialog>
-#include <QSqlDatabase>
 #include <QMessageBox>
-#include <QSqlError>
-#include <QSqlQuery>
+
 #include <QDesktopWidget>
 #include <QToolBar>
+#include <QHBoxLayout>
+#include <QDebug>
 
 #include "databaseconfigelement.h"
 #include "databaseguioptions.h"
@@ -35,6 +32,7 @@ public:
     }
 
     QToolBar* toolBar;
+    UserWidget* userWidget;
 };
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), d(new Private())
@@ -48,21 +46,40 @@ MainWindow::~MainWindow()
 {
 }
 
+void MainWindow::slotListUsers()
+{
+    qDebug() << "Connection is established";
+
+    AdminUser* admin = AdminUser::instance();
+
+    bool result = admin->logIn();
+
+    if(result)
+    {
+        d->userWidget->populateTable();
+    }
+}
+
 void MainWindow::setupUi()
 {
     QWidget* widget = new QWidget(this);
     QHBoxLayout* hbox = new QHBoxLayout(widget);
-    UserWidget* userW         = new UserWidget(widget);
-        DatabaseGuiOptions* dbGui = new DatabaseGuiOptions(userW, widget);
+    d->userWidget         = new UserWidget(widget);
+    DatabaseGuiOptions* dbGui = new DatabaseGuiOptions(widget);
 
     hbox->addWidget(dbGui,2);
-    hbox->addWidget(userW,6);
+    hbox->addWidget(d->userWidget,6);
     this->setCentralWidget(widget);
 }
 
 void MainWindow::setupToolBar()
 {
     d->toolBar = addToolBar(tr("Main"));
+
+
+    d->toolBar->addAction(QIcon::fromTheme(""),
+                          tr("List Users"), this,
+                          SLOT(slotListUsers()));
 
     d->toolBar->addAction(QIcon::fromTheme("add"),
                           tr("Add user"),
@@ -75,8 +92,15 @@ bool MainWindow::slotAddUser()
     UserData data = UserAddDialog::AddUser(false);
     if(data.userName.isEmpty() || data.password.isEmpty())
         return false;
-    QueryUtils::addUser(data.userName, QueryUtils::USER, data.password , AdminUser::instance()->masterKey());
+    qlonglong id = -1;
+    id = QueryUtils::addUser(data.userName, QueryUtils::USER, data.password , AdminUser::instance()->masterKey());
 
+    if(id == -1)
+        return false;
+    else
+    {
+        d->userWidget->addRow(id);
+    }
     return true;
 }
 

@@ -132,7 +132,8 @@ bool DatabaseAccess::executeDBAction(QString actionName, QMap<QString, QVariant>
 //        qDebug() << "Executing statement " << actionElement.statement << " " << actionElement.mode;
         if (actionElement.mode == QString("query"))
         {
-            result = executeSql(actionElement.statement, bindingMap);
+            QVariant id;
+            result = executeSql(actionElement.statement, bindingMap, id);
         }
         else
         {
@@ -219,11 +220,31 @@ QString DatabaseAccess::setting(QString value)
     return QString();
 }
 
-DatabaseAccess::QueryStateEnum DatabaseAccess::executeSql(QString query, QMap<QString, QVariant> bindValues )
+DatabaseAccess::QueryStateEnum DatabaseAccess::executeSql(QString queryString, QMap<QString, QVariant> bindValues, QVariant& lastId)
 {
-    Q_UNUSED(query);
-    Q_UNUSED(bindValues);
-    return DatabaseAccess::NoErrors;
+
+    QSqlQuery* query = new QSqlQuery(d->database);
+    query->prepare(queryString);
+
+    for(QMap<QString, QVariant>::iterator it = bindValues.begin(); it !=bindValues.end(); ++it)
+    {
+        query->bindValue(it.key(),it.value());
+    }
+
+    int result = query->exec();
+
+
+    if(result)
+    {
+        lastId = query->lastInsertId();
+        return DatabaseAccess::NoErrors;
+    }
+    else
+    {
+        qDebug() << "Error:" << query->lastError().text().toLatin1();
+        return DatabaseAccess::SQLError;
+    }
+
 }
 
 DatabaseAccess::QueryStateEnum DatabaseAccess::executeDirectSql(QString queryString, QMap<QString, QVariant> bindValues, QVector<QVector<QVariant> >& results)

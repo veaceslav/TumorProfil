@@ -18,12 +18,14 @@ public:
     QLineEdit* passwordSecondTime;
     QLabel*    errMsg;
     QLabel*    mainLabel;
+    bool       login;
 };
 
 UserAddDialog::UserAddDialog(UserData &data, bool isAdmin, bool login) : QDialog(), d(new Private)
 {
 
     setModal(true);
+    d->login = login;
 
     d->buttons = new QDialogButtonBox(QDialogButtonBox::Ok   |
                                       QDialogButtonBox::Cancel, this);
@@ -76,9 +78,21 @@ UserData UserAddDialog::editUser(bool isAdmin, UserData& data)
     return returnData;
 }
 
-UserData UserAddDialog::login()
+UserData UserAddDialog::login(bool isAdmin)
 {
+    UserData data;
+    UserAddDialog* dlg = new UserAddDialog(data, isAdmin, true);
 
+    int result = dlg->exec();
+
+    if(result)
+    {
+        data.userName = dlg->username();
+        data.password = dlg->password();
+    }
+
+    delete dlg;
+    return data;
 }
 
 QString UserAddDialog::username()
@@ -89,6 +103,19 @@ QString UserAddDialog::username()
 QString UserAddDialog::password()
 {
     return d->password->text();
+}
+
+void UserAddDialog::accept()
+{
+    if(!d->login)
+    {
+        if(d->password->text() != d->passwordSecondTime->text())
+        {
+            d->errMsg->setText(tr("Password does not match"));
+            return;
+        }
+    }
+    QDialog::accept();
 }
 
 void UserAddDialog::setupUi(bool isAdmin, bool login)
@@ -121,13 +148,18 @@ void UserAddDialog::setupUi(bool isAdmin, bool login)
 
     gLayout->addWidget(d->mainLabel, 1, 1, 1, 4);
     gLayout->addWidget(userLabel, 2, 1, 1, 2);
-    gLayout->addWidget(d->username, 2, 2, 1, 2);
+    gLayout->addWidget(d->username, 2, 3, 1, 2);
     gLayout->addWidget(passwordLabel, 3, 1, 1, 2);
-    gLayout->addWidget(d->password, 3, 2, 1, 2);
+    gLayout->addWidget(d->password, 3, 3, 1, 2);
     if(!login)
     {
         gLayout->addWidget(password2Label, 4, 1, 1, 2);
-        gLayout->addWidget(d->passwordSecondTime, 4, 2, 1, 2);
+        gLayout->addWidget(d->passwordSecondTime, 4, 3, 1, 2);
+    }
+    else
+    {
+        password2Label->hide();
+        d->passwordSecondTime->hide();
     }
     gLayout->addWidget(d->errMsg, 5, 1, 1, 4);
 

@@ -42,7 +42,7 @@ public:
     bool        setSetting(QString setting, QVariant value);
     QString setting(QString value);
 
-    QueryStateEnum executeSql(QString query, QMap<QString, QVariant> bindValues);
+    QueryStateEnum executeSql(QString queryString, QMap<QString, QVariant> bindValues, QVariant &lastId);
     QueryStateEnum executeDirectSql(QString queryString, QMap<QString,
                                     QVariant> bindValues, QVector<QVector<QVariant> > &results);
 

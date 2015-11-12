@@ -44,13 +44,13 @@ void AdminUser::setData(QString password, QVector<QVector<QVariant> > &queryResu
 {
     d->password = password;
 
-    QByteArray masterKeyHash = queryResult.first().at(AdminUser::ENCRYPTED_KEY).toByteArray();
+    //QByteArray masterKeyHash = queryResult.first().at(AdminUser::ENCRYPTED_KEY).toByteArray();
 
-    QString filling = queryResult.first().at(AdminUser::AES_FILLING).toString();
+//    QString filling = queryResult.first().at(AdminUser::AES_FILLING).toString();
 
-    d->masterKey = QueryUtils::decryptMasterKey(d->password, filling, masterKeyHash);
+//    d->masterKey = QueryUtils::decryptMasterKey(d->password, filling, masterKeyHash);
 
-    qDebug() << "Master key is: " << d->masterKey;
+//    qDebug() << "Master key is: " << d->masterKey;
 }
 
 bool AdminUser::logIn()
@@ -68,7 +68,7 @@ bool AdminUser::logIn()
 
     while(true)
     {
-        UserData data = UserAddDialog::AddUser(true);
+        UserData data = UserAddDialog::login(true);
         if(data.userName.isEmpty() || data.password.isEmpty())
             return false;
 
