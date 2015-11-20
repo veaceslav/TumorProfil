@@ -12,6 +12,8 @@
 #include "aesutils.h"
 #include "queryutils.h"
 
+#define ADMIN_ID 1
+
 QPointer<AdminUser> AdminUser::internalPtr = QPointer<AdminUser>();
 
 
@@ -23,7 +25,7 @@ public:
         isLoggedIn = false;
     }
     QString password;
-    QString masterKey;
+    QList<MasterKey> masterKeys;
     bool    isLoggedIn;
 };
 
@@ -42,7 +44,17 @@ AdminUser::AdminUser() : d(new Private())
 
 void AdminUser::setData(QString password, QVector<QVector<QVariant> > &queryResult)
 {
+    Q_UNUSED(queryResult);
     d->password = password;
+
+    QVector<QVector<QVariant> > result = QueryUtils::retrieveMasterKeys(ADMIN_ID);
+
+    foreach (QVector<QVariant> key, result)
+    {
+        MasterKey mKey(key.at(MasterKey::NAME_FIELD).toString(),
+                       key.at(MasterKey::VALUE_FIELD).toString());
+        d->masterKeys.append(mKey);
+    }
 
     //QByteArray masterKeyHash = queryResult.first().at(AdminUser::ENCRYPTED_KEY).toByteArray();
 
@@ -99,5 +111,7 @@ bool AdminUser::logIn()
 
 QString AdminUser::masterKey()
 {
-    return d->masterKey;
+    if(d->masterKeys.isEmpty())
+        return QString();
+    return d->masterKeys.first().value;
 }

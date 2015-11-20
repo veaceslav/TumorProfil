@@ -46,10 +46,6 @@ qlonglong QueryUtils::addUser(QString name, QueryUtils::UserType userType, QStri
        }
    }
 
-//   QString aesKey = password + aesFilling;
-//   aesKey.truncate(64);
-//   QString encodedKey = AesUtils::encrypt(masterKey, aesKey);
-
    bindValues[QLatin1String(":name")] = name;
 
    if(userType == QueryUtils::ADMIN)
@@ -123,6 +119,18 @@ qlonglong QueryUtils::addMasterKey(QString name, qlonglong userid, QString passw
                                                  id);
 
     return id.toLongLong();
+}
+
+QVector<QVector<QVariant> > QueryUtils::retrieveMasterKeys(qlonglong userId)
+{
+    QMap<QString, QVariant> bindValues;
+    QVector<QVector<QVariant> > results;
+    bindValues[QLatin1String(":userid")] = userId;
+
+    DatabaseAccess::instance()->executeDirectSql(QLatin1String("SELECT * from MasterKeys where userid=:userid"),
+                                                 bindValues,
+                                                 results);
+    return results;
 }
 
 

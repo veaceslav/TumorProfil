@@ -2,6 +2,8 @@
 #define QUERYUTILS_H
 #include <QObject>
 
+#include <QMap>
+
 
 class QueryUtils : public QObject
 {
@@ -23,6 +25,8 @@ public:
     static QString decryptMasterKey(QString password, QString filling, QString masterHash);
 
     static qlonglong addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling);
+
+    static QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId);
 
 
 

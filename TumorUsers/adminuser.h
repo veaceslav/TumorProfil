@@ -5,6 +5,38 @@
 #include <QPointer>
 #include <QVector>
 
+
+class MasterKey
+{
+public:
+
+
+    enum Fied
+    {
+        NAME_FIELD = 1,
+        VALUE_FIELD = 2
+    };
+
+    MasterKey()
+    {
+
+    }
+
+    MasterKey(QString name, QString value)
+    {
+        this->name = name;
+        this->value = value;
+    }
+    MasterKey(const MasterKey& copy)
+    {
+        this->name = copy.name;
+        this->value = copy.value;
+    }
+
+    QString name;
+    QString value;
+};
+
 class AdminUser  : public QObject
 {
 
