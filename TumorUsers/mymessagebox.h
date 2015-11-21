@@ -10,6 +10,7 @@ public:
 
     static void showError(QString title, QString errMsg);
     static void showWarning(QString title, QString warningMsg);
+    static void showInfo(QString title, QString infoMsg);
 };
 
 #endif // MYMESSAGEBOX_H

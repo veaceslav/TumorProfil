@@ -32,7 +32,7 @@ UserAddDialog::UserAddDialog(UserData &data, bool isAdmin, bool login) : QDialog
 
     d->buttons->button(QDialogButtonBox::Ok)->setDefault(true);
 
-    setupUi(isAdmin,login);
+    setupUi(data, isAdmin,login);
 
     connect(d->buttons->button(QDialogButtonBox::Ok), SIGNAL(clicked()),
             this, SLOT(accept()));
@@ -118,17 +118,22 @@ void UserAddDialog::accept()
     QDialog::accept();
 }
 
-void UserAddDialog::setupUi(bool isAdmin, bool login)
+void UserAddDialog::setupUi(UserData &data, bool isAdmin, bool login)
 {
     d->mainLabel = new QLabel(this);
     d->mainLabel->setWordWrap(true);
-    d->mainLabel->setText(tr("Choose username and password for the new user:"));
+    if(login)
+        d->mainLabel->setText(tr("Please provide the Username and Password"));
+    else
+        d->mainLabel->setText(tr("Choose username and password for the new user:"));
 
     QGridLayout* gLayout = new QGridLayout();
 
     QLabel* userLabel = new QLabel(this);
     userLabel->setText(tr("Username:"));
     d->username = new QLineEdit(this);
+    if(!data.userName.isEmpty())
+        d->username->setText(data.userName);
 
     if(isAdmin)
     {

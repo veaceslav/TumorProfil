@@ -36,6 +36,7 @@ UserWidget::~UserWidget()
 void UserWidget::populateTable()
 {
     d->tableView->clear();
+    setTableHeader();
     QLatin1String queryString("SELECT * from Users");
     QMap<QString, QVariant> bindMap;
     QVector<QVector<QVariant> > results;
@@ -156,14 +157,15 @@ void UserWidget::setTableHeader()
     QHeaderView* header = d->tableView->horizontalHeader();
     header->setSectionResizeMode(QHeaderView::Stretch);
 
-    d->headerLabelsList << tr("Number")
-                        << tr("Name")
-                        << tr("Group")
-                        << tr("Salt")
-                        << tr("Password Hash")
-                        << tr("Private key filling")
-                        << tr("Encrypted Key");
-
+    if(d->headerLabelsList.isEmpty())
+    {
+        d->headerLabelsList << tr("User Id")
+                            << tr("Name")
+                            << tr("Group")
+                            << tr("Salt")
+                            << tr("Password Hash")
+                            << tr("Private key filling");
+    }
     d->tableView->setColumnCount(d->headerLabelsList.size());
     d->tableView->setHorizontalHeaderLabels(d->headerLabelsList);
 }

@@ -25,7 +25,7 @@ public slots:
     void accept();
 private:
 
-    void setupUi(bool isAdmin, bool login);
+    void setupUi(UserData& data, bool isAdmin, bool login);
     class Private;
     Private* d;
 };

@@ -21,6 +21,7 @@
 #include "useradddialog.h"
 #include "queryutils.h"
 #include "adminuser.h"
+#include "mymessagebox.h"
 
 
 class MainWindow::Private
@@ -140,7 +141,11 @@ void MainWindow::slotDeleteUser()
     int index = d->userWidget->selectedRowId();
 
     if(index == -1)
+    {
+        MyMessageBox::showInfo(tr("Delete User"),
+                               tr("No use is selected, Please select one user"));
         return;
+    }
 
     QueryUtils::removeUser(index);
 

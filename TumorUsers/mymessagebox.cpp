@@ -14,9 +14,15 @@ void MyMessageBox::showError(QString title, QString errMsg)
                           errMsg );
 }
 
-void MyMessageBox::showWarning(QString title, QString errMsg)
+void MyMessageBox::showWarning(QString title, QString warningMsg)
 {
     QMessageBox::warning(qApp->activeWindow(), title,
-                          errMsg );
+                         warningMsg );
+}
+
+void MyMessageBox::showInfo(QString title, QString infoMsg)
+{
+    QMessageBox::information(qApp->activeWindow(), title,
+                         infoMsg );
 }
 
