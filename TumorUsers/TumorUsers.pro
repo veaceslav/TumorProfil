@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     queryutils.cpp \
     aesutils.cpp \
     useradddialog.cpp \
-    adminuser.cpp
+    adminuser.cpp \
+    mymessagebox.cpp
 
 HEADERS  += mainwindow.h \
     databaseconfigelement.h \
@@ -38,7 +39,8 @@ HEADERS  += mainwindow.h \
     queryutils.h \
     aesutils.h \
     useradddialog.h \
-    adminuser.h
+    adminuser.h \
+    mymessagebox.h
 
 FORMS    +=
 

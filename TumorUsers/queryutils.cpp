@@ -133,5 +133,21 @@ QVector<QVector<QVariant> > QueryUtils::retrieveMasterKeys(qlonglong userId)
     return results;
 }
 
+bool QueryUtils::removeUser(int userId)
+{
+    QMap<QString, QVariant> bindValues;
+    QVariant id;
+    bindValues[QLatin1String(":userid")] = userId;
+
+    DatabaseAccess::QueryStateEnum rez = DatabaseAccess::instance()->executeSql(QLatin1String("DELETE from Users where id=:userid"),
+                                                 bindValues,
+                                                 id);
+
+    if(rez == DatabaseAccess::NoErrors)
+        return true;
+    else
+        return false;
+}
+
 
 

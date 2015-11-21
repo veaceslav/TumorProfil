@@ -35,6 +35,7 @@ UserWidget::~UserWidget()
 
 void UserWidget::populateTable()
 {
+    d->tableView->clear();
     QLatin1String queryString("SELECT * from Users");
     QMap<QString, QVariant> bindMap;
     QVector<QVector<QVariant> > results;
@@ -124,6 +125,21 @@ void UserWidget::addRow(qlonglong id)
 
         d->tableView->setItem(rowcount,j,tableItem);
     }
+}
+
+int UserWidget::selectedRowId()
+{
+
+    QList<QTableWidgetItem*> items = d->tableView->selectedItems();
+
+    if(items.isEmpty())
+        return -1;
+
+    int rowNr = items.first()->row();
+
+    QTableWidgetItem* item = d->tableView->item(rowNr, 0);
+
+    return item->text().toInt();
 }
 
 void UserWidget::setupUi()

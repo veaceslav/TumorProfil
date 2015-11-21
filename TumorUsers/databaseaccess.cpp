@@ -7,6 +7,8 @@
 
 #include <QDebug>
 
+#include "mymessagebox.h"
+
 
 QPointer<DatabaseAccess> DatabaseAccess::internalPtr = QPointer<DatabaseAccess>();
 
@@ -144,6 +146,7 @@ bool DatabaseAccess::executeDBAction(QString actionName, QMap<QString, QVariant>
         {
             qDebug() << "Error while executing DBAction ["<<  action.name  <<"] Statement ["<<actionElement.statement<<"]";
 
+
             /*
             if (wrapInTransaction && !db.rollback())
             {
@@ -241,6 +244,8 @@ DatabaseAccess::QueryStateEnum DatabaseAccess::executeSql(QString queryString, Q
     }
     else
     {
+        MyMessageBox::showError(tr("Error Executing Query"),
+                                tr("Error while executing query [") + queryString + tr("] Error: ") + query->lastError().text().toLatin1());
         qDebug() << "Error:" << query->lastError().text().toLatin1();
         return DatabaseAccess::SQLError;
     }
@@ -280,6 +285,8 @@ DatabaseAccess::QueryStateEnum DatabaseAccess::executeDirectSql(QString queryStr
     else
     {
         qDebug() << "Error:" << query->lastError().text().toLatin1();
+        MyMessageBox::showError(tr("Error Executing Query"),
+                                tr("Error while executing query [") + queryString + tr("] Error: ") + query->lastError().text().toLatin1());
         return DatabaseAccess::SQLError;
     }
 }

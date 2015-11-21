@@ -28,7 +28,7 @@ public:
 
     static QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId);
 
-
+    static bool removeUser(int userId);
 
 signals:
 

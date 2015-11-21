@@ -53,6 +53,7 @@ public:
     static AdminUser* instance();
     bool logIn();
     QString masterKey();
+    bool isLoggedIn();
 
 protected:
     static QPointer<AdminUser> internalPtr;

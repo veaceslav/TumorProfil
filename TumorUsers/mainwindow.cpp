@@ -52,7 +52,12 @@ void MainWindow::slotListUsers()
 
     AdminUser* admin = AdminUser::instance();
 
-    bool result = admin->logIn();
+    bool result = true;
+    if(!admin->isLoggedIn())
+    {
+        result = false;
+        result = admin->logIn();
+    }
 
     if(result)
     {
@@ -77,6 +82,7 @@ void MainWindow::setupToolBar()
     d->toolBar = addToolBar(tr("Main"));
 
 
+    // TODO: find nice icons later
     d->toolBar->addAction(QIcon::fromTheme(""),
                           tr("List Users"), this,
                           SLOT(slotListUsers()));
@@ -84,6 +90,21 @@ void MainWindow::setupToolBar()
     d->toolBar->addAction(QIcon::fromTheme("add"),
                           tr("Add user"),
                           this, SLOT(slotAddUser()));
+
+    d->toolBar->addAction(QIcon::fromTheme(""),
+                          tr("Add Encryption Key"),
+                          this,
+                          SLOT(slotAddEncryptionKey()));
+
+    d->toolBar->addAction(QIcon::fromTheme(""),
+                          tr("Edit User"),
+                          this,
+                          SLOT(slotEditUser()));
+
+    d->toolBar->addAction(QIcon::fromTheme(""),
+                          tr("Delete Selected User"),
+                          this,
+                          SLOT(slotDeleteUser()));
 
 }
 
@@ -102,5 +123,27 @@ bool MainWindow::slotAddUser()
         d->userWidget->addRow(id);
     }
     return true;
+}
+
+void MainWindow::slotAddEncryptionKey()
+{
+
+}
+
+void MainWindow::slotEditUser()
+{
+
+}
+
+void MainWindow::slotDeleteUser()
+{
+    int index = d->userWidget->selectedRowId();
+
+    if(index == -1)
+        return;
+
+    QueryUtils::removeUser(index);
+
+    d->userWidget->populateTable();
 }
 

@@ -102,11 +102,12 @@ bool AdminUser::logIn()
         }
         else
         {
+            d->isLoggedIn = true;
             setData(data.password, results);
             return true;
         }
     }
-    return true;
+    return false;
 }
 
 QString AdminUser::masterKey()
@@ -114,4 +115,9 @@ QString AdminUser::masterKey()
     if(d->masterKeys.isEmpty())
         return QString();
     return d->masterKeys.first().value;
+}
+
+bool AdminUser::isLoggedIn()
+{
+    return d->isLoggedIn;
 }

@@ -18,6 +18,10 @@ public:
 private Q_SLOTS:
     void slotListUsers();
     bool slotAddUser();
+    void slotAddEncryptionKey();
+    void slotEditUser();
+    void slotDeleteUser();
+
 private:
     void setupUi();
     void setupToolBar();

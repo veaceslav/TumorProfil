@@ -11,6 +11,7 @@ public:
 
     void populateTable();
     void addRow(qlonglong id);
+    int selectedRowId();
 signals:
 
 public slots:
