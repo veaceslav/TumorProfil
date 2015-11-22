@@ -27,7 +27,9 @@ SOURCES += main.cpp\
     aesutils.cpp \
     useradddialog.cpp \
     adminuser.cpp \
-    mymessagebox.cpp
+    mymessagebox.cpp \
+    masterkeystable.cpp \
+    addkeywidget.cpp
 
 HEADERS  += mainwindow.h \
     databaseconfigelement.h \
@@ -40,7 +42,9 @@ HEADERS  += mainwindow.h \
     aesutils.h \
     useradddialog.h \
     adminuser.h \
-    mymessagebox.h
+    mymessagebox.h \
+    masterkeystable.h \
+    addkeywidget.h
 
 FORMS    +=
 

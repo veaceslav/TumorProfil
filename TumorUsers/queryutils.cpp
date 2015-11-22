@@ -68,8 +68,6 @@ qlonglong QueryUtils::addUser(QString name, QueryUtils::UserType userType, QStri
 
 
    qDebug() << "Id of inserted item: " << id;
-
-   addMasterKey(QString("Default"), id.toLongLong(), password, aesFilling);
    return id.toLongLong();
 }
 

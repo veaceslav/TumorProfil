@@ -26,6 +26,7 @@ public:
     }
     QString password;
     QList<MasterKey> masterKeys;
+    QString aesFilling;
     bool    isLoggedIn;
 };
 
@@ -42,27 +43,21 @@ AdminUser::AdminUser() : d(new Private())
 
 }
 
-void AdminUser::setData(QString password, QVector<QVector<QVariant> > &queryResult)
+void AdminUser::loadKeys()
 {
-    Q_UNUSED(queryResult);
-    d->password = password;
-
+    d->masterKeys.clear();
     QVector<QVector<QVariant> > result = QueryUtils::retrieveMasterKeys(ADMIN_ID);
 
     foreach (QVector<QVariant> key, result)
     {
+        QString decryptedKey = QueryUtils::decryptMasterKey(d->password,
+                                                            d->aesFilling,
+                                                            key.at(MasterKey::VALUE_FIELD).toString());
+
         MasterKey mKey(key.at(MasterKey::NAME_FIELD).toString(),
-                       key.at(MasterKey::VALUE_FIELD).toString());
+                       decryptedKey);
         d->masterKeys.append(mKey);
     }
-
-    //QByteArray masterKeyHash = queryResult.first().at(AdminUser::ENCRYPTED_KEY).toByteArray();
-
-//    QString filling = queryResult.first().at(AdminUser::AES_FILLING).toString();
-
-//    d->masterKey = QueryUtils::decryptMasterKey(d->password, filling, masterKeyHash);
-
-//    qDebug() << "Master key is: " << d->masterKey;
 }
 
 bool AdminUser::logIn()
@@ -103,7 +98,9 @@ bool AdminUser::logIn()
         else
         {
             d->isLoggedIn = true;
-            setData(data.password, results);
+            d->password = data.password;
+            d->aesFilling = results.first().at(AdminUser::AES_FILLING).toString();
+            loadKeys();
             return true;
         }
     }
@@ -120,4 +117,25 @@ QString AdminUser::masterKey()
 bool AdminUser::isLoggedIn()
 {
     return d->isLoggedIn;
+}
+
+QString AdminUser::aesFilling()
+{
+    return d->aesFilling;
+}
+
+QString AdminUser::adminPassword()
+{
+    return d->password;
+}
+
+QList<QString> AdminUser::masterKeyNames()
+{
+    QList<QString> list;
+
+    foreach(MasterKey key, d->masterKeys)
+    {
+        list.append(key.name);
+    }
+    return list;
 }

@@ -54,6 +54,10 @@ public:
     bool logIn();
     QString masterKey();
     bool isLoggedIn();
+    QString aesFilling();
+    QString adminPassword();
+    QList<QString> masterKeyNames();
+    void loadKeys();
 
 protected:
     static QPointer<AdminUser> internalPtr;
@@ -61,7 +65,6 @@ protected:
 
 
 private:
-    void setData(QString password, QVector<QVector<QVariant> >& queryResult);
     class Private;
     Private* d;
 };

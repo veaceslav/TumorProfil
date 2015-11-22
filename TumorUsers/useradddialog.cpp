@@ -172,4 +172,3 @@ void UserAddDialog::setupUi(UserData &data, bool isAdmin, bool login)
     vbx->addLayout(gLayout);
     vbx->addWidget(d->buttons);
 }
-
