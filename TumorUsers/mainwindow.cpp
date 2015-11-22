@@ -127,15 +127,22 @@ bool MainWindow::slotAddUser()
     UserData data = UserAddDialog::AddUser(false);
     if(data.userName.isEmpty() || data.password.isEmpty())
         return false;
-    qlonglong id = -1;
-    id = QueryUtils::addUser(data.userName, QueryUtils::USER, data.password , AdminUser::instance()->masterKey());
 
-    if(id == -1)
+    UserDetails user = QueryUtils::addUser(data.userName, QueryUtils::USER, data.password);
+
+    if(user.id == -1)
         return false;
     else
     {
-        d->userWidget->addRow(id);
+        d->userWidget->addRow(user.id);
     }
+
+
+    foreach(QString keyName, data.keys)
+    {
+        QueryUtils::addMasterKey(keyName, user.id, data.password, user.aesFilling, AdminUser::instance()->masterKey(keyName));
+    }
+
     return true;
 }
 

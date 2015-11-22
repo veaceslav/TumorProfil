@@ -264,7 +264,7 @@ bool SchemaUpdater::checkAndAddAdmin()
         UserData data = UserAddDialog::AddUser(true);
         if(data.userName.isEmpty() || data.password.isEmpty())
             return false;
-        QueryUtils::addUser(QLatin1String("admin"), QueryUtils::ADMIN, data.password , QString());
+        QueryUtils::addUser(QLatin1String("admin"), QueryUtils::ADMIN, data.password);
     }
 
     return true;

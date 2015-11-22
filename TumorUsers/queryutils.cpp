@@ -18,7 +18,7 @@ QueryUtils::QueryUtils(QObject *parent) : QObject(parent)
 
 }
 
-qlonglong QueryUtils::addUser(QString name, QueryUtils::UserType userType, QString password, QString masterKey)
+UserDetails QueryUtils::addUser(QString name, QueryUtils::UserType userType, QString password)
 {
    QMap<QString, QVariant> bindValues;
 
@@ -32,19 +32,6 @@ qlonglong QueryUtils::addUser(QString name, QueryUtils::UserType userType, QStri
    // add aes private key filling
    QString aesFilling = generateRandomString(AESKEY_LENGTH);
 
-   if(masterKey.isEmpty())
-   {
-       if(userType == QueryUtils::ADMIN)
-       {
-           masterKey = generateRandomString(MASTERKEY_SIZE);
-           qDebug() << "generated master key" << masterKey;
-       }
-       else
-       {
-           qDebug() << "Error, not an admin and no masterkey supplied";
-           return -1;
-       }
-   }
 
    bindValues[QLatin1String(":name")] = name;
 
@@ -56,7 +43,6 @@ qlonglong QueryUtils::addUser(QString name, QueryUtils::UserType userType, QStri
    bindValues[QLatin1String(":passwordSalt")] = salt;
    bindValues[QLatin1String(":passwordHash")] = QVariant(passHash);
    bindValues[QLatin1String(":aesPrivateKeyFilling")] = aesFilling;
-//   bindValues[QLatin1String(":encryptedKey")] = encodedKey;
 
    QVariant id;
    DatabaseAccess::instance()->executeSql(QLatin1String("INSERT into Users(name, usergroup, passwordSalt,"
@@ -68,7 +54,7 @@ qlonglong QueryUtils::addUser(QString name, QueryUtils::UserType userType, QStri
 
 
    qDebug() << "Id of inserted item: " << id;
-   return id.toLongLong();
+   return UserDetails(id.toLongLong(),aesFilling);
 }
 
 QString QueryUtils::generateRandomString(int length)
@@ -97,10 +83,12 @@ QString QueryUtils::decryptMasterKey(QString password, QString filling, QString 
     return AesUtils::decrypt(masterHash, decryption);
 }
 
-qlonglong QueryUtils::addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling)
+qlonglong QueryUtils::addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling, QString masterKey)
 {
 
-    QString masterKey = generateRandomString(MASTERKEY_SIZE);
+    if(masterKey.isEmpty())
+        masterKey = generateRandomString(MASTERKEY_SIZE);
+
     QString aesKey = password + aesFilling;
     aesKey.truncate(64);
     QString encodedKey = AesUtils::encrypt(masterKey, aesKey);

@@ -25,7 +25,7 @@ public:
         isLoggedIn = false;
     }
     QString password;
-    QList<MasterKey> masterKeys;
+    QMap<QString, MasterKey> masterKeys;
     QString aesFilling;
     bool    isLoggedIn;
 };
@@ -56,7 +56,7 @@ void AdminUser::loadKeys()
 
         MasterKey mKey(key.at(MasterKey::NAME_FIELD).toString(),
                        decryptedKey);
-        d->masterKeys.append(mKey);
+        d->masterKeys.insert(mKey.name, mKey);
     }
 }
 
@@ -107,11 +107,12 @@ bool AdminUser::logIn()
     return false;
 }
 
-QString AdminUser::masterKey()
+QString AdminUser::masterKey(QString name)
 {
-    if(d->masterKeys.isEmpty())
+    if(d->masterKeys.contains(name))
+        return d->masterKeys.value(name).value;
+    else
         return QString();
-    return d->masterKeys.first().value;
 }
 
 bool AdminUser::isLoggedIn()
@@ -131,11 +132,5 @@ QString AdminUser::adminPassword()
 
 QList<QString> AdminUser::masterKeyNames()
 {
-    QList<QString> list;
-
-    foreach(MasterKey key, d->masterKeys)
-    {
-        list.append(key.name);
-    }
-    return list;
+    return d->masterKeys.keys();
 }

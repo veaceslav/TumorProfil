@@ -4,6 +4,9 @@
 #include <QLineEdit>
 #include <QLabel>
 #include <QGridLayout>
+#include <QListWidget>
+
+#include "adminuser.h"
 
 class UserAddDialog::Private
 {
@@ -12,13 +15,14 @@ public:
     {
 
     }
-    QDialogButtonBox* buttons;
-    QLineEdit* username;
-    QLineEdit* password;
-    QLineEdit* passwordSecondTime;
-    QLabel*    errMsg;
-    QLabel*    mainLabel;
-    bool       login;
+    QDialogButtonBox*   buttons;
+    QLineEdit*      username;
+    QLineEdit*      password;
+    QLineEdit*      passwordSecondTime;
+    QLabel*         errMsg;
+    QLabel*         mainLabel;
+    QListWidget*    keyList;
+    bool            login;
 };
 
 UserAddDialog::UserAddDialog(UserData &data, bool isAdmin, bool login) : QDialog(), d(new Private)
@@ -34,6 +38,7 @@ UserAddDialog::UserAddDialog(UserData &data, bool isAdmin, bool login) : QDialog
 
     setupUi(data, isAdmin,login);
 
+    populateKeyList(data);
     connect(d->buttons->button(QDialogButtonBox::Ok), SIGNAL(clicked()),
             this, SLOT(accept()));
 
@@ -55,6 +60,7 @@ UserData UserAddDialog::AddUser(bool isAdmin)
     {
         data.userName = dlg->username();
         data.password = dlg->password();
+        data.keys     = dlg->selectedKeys();
     }
 
     delete dlg;
@@ -73,6 +79,7 @@ UserData UserAddDialog::editUser(bool isAdmin, UserData& data)
     {
         returnData.userName = dlg->username();
         returnData.password = dlg->password();
+        returnData.keys     = dlg->selectedKeys();
     }
     delete dlg;
     return returnData;
@@ -103,6 +110,19 @@ QString UserAddDialog::username()
 QString UserAddDialog::password()
 {
     return d->password->text();
+}
+
+QList<QString> UserAddDialog::selectedKeys()
+{
+    QList<QString> lst;
+
+    for(int i = 0; i < d->keyList->count(); i++)
+    {
+        QListWidgetItem* item = d->keyList->takeItem(i);
+        if(item->checkState() == Qt::Checked)
+            lst.append(item->text());
+    }
+    return lst;
 }
 
 void UserAddDialog::accept()
@@ -169,6 +189,32 @@ void UserAddDialog::setupUi(UserData &data, bool isAdmin, bool login)
     gLayout->addWidget(d->errMsg, 5, 1, 1, 4);
 
     QVBoxLayout* const vbx = new QVBoxLayout(this);
-    vbx->addLayout(gLayout);
+    QHBoxLayout* const hbx = new QHBoxLayout(this);
+
+    // List widget with keys
+    d->keyList = new QListWidget();
+
+    hbx->addLayout(gLayout);
+    if(!login)
+    {
+        hbx->addWidget(d->keyList);
+    }
+
+    vbx->addLayout(hbx);
     vbx->addWidget(d->buttons);
+}
+
+void UserAddDialog::populateKeyList(UserData &data)
+{
+    QList<QString> keyNames = AdminUser::instance()->masterKeyNames();
+
+    foreach(QString keyName, keyNames)
+    {
+        QListWidgetItem* item = new QListWidgetItem(keyName, d->keyList);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable); // set checkable flag
+        if(data.keys.contains(keyName))
+            item->setCheckState(Qt::Checked);
+        else
+            item->setCheckState(Qt::Unchecked); // AND initialize check state
+    }
 }

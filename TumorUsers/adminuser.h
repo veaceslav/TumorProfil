@@ -52,7 +52,7 @@ class AdminUser  : public QObject
 public:
     static AdminUser* instance();
     bool logIn();
-    QString masterKey();
+    QString masterKey(QString name);
     bool isLoggedIn();
     QString aesFilling();
     QString adminPassword();

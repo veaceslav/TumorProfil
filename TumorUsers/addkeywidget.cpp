@@ -80,7 +80,7 @@ void AddKeyWidget::setupUi()
 void AddKeyWidget::setHardcodedNames()
 {
     d->keyNames << "firstName"
-                << "surName"
+                << "surname"
                 << "dateOfBirth";
 }
 

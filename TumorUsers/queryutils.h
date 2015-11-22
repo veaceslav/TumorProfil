@@ -5,6 +5,35 @@
 #include <QMap>
 
 
+/**
+ * @brief The UserDetails class is a container class for storing information
+ *        about the use after it is being added to database
+ */
+class UserDetails
+{
+public:
+
+    UserDetails()
+    {
+        id = -1;
+    }
+
+    UserDetails(qlonglong id, QString aesFilling)
+    {
+        this->id = id;
+        this->aesFilling = aesFilling;
+    }
+
+    UserDetails(const UserDetails& copy)
+    {
+        this->id = copy.id;
+        this->aesFilling = copy.aesFilling;
+    }
+
+    qlonglong id;
+    QString aesFilling;
+};
+
 class QueryUtils : public QObject
 {
     Q_OBJECT
@@ -16,7 +45,7 @@ public:
 
     explicit QueryUtils(QObject *parent = 0);
 
-    static qlonglong addUser(QString name, UserType userType, QString password, QString masterKey);
+    static UserDetails addUser(QString name, UserType userType, QString password);
 
     static QString generateRandomString(int length);
 
@@ -24,7 +53,7 @@ public:
 
     static QString decryptMasterKey(QString password, QString filling, QString masterHash);
 
-    static qlonglong addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling);
+    static qlonglong addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling, QString masterKey = QString());
 
     static QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId);
 
