@@ -21,6 +21,10 @@ private Q_SLOTS:
     void slotAddEncryptionKey();
     void slotEditUser();
     void slotDeleteUser();
+    void slotDeleteMasterKey();
+
+    void slotConnectedToDb();
+    void slotEnableActions();
 
 private:
     void setupUi();

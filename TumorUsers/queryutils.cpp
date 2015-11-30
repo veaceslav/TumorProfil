@@ -135,5 +135,37 @@ bool QueryUtils::removeUser(int userId)
         return false;
 }
 
+bool QueryUtils::removeMasterKey(QString keyName)
+{
+    QMap<QString, QVariant> bindValues;
+    QVariant id;
+    bindValues[QLatin1String(":keyName")] = keyName;
+
+    DatabaseAccess::QueryStateEnum rez = DatabaseAccess::instance()->executeSql(QLatin1String("DELETE from MasterKeys where keyName=:keyName"),
+                                                 bindValues,
+                                                 id);
+
+    if(rez == DatabaseAccess::NoErrors)
+        return true;
+    else
+        return false;
+}
+
+bool QueryUtils::removeAllMasterKeys(int userid)
+{
+    QMap<QString, QVariant> bindValues;
+    QVariant id;
+    bindValues[QLatin1String(":userid")] = userid;
+
+    DatabaseAccess::QueryStateEnum rez = DatabaseAccess::instance()->executeSql(QLatin1String("DELETE from MasterKeys where userid=:userid"),
+                                                 bindValues,
+                                                 id);
+
+    if(rez == DatabaseAccess::NoErrors)
+        return true;
+    else
+        return false;
+}
+
 
 

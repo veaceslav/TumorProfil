@@ -59,6 +59,10 @@ public:
 
     static bool removeUser(int userId);
 
+    static bool removeMasterKey(QString keyName);
+
+    static bool removeAllMasterKeys(int userid);
+
 signals:
 
 public slots:

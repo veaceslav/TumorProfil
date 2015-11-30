@@ -9,6 +9,7 @@
 #include <QLabel>
 #include <QApplication>
 #include <QMessageBox>
+#include <QAction>
 
 #include <QDesktopWidget>
 #include <QToolBar>
@@ -40,12 +41,15 @@ public:
     QToolBar* toolBar;
     UserWidget* userWidget;
     MasterKeysTable* keysTables;
+    DatabaseGuiOptions* dbGui;
 };
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), d(new Private())
 {
     setupUi();
     setupToolBar();
+
+    connect(d->dbGui, SIGNAL(signalconnectedToDb()), this, SLOT(slotConnectedToDb()));
     resize(QDesktopWidget().availableGeometry(this).size() * 0.7);
 }
 
@@ -70,6 +74,7 @@ void MainWindow::slotListUsers()
     {
         d->userWidget->populateTable();
         d->keysTables->populateTable();
+        slotEnableActions();
     }
 }
 
@@ -84,9 +89,9 @@ void MainWindow::setupUi()
 
     tabWidget->addTab(d->userWidget, tr("Users"));
     tabWidget->addTab(d->keysTables, tr("Keys"));
-    DatabaseGuiOptions* dbGui = new DatabaseGuiOptions(widget);
+    d->dbGui = new DatabaseGuiOptions(widget);
 
-    hbox->addWidget(dbGui,2);
+    hbox->addWidget(d->dbGui,2);
     hbox->addWidget(tabWidget,6);
     this->setCentralWidget(widget);
 }
@@ -97,29 +102,44 @@ void MainWindow::setupToolBar()
 
 
     // TODO: find nice icons later
-    d->toolBar->addAction(QIcon::fromTheme(""),
+    QAction* action = d->toolBar->addAction(QIcon::fromTheme(""),
                           tr("List Users"), this,
                           SLOT(slotListUsers()));
 
-    d->toolBar->addAction(QIcon::fromTheme("add"),
+    action->setEnabled(false);
+
+    action = d->toolBar->addAction(QIcon::fromTheme("add"),
                           tr("Add user"),
                           this, SLOT(slotAddUser()));
 
-    d->toolBar->addAction(QIcon::fromTheme(""),
+    action->setEnabled(false);
+
+    action = d->toolBar->addAction(QIcon::fromTheme(""),
                           tr("Add Encryption Key"),
                           this,
                           SLOT(slotAddEncryptionKey()));
 
-    d->toolBar->addAction(QIcon::fromTheme(""),
+    action->setEnabled(false);
+
+    action = d->toolBar->addAction(QIcon::fromTheme(""),
                           tr("Edit User"),
                           this,
                           SLOT(slotEditUser()));
 
-    d->toolBar->addAction(QIcon::fromTheme(""),
+    action->setEnabled(false);
+
+    action = d->toolBar->addAction(QIcon::fromTheme(""),
                           tr("Delete Selected User"),
                           this,
                           SLOT(slotDeleteUser()));
 
+    action->setEnabled(false);
+    action = d->toolBar->addAction(QIcon::fromTheme(""),
+                          tr("Delete Selected Key"),
+                          this,
+                          SLOT(slotDeleteMasterKey()));
+
+    action->setEnabled(false);
 }
 
 bool MainWindow::slotAddUser()
@@ -179,5 +199,25 @@ void MainWindow::slotDeleteUser()
     QueryUtils::removeUser(index);
 
     d->userWidget->populateTable();
+}
+
+void MainWindow::slotDeleteMasterKey()
+{
+
+}
+
+void MainWindow::slotConnectedToDb()
+{
+    d->toolBar->actions().first()->setEnabled(true);
+}
+
+void MainWindow::slotEnableActions()
+{
+    QList<QAction*> actions = d->toolBar->actions();
+
+    foreach(QAction* action, actions)
+    {
+        action->setEnabled(true);
+    }
 }
 
