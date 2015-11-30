@@ -84,19 +84,19 @@ void MasterKeysTable::populateTable()
 
 }
 
-int MasterKeysTable::selectedRowId()
+QString MasterKeysTable::selectedRowName()
 {
 
     QList<QTableWidgetItem*> items = d->tableView->selectedItems();
 
     if(items.isEmpty())
-        return -1;
+        return QString();
 
     int rowNr = items.first()->row();
 
-    QTableWidgetItem* item = d->tableView->item(rowNr, 0);
+    QTableWidgetItem* item = d->tableView->item(rowNr, 1);
 
-    return item->text().toInt();
+    return item->text();
 }
 
 void MasterKeysTable::setupUi()

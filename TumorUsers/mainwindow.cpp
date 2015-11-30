@@ -160,7 +160,8 @@ bool MainWindow::slotAddUser()
 
     foreach(QString keyName, data.keys)
     {
-        QueryUtils::addMasterKey(keyName, user.id, data.password, user.aesFilling, AdminUser::instance()->masterKey(keyName));
+        QueryUtils::addMasterKey(keyName, user.id, data.password, user.aesFilling,
+                                 AdminUser::instance()->masterKey(keyName));
     }
 
     return true;
@@ -196,6 +197,13 @@ void MainWindow::slotDeleteUser()
         return;
     }
 
+    if(index == 1)
+    {
+        MyMessageBox::showInfo(tr("Delete User"),
+                               tr("Deleting admin user is not implemented"));
+        return;
+    }
+
     QueryUtils::removeUser(index);
 
     d->userWidget->populateTable();
@@ -203,7 +211,19 @@ void MainWindow::slotDeleteUser()
 
 void MainWindow::slotDeleteMasterKey()
 {
+    QString keyName = d->keysTables->selectedRowName();
 
+    if(keyName.isEmpty())
+    {
+        MyMessageBox::showInfo(tr("Delete Master Key"),
+                               tr("No Key is selected, Please select one Key"));
+        return;
+    }
+
+
+    QueryUtils::removeMasterKey(keyName);
+
+    d->keysTables->populateTable();
 }
 
 void MainWindow::slotConnectedToDb()

@@ -11,7 +11,7 @@ public:
     ~MasterKeysTable();
 
     void populateTable();
-    int selectedRowId();
+    QString selectedRowName();
 signals:
 
 public slots:
