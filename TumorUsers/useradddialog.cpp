@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QGridLayout>
 #include <QListWidget>
+#include <QDebug>
 
 #include "adminuser.h"
 
@@ -118,10 +119,11 @@ QList<QString> UserAddDialog::selectedKeys()
 
     for(int i = 0; i < d->keyList->count(); i++)
     {
-        QListWidgetItem* item = d->keyList->takeItem(i);
+        QListWidgetItem* item = d->keyList->item(i);
         if(item->checkState() == Qt::Checked)
             lst.append(item->text());
     }
+    qDebug() << lst.size();
     return lst;
 }
 
