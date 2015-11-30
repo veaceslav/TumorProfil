@@ -143,6 +143,22 @@ int UserWidget::selectedRowId()
     return item->text().toInt();
 }
 
+QList<QVariant> UserWidget::selectedRowData()
+{
+    QList<QTableWidgetItem*> items = d->tableView->selectedItems();
+
+    if(items.isEmpty())
+        return QList<QVariant>();
+
+    int rowNr = items.first()->row();
+
+    QList<QVariant> data;
+    data.append(d->tableView->item(rowNr, UserWidget::USERID_COLUMN)->text().toInt()); // append id
+    data.append(d->tableView->item(rowNr, UserWidget::USERNAME_COLUMN)->text()); // append name
+    data.append(d->tableView->item(rowNr, UserWidget::USERGROUP_COLUMN)->text()); // append group
+    return data;
+}
+
 void UserWidget::setupUi()
 {
     QVBoxLayout* lay = new QVBoxLayout(this);

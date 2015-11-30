@@ -59,7 +59,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::slotListUsers()
 {
-    qDebug() << "Connection is established";
 
     AdminUser* admin = AdminUser::instance();
 
@@ -183,6 +182,46 @@ void MainWindow::slotAddEncryptionKey()
 
 void MainWindow::slotEditUser()
 {
+    QList<QVariant> userData = d->userWidget->selectedRowData();
+
+    UserData oldData;
+    oldData.userName = userData.at(1).toString();
+
+    QVector<QVector<QVariant> > userKeys = QueryUtils::retrieveMasterKeys(userData.first().toInt());
+
+    foreach (QVector<QVariant> key, userKeys)
+    {
+        oldData.keys.append(key.at(MasterKey::NAME_FIELD).toString());
+    }
+
+    UserData data = UserAddDialog::editUser(false, oldData);
+
+    if(data.userName.isEmpty() || data.password.isEmpty())
+        return;
+
+    UserDetails user = QueryUtils::editUser(data.userName, QueryUtils::USER,
+                                            data.password, userData.at(UserWidget::USERID_COLUMN).toInt());
+
+    if(user.id == -1)
+        return;
+    else
+    {
+        d->userWidget->populateTable();
+    }
+
+    QueryUtils::removeAllMasterKeys(user.id);
+
+    foreach(QString keyName, data.keys)
+    {
+        QueryUtils::addMasterKey(keyName, user.id, data.password, user.aesFilling,
+                                 AdminUser::instance()->masterKey(keyName));
+    }
+
+    if(user.id == ADMIN_ID)
+    {
+        AdminUser::instance()->loadKeys();
+        d->keysTables->populateTable();
+    }
 
 }
 

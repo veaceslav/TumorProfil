@@ -47,6 +47,8 @@ public:
 
     static UserDetails addUser(QString name, UserType userType, QString password);
 
+    static UserDetails editUser(QString name, UserType userType, QString password, qlonglong userId);
+
     static QString generateRandomString(int length);
 
     static QString encpryptMasterKey(QString password, QString filling, QString masterKey);

@@ -57,6 +57,46 @@ UserDetails QueryUtils::addUser(QString name, QueryUtils::UserType userType, QSt
    return UserDetails(id.toLongLong(),aesFilling);
 }
 
+UserDetails QueryUtils::editUser(QString name, QueryUtils::UserType userType, QString password, qlonglong userId)
+{
+    QMap<QString, QVariant> bindValues;
+
+
+    QString salt = generateRandomString(SALT_SIZE);
+
+    // Compute password
+    QString saltedPass(password + salt);
+    QByteArray passHash = QCryptographicHash::hash(saltedPass.toLatin1(), QCryptographicHash::Sha256);
+
+    // add aes private key filling
+    QString aesFilling = generateRandomString(AESKEY_LENGTH);
+
+
+    bindValues[QLatin1String(":name")] = name;
+
+    if(userType == QueryUtils::ADMIN)
+        bindValues[QLatin1String(":usergroup")] = "ADMIN";
+    else
+        bindValues[QLatin1String(":usergroup")] = "USER";
+
+    bindValues[QLatin1String(":passwordSalt")] = salt;
+    bindValues[QLatin1String(":passwordHash")] = QVariant(passHash);
+    bindValues[QLatin1String(":aesPrivateKeyFilling")] = aesFilling;
+    bindValues[QLatin1String(":userid")] = userId;
+
+    QVariant id;
+    DatabaseAccess::instance()->executeSql(QLatin1String("UPDATE Users"
+                                                         " SET name= :name, usergroup= :usergroup, passwordSalt= :passwordSalt, "
+                                                         " passwordHash= :passwordHash, aesPrivateKeyFilling= :aesPrivateKeyFilling"
+                                                         " WHERE id = :userid"),
+                                                 bindValues,
+                                                 id);
+
+
+    qDebug() << "Id of inserted item: " << userId;
+    return UserDetails(userId,aesFilling);
+}
+
 QString QueryUtils::generateRandomString(int length)
 {
     qsrand(time(NULL));
