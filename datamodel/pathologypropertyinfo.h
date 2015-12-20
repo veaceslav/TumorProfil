@@ -54,6 +54,9 @@ public:
         IHC_PR,
         IHC_cMET,
         IHC_ROS1,
+        IHC_PD1,
+        IHC_PDL1,
+        IHC_PDL1_immunecell,
         Fish_ALK,
         Fish_HER2,
         Fish_FGFR1,
@@ -136,6 +139,7 @@ public:
     static PathologyPropertyInfo info(Property property);
     static PathologyPropertyInfo info(const QString& id);
     static QList<PathologyPropertyInfo> allInfosWithType(ValueTypeCategory category);
+    static QList<PathologyPropertyInfo> allIHC();
     static QList<PathologyPropertyInfo> allMutations() { return allInfosWithType(Mutation); }
     static QList<PathologyPropertyInfo> allFish() { return allInfosWithType(Fish); }
 };
