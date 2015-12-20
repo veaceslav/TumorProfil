@@ -110,6 +110,12 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
         return PathologyPropertyInfo(property, IHCHScore, "ihc/c-met", QObject::tr("cMet"));
     case IHC_ROS1:
         return PathologyPropertyInfo(property, IHCTwoDim, "ihc/ros1", QObject::tr("ROS1"));
+    case IHC_PD1:
+        return PathologyPropertyInfo(property, IHCHScore, "ihc/pd1", QObject::tr("PD-1"));
+    case IHC_PDL1:
+        return PathologyPropertyInfo(property, IHCHScore, "ihc/pdl1", QObject::tr("PD-L1"));
+    case IHC_PDL1_immunecell:
+        return PathologyPropertyInfo(property, IHCBoolean, "ihc/pdl1-immunecell", QObject::tr("PD-L1 Immunzellen"));
     case Fish_ALK:
         return PathologyPropertyInfo(property, Fish, "fish/alk", QObject::tr("ALK-Translokation"), QObject::tr("Prozentsatz:"));
     case Fish_HER2:
@@ -147,11 +153,11 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
     case IHC_pP70S6K:
         return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-p70S6k", QObject::tr("p-p70S6K"));
     case IHC_MLH1:
-        return PathologyPropertyInfo(property, IHCClassical, "ihc/mlh1", QObject::tr("MLH1"));
+        return PathologyPropertyInfo(property, IHCBoolean, "ihc/mlh1", QObject::tr("MLH1"));
     case IHC_MSH2:
-        return PathologyPropertyInfo(property, IHCClassical, "ihc/msh2", QObject::tr("MSH2"));
+        return PathologyPropertyInfo(property, IHCBoolean, "ihc/msh2", QObject::tr("MSH2"));
     case IHC_MSH6:
-        return PathologyPropertyInfo(property, IHCClassical, "ihc/msh6", QObject::tr("MSH6"));
+        return PathologyPropertyInfo(property, IHCBoolean, "ihc/msh6", QObject::tr("MSH6"));
     case PCR_D5S346:
         return PathologyPropertyInfo(property, StableUnstable, "msi/d5s346", QObject::tr("MSI PCR: D5S346"));
     case PCR_BAT26:
@@ -221,7 +227,21 @@ QList<PathologyPropertyInfo> PathologyPropertyInfo::allInfosWithType(ValueTypeCa
         PathologyPropertyInfo obj = info((Property)i);
         if (obj.valueType == category)
         {
-            return infos << obj;
+            infos << obj;
+        }
+    }
+    return infos;
+}
+
+QList<PathologyPropertyInfo> PathologyPropertyInfo::allIHC()
+{
+    QList<PathologyPropertyInfo> infos;
+    for (int i = FirstProperty; i<= LastProperty; i++)
+    {
+        PathologyPropertyInfo obj = info((Property)i);
+        if (obj.valueType >= IHCClassical && obj.valueType <= IHCHScore)
+        {
+            infos << obj;
         }
     }
     return infos;
