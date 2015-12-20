@@ -21,9 +21,11 @@
 
 #include "patientparsepage.h"
 
+#include <QAction>
 #include <QDateEdit>
 #include <QLabel>
 #include <QHBoxLayout>
+#include <QMenu>
 #include <QPushButton>
 #include <QTextEdit>
 #include <QVBoxLayout>
@@ -100,6 +102,7 @@ PatientParsePage::PatientParsePage(const PatientParseResults& results)
     }
 
     model = new PathologyPropertiesTableModel(this);
+    model->setEditingEnabled(true);
     filterModel = new PathologyPropertiesTableFilterModel(this);
     view  = new PathologyPropertiesTableView;
     view->setModels(model, filterModel);
@@ -110,8 +113,19 @@ PatientParsePage::PatientParsePage(const PatientParseResults& results)
     path.date       = results.resultsDate;
     model->setPathology(path);
 
+    QHBoxLayout* lineBelowTableView = new QHBoxLayout;
+
     QLabel* unknownTextLabel = new QLabel(tr("Nicht erkannte Passagen aus den Befunden:"));
-    layout->addWidget(unknownTextLabel);
+    lineBelowTableView->addWidget(unknownTextLabel);
+
+    lineBelowTableView->addStretch(1);
+    QPushButton* addNewFindingButton = new QPushButton(QIcon::fromTheme("add"), tr("Eintrag hinzufügen"));
+    addNewFindingButton->setMenu(buildPropertyMenu());
+    connect(addNewFindingButton->menu(), &QMenu::triggered, this, &PatientParsePage::addPropertyTriggered);
+    lineBelowTableView->addWidget(addNewFindingButton);
+
+    layout->addLayout(lineBelowTableView);
+
     QTextEdit* textEdit = new QTextEdit;
     textEdit->setReadOnly(true);
     textEdit->setPlainText(results.unrecognizedText);
@@ -189,4 +203,104 @@ void PatientParsePage::showFullText()
     fullTextEdit->setReadOnly(true);
     fullTextEdit->setPlainText(results.text);
     fullTextEdit->show();
+}
+
+QMenu* PatientParsePage::buildPropertyMenu()
+{
+    QMenu* menu = new QMenu;
+
+    QMenu* ihcMenu = menu->addMenu(tr("IHC"));
+    fillPropertySubmenu(ihcMenu, PathologyPropertyInfo::allIHC());
+
+    QMenu* mutationSubMenu = menu->addMenu(tr("Mutationsanalyse"));
+    fillPropertySubmenu(mutationSubMenu, PathologyPropertyInfo::allMutations());
+
+    QMenu* fishSubMenu = menu->addMenu(tr("FISH"));
+    fillPropertySubmenu(fishSubMenu, PathologyPropertyInfo::allFish());
+
+    QAction* allAdenoAction = ihcMenu->addAction(tr("IHC Adenokarzinom Lunge"));
+    allAdenoAction->setData(QVariantList()
+                            << PathologyPropertyInfo::IHC_ALK
+                            << PathologyPropertyInfo::IHC_ROS1
+                            << PathologyPropertyInfo::IHC_PTEN
+                            << PathologyPropertyInfo::IHC_HER2
+                            << PathologyPropertyInfo::IHC_HER2_DAKO
+                            << PathologyPropertyInfo::IHC_pAKT
+                            << PathologyPropertyInfo::IHC_pERK
+                            << PathologyPropertyInfo::IHC_PDL1
+                            << PathologyPropertyInfo::IHC_PDL1_immunecell);
+
+    QAction* allPECAction = ihcMenu->addAction(tr("IHC PEC Lunge"));
+    allPECAction->setData(QVariantList()
+                            << PathologyPropertyInfo::IHC_PTEN
+                            << PathologyPropertyInfo::IHC_pAKT
+                            << PathologyPropertyInfo::IHC_pERK);
+
+    QAction* allCRCAction = ihcMenu->addAction(tr("IHC CRC"));
+    allCRCAction->setData(QVariantList()
+                            << PathologyPropertyInfo::IHC_PTEN
+                            << PathologyPropertyInfo::IHC_pAKT
+                            << PathologyPropertyInfo::IHC_pERK
+                            << PathologyPropertyInfo::IHC_pP70S6K
+                            << PathologyPropertyInfo::IHC_MLH1
+                            << PathologyPropertyInfo::IHC_MSH2);
+
+    QAction* allMutAction = mutationSubMenu->addAction(tr("NGS Panel"));
+    allMutAction->setData(QVariantList()
+                          << PathologyPropertyInfo::Mut_BRAF_11
+                          << PathologyPropertyInfo::Mut_BRAF_15
+                          << PathologyPropertyInfo::Mut_DDR2
+                          << PathologyPropertyInfo::Mut_EGFR_18_20
+                          << PathologyPropertyInfo::Mut_EGFR_19_21
+                          << PathologyPropertyInfo::Mut_ERBB2
+                          << PathologyPropertyInfo::Mut_FGFR1
+                          << PathologyPropertyInfo::Mut_FGFR3
+                          << PathologyPropertyInfo::Mut_HRAS_2_4
+                          << PathologyPropertyInfo::Mut_NRAS_2_4
+                          << PathologyPropertyInfo::Mut_KIT
+                          << PathologyPropertyInfo::Mut_KRAS_2
+                          << PathologyPropertyInfo::Mut_KRAS_3
+                          << PathologyPropertyInfo::Mut_KRAS_4
+                          << PathologyPropertyInfo::Mut_MET
+                          << PathologyPropertyInfo::Mut_PDGFRa
+                          << PathologyPropertyInfo::Mut_PIK3CA_10_21
+                          << PathologyPropertyInfo::Mut_RET
+                          << PathologyPropertyInfo::Mut_TP53);
+
+    return menu;
+}
+
+void PatientParsePage::fillPropertySubmenu(QMenu* menu, const QList<PathologyPropertyInfo>& infos)
+{
+    foreach (const PathologyPropertyInfo& info, infos)
+    {
+        QAction* action = menu->addAction(info.label);
+        action->setData((int)info.property);
+    }
+}
+
+void PatientParsePage::addPropertyTriggered(QAction *action)
+{
+    QVariant propertyData = action->data();
+    QList<PathologyPropertyInfo> infos;
+    if (propertyData.type() == QVariant::Int)
+    {
+        infos << PathologyPropertyInfo::info((PathologyPropertyInfo::Property)propertyData.toInt());
+    }
+    else if (propertyData.type() == QVariant::List)
+    {
+        foreach (const QVariant& element, propertyData.toList())
+        {
+            infos << PathologyPropertyInfo::info((PathologyPropertyInfo::Property)element.toInt());
+        }
+    }
+
+    PropertyList newProperties;
+    foreach (const PathologyPropertyInfo& info, infos)
+    {
+        Property prop;
+        prop.property = info.id;
+        newProperties << prop;
+    }
+    model->addProperties(newProperties);
 }
