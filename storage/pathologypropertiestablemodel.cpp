@@ -22,6 +22,7 @@
 #include "pathologypropertiestablemodel.h"
 
 #include <QDebug>
+#include <QPair>
 
 #include "pathologypropertyinfo.h"
 
@@ -42,14 +43,22 @@ PropertyType& segmentedPropertiesListElement(ListType& list, int index)
 template <class ListType, class IteratorType, class PropertyType>
 IteratorType segmentedPropertiesListSegmentIterator(ListType& list, int index)
 {
+    return segmentedPropertiesListSegmentIterator<ListType, IteratorType, PropertyType>(list, &index);
+}
+
+// Note: This method takes the index parameter as a pointer and changes it
+// to contain the index of the property in the Pathology's property list!
+template <class ListType, class IteratorType, class PropertyType>
+IteratorType segmentedPropertiesListSegmentIterator(ListType& list, int* index)
+{
     for (IteratorType it = list.begin(); /* stopped by index, or crash if index is invalid*/; ++it)
     {
         const int propertiesSize = it->properties.size();
-        if (index < propertiesSize)
+        if (*index < propertiesSize)
         {
             return it;
         }
-        index -= propertiesSize;
+        *index -= propertiesSize;
     }
 }
 
@@ -78,6 +87,23 @@ public:
         return *segmentedPropertiesListSegmentIterator<const QList<Pathology>, QList<Pathology>::const_iterator, const Property>(pathologies, index);
     }
 
+    // Converts from "flat" index over all pathologies, to index in pathologies / index in the pathology's property list
+    int toOverallIndex(int pathologyIndex, int propertyIndex)
+    {
+        int index = 0;
+        for (int i=0; i<pathologyIndex; ++i)
+        {
+            index += pathologies[i].properties.size();
+        }
+        return index + propertyIndex;
+    }
+    QPair<int,int> fromOverallIndex(int overallIndex)
+    {
+        int index = overallIndex;
+        QList<Pathology>::const_iterator pathIterator = segmentedPropertiesListSegmentIterator<const QList<Pathology>, QList<Pathology>::const_iterator, const Property>(pathologies, &index);
+        return QPair<int,int>(pathIterator-pathologies.begin(), index);
+    }
+
     int propertiesSize() const
     {
         int size = 0;
@@ -90,10 +116,14 @@ public:
 
     bool         editingEnabled;
 
-    bool hasInvalidProperties() const
+    bool pathologyListClean() const
     {
         foreach (const Pathology& pathology, pathologies)
         {
+            if (pathology.properties.isEmpty() && pathology.reports.isEmpty())
+            {
+                return true;
+            }
             foreach (const Property& prop, pathology.properties)
             {
                 if (!prop.isValid())
@@ -134,13 +164,17 @@ QList<Pathology> PathologyPropertiesTableModel::pathologies() const
 
 QList<Pathology> PathologyPropertiesTableModel::pathologiesConsolidated() const
 {
-    if (!d->hasInvalidProperties())
+    if (!d->pathologyListClean())
     {
         return d->pathologies;
     }
     QList<Pathology> cleanPaths;
     foreach (const Pathology& pathology, d->pathologies)
     {
+        if (pathology.properties.isEmpty() && pathology.reports.isEmpty())
+        {
+            continue;
+        }
         cleanPaths << pathology;
         cleanPaths.last().properties.clear();
         foreach (const Property& prop, pathology.properties)
@@ -258,10 +292,21 @@ bool PathologyPropertiesTableModel::setData(const QModelIndex &index, const QVar
     }
     Property newProp = value.value<Property>();
     Property& oldProp = d->property(index.row());
+
+    if (newProp.isEmpty())
+    {
+        beginRemoveRows(QModelIndex(), index.row(), index.row());
+        QPair<int,int> indexes = d->fromOverallIndex(index.row());
+        d->pathologies[indexes.first].properties.removeAt(indexes.second);
+        endInsertRows();
+        return true;
+    }
+
     if (oldProp == newProp)
     {
         return true;
     }
+
     Property& propRef = d->property(index.row());
     propRef = newProp;
     emit dataChanged(index, index);
@@ -280,6 +325,38 @@ void PathologyPropertiesTableModel::setEditingEnabled(bool enabled)
     {
         emit dataChanged(index(0,0), index(rowCount()-1, columnCount()-1));
     }
+}
+
+int PathologyPropertiesTableModel::addPathology(const Pathology& pathology)
+{
+    beginInsertRows(QModelIndex(), d->propertiesSize(), d->propertiesSize() + pathology.properties.size());
+    d->pathologies << pathology;
+    endInsertRows();
+    return d->pathologies.size() - 1;
+}
+
+void PathologyPropertiesTableModel::addProperties(const PropertyList& properties)
+{
+    if (d->pathologies.isEmpty())
+    {
+        // No pathology yet? Create a default one
+        Pathology path;
+        path.properties = properties;
+        addPathology(path);
+    }
+    else
+    {
+        addProperties(d->pathologies.size()-1, properties);
+    }
+}
+
+void PathologyPropertiesTableModel::addProperties(int pathologyIndex, const PropertyList& properties)
+{
+    Pathology& path  = d->pathologies[pathologyIndex];
+    int firstNewIndex = d->toOverallIndex(pathologyIndex, 0) + path.properties.size();
+    beginInsertRows(QModelIndex(), firstNewIndex, firstNewIndex + properties.size());
+    path.properties << properties;
+    endInsertRows();
 }
 
 PathologyPropertiesTableFilterModel::PathologyPropertiesTableFilterModel(QObject* parent)
