@@ -23,7 +23,9 @@
 
 #include <QDebug>
 
+#include "actionableresultchecker.h"
 #include "combinedvalue.h"
+#include "dataaggregator.h"
 #include "diseasehistory.h"
 #include "history/historyiterator.h"
 #include "ihcscore.h"
@@ -922,7 +924,7 @@ void AnalysisGenerator::crc2015()
     m_file.finishWriting();
 }
 
-void AnalysisGenerator::nsclcSNCNTrialFinalFromCSV()
+void AnalysisGenerator::nsclcSCNE21ListFromCSV()
 {
     QList<Patient::Ptr> patients = patientsFromCSV("/home/marcel/Dokumente/Tumorprofil/Novartis SCNE-21/Final/Daten 180 Patienten.csv");
     m_file.openForWriting("/home/marcel/Dokumente/Tumorprofil/Novartis SCNE-21/Final/Patienten Mutationen OS.csv");
@@ -993,6 +995,98 @@ void AnalysisGenerator::nsclcSNCNTrialFinalFromCSV()
         m_file.newLine();
     }
 
+    m_file.finishWriting();
+}
+
+void AnalysisGenerator::nsclcSCNE21PathologyDates()
+{
+    QList<Patient::Ptr> patients = patientsFromCSV("/home/marcel/Dokumente/Tumorprofil/Novartis SCNE-21/Final/Patienten Mutationen OS.csv");
+    m_file.openForWriting("/home/marcel/Dokumente/Tumorprofil/Novartis SCNE-21/Final/Patienten Befunddatum.csv");
+    m_file << "id";
+    m_file << "Nachname";
+    m_file << "Vorname";
+    m_file << "Geburtsdatum";
+    m_file << "Befunddatum";
+    m_file.newLine();
+
+    qDebug() << "Identified" << patients.size();
+
+    foreach (Patient::Ptr p, patients)
+    {
+        m_file << p->id;
+        m_file << p->surname;
+        m_file << p->firstName;
+        m_file << p->dateOfBirth;
+
+        const Disease& disease = p->firstDisease();
+        if (!disease.hasProfilePathology())
+        {
+            m_file << QDate();
+        }
+        else
+        {
+            const Pathology& path = disease.firstProfilePathology();
+            m_file << path.date;
+        }
+
+        m_file.newLine();
+    }
+
+    m_file.finishWriting();
+}
+
+void AnalysisGenerator::writeActionableCombinations(const QList<Patient::Ptr>& patients)
+{
+    QMap< QList<PathologyPropertyInfo>, DataAggregator* > actionableCombinations = ActionableResultChecker::actionableCombinations(patients, ActionableResultChecker::IncludeRAS);
+    QMap< QList<PathologyPropertyInfo>,  DataAggregator* >::const_iterator it;
+    for (it = actionableCombinations.begin(); it != actionableCombinations.end(); ++it)
+    {
+        QStringList titles;
+        foreach (const PathologyPropertyInfo& info, it.key())
+        {
+            titles << info.plainTextLabel();
+        }
+        if (titles.isEmpty())
+        {
+            titles << "Kein relevanter Befund";
+        }
+        m_file << titles.join(", ");
+        m_file << it.value()->values().value(AggregatedDatumInfo(AggregatedDatumInfo::Positive, AggregatedDatumInfo::AbsoluteValue));
+        m_file.newLine();
+    }
+    qDeleteAll(actionableCombinations);
+}
+
+void AnalysisGenerator::nsclcSCNE21ActionableResults()
+{
+    QList<Patient::Ptr> patients = patientsFromCSV("/home/marcel/Dokumente/Tumorprofil/Novartis SCNE-21/Final/Patienten Mutationen OS.csv");
+    m_file.openForWriting("/home/marcel/Dokumente/Tumorprofil/Novartis SCNE-21/Final/Actionable results.csv");
+    m_file << "Combination";
+    m_file << "n";
+    m_file.newLine();
+
+    qDebug() << "Identified" << patients.size();
+    QList<Patient::Ptr> adc, pec;
+    foreach (const Patient::Ptr p, patients)
+    {
+        if (p->firstDisease().entity() == Pathology::PulmonarySquamous)
+        {
+            pec << p;
+        }
+        else
+        {
+            adc << p;
+        }
+    }
+
+    m_file << "ADC";
+    m_file << adc.size();
+    m_file.newLine();
+    writeActionableCombinations(adc);
+    m_file << "PEC";
+    m_file << pec.size();
+    m_file.newLine();
+    writeActionableCombinations(pec);
     m_file.finishWriting();
 }
 
