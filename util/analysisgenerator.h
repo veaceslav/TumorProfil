@@ -41,7 +41,9 @@ public:
     void cmetListe();
     void fishRatioListe();
     void crc2015();
-    void nsclcSNCNTrialFinalFromCSV();
+    void nsclcSCNE21ListFromCSV();
+    void nsclcSCNE21PathologyDates();
+    void nsclcSCNE21ActionableResults();
     void ros1Project();
 
 protected:
@@ -54,6 +56,7 @@ protected:
     void writeIHCIsPositive(const Disease& disease, PathologyPropertyInfo::Property id);
     virtual void problem(const HistoryElement* element, const QString& problem);
     QList<Patient::Ptr> patientsFromCSV(const QString& path);
+    void writeActionableCombinations(const QList<Patient::Ptr>& patients);
 
     CSVFile m_file;
     Patient::Ptr m_currentPatient;
