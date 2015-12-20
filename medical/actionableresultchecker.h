@@ -28,6 +28,8 @@
 
 #include "patient.h"
 
+class DataAggregator;
+
 class ActionableResultChecker
 {
 public:
@@ -45,6 +47,12 @@ public:
 
     QList<PathologyPropertyInfo> actionableResults();
     QVariant hasResults(const QList<PathologyPropertyInfo>& combination);
+
+    // Returns a complex data structure of aggregated actionable results of the given patients.
+    // For all seen combinations of actionable properties (as keys in the map), an aggregator is created
+    // which counts the patients presenting with this combination.
+    // Note that you must delete the DataAggregator objects after usage.
+    static QMap< QList<PathologyPropertyInfo>, DataAggregator* > actionableCombinations(const QList<Patient::Ptr>& patients, Flags flags);
 
 protected:
 

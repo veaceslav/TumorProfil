@@ -85,7 +85,7 @@ void ActionableResultChecker::fillFields(const Disease &disease)
     QList<PathologyPropertyInfo> alwaysActionable = PathologyPropertyInfo::allMutations() + PathologyPropertyInfo::allFish();
     foreach (const PathologyPropertyInfo& info, alwaysActionable)
     {
-        if (!flags & IncludeRAS)
+        if (!(flags & IncludeRAS))
         {
             if (info.property == PathologyPropertyInfo::Mut_KRAS_2 ||
                 info.property == PathologyPropertyInfo::Mut_KRAS_3 ||
@@ -179,4 +179,72 @@ QVariant ActionableResultChecker::hasResults(const QList<PathologyPropertyInfo>&
     }
     // If at least one of the fields is found, we return a value
     return matches == combination.size();
+}
+
+static bool operator<(const QList<PathologyPropertyInfo>& a,
+                      const QList<PathologyPropertyInfo>& b)
+{
+    if (a.size() == b.size())
+    {
+        const int size = a.size();
+        for (int i=0; i<size; i++)
+        {
+            if (a[i] == b[i])
+            {
+                continue;
+            }
+            return a[i] < b[i];
+        }
+    }
+    return a.size() < b.size();
+}
+
+QMap< QList<PathologyPropertyInfo>, DataAggregator* > ActionableResultChecker::actionableCombinations(const QList<Patient::Ptr>& patients, Flags flags)
+{
+    QMap< QList<PathologyPropertyInfo>, DataAggregator* > actionableCombinations;
+
+    // Find out which combinations of actionable results exist
+    foreach (const Patient::Ptr p, patients)
+    {
+        ActionableResultChecker checker(p, flags);
+        QList<PathologyPropertyInfo> combination = checker.actionableResults();
+        if (!actionableCombinations.contains(combination))
+        {
+            actionableCombinations.insert(combination, new DataAggregator(DataAggregation::Boolean));
+        }
+    }
+    // Aggregate info
+    QMap< QList<PathologyPropertyInfo>,  DataAggregator* >::const_iterator it;
+    foreach (const Patient::Ptr p, patients)
+    {
+        ActionableResultChecker checker(p, flags);
+        // Extra measure: If a patient has a combination of two results, he may fit into three combinations etc.
+        // Give the patient to the last in the list (which has the largest number of properties, see operator< above)
+        QList<DataAggregator*> positiveAggregators;
+        for (it = actionableCombinations.begin(); it != actionableCombinations.end(); ++it)
+        {
+            QVariant value = checker.hasResults(it.key());
+            DataAggregator* aggregator = it.value();
+            if (value.toBool())
+            {
+                positiveAggregators << aggregator;
+            }
+            else
+            {
+                *aggregator << value;
+            }
+        }
+        if (!positiveAggregators.isEmpty())
+        {
+            *positiveAggregators.takeLast() << true;
+            foreach (DataAggregator* aggregator, positiveAggregators)
+            {
+                // exclusive for double mutants
+                *aggregator << false;
+                // inclusive for double mutants
+                //*aggregator << true;
+            }
+        }
+    }
+    return actionableCombinations;
 }
