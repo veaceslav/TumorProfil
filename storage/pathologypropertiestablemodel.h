@@ -47,6 +47,13 @@ public:
     // Returns pathologies() without any invalid (empty / removed) properties
     QList<Pathology> pathologiesConsolidated() const;
 
+    // Add the given pathology to this model. The index of the pathology (in the pathologies() list) is returned.
+    int addPathology(const Pathology& pathology);
+    // Adds the given properties to the last pathology (in the pathologies() list)
+    void addProperties(const PropertyList& properties);
+    // Adds the given properties to the specified pathology. The index refers to the pathologies() list.
+    void addProperties(int pathologyIndex, const PropertyList& properties);
+
 public slots:
 
     void setPathologies(const QList<Pathology>& pathologies);
