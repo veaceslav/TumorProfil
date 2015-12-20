@@ -44,6 +44,7 @@ public:
     {
         infos.clear();
         QList<PathologyPropertyInfo::Property> props;
+        bool addMutations = false;
         switch (profile)
         {
         case AllPatientsProfile:
@@ -62,40 +63,30 @@ public:
                   << PathologyPropertyInfo::Comb_HER2
                   << PathologyPropertyInfo::IHC_cMET
                   << PathologyPropertyInfo::Fish_ALK
-                  << PathologyPropertyInfo::Fish_ROS1
-                  << PathologyPropertyInfo::Mut_KRAS_2
-                  << PathologyPropertyInfo::Mut_EGFR_19_21
-                  << PathologyPropertyInfo::Mut_PIK3CA_10_21
-                  << PathologyPropertyInfo::Mut_BRAF_15;
+                  << PathologyPropertyInfo::Fish_ROS1;
+            addMutations = true;
             break;
         case PatientPropertyModel::PulmonarySqamousProfile:
             props << PathologyPropertyInfo::IHC_PTEN
                   << PathologyPropertyInfo::IHC_pAKT
                   << PathologyPropertyInfo::IHC_pERK
-                  << PathologyPropertyInfo::Mut_PIK3CA_10_21
-                  << PathologyPropertyInfo::Mut_DDR2
                   << PathologyPropertyInfo::Fish_FGFR1
                   << PathologyPropertyInfo::Fish_PIK3CA;
+            addMutations = true;
             break;
         case PatientPropertyModel::CRCProfile:
             props << PathologyPropertyInfo::IHC_PTEN
                   << PathologyPropertyInfo::IHC_pAKT
                   << PathologyPropertyInfo::IHC_pERK
                   << PathologyPropertyInfo::IHC_pP70S6K
-                  << PathologyPropertyInfo::Comb_cMetActivation
-                  << PathologyPropertyInfo::Mut_KRAS_2
-                  << PathologyPropertyInfo::Mut_PIK3CA_10_21
-                  << PathologyPropertyInfo::Mut_BRAF_15
-                  << PathologyPropertyInfo::Mut_KRAS_3
-                  << PathologyPropertyInfo::Mut_KRAS_4
-                  << PathologyPropertyInfo::Mut_NRAS_2_4;
+                  << PathologyPropertyInfo::Comb_cMetActivation;
+            addMutations = true;
             break;
         case PatientPropertyModel::BreastCaProfile:
             props << PathologyPropertyInfo::IHC_PTEN
                   << PathologyPropertyInfo::IHC_pAKT
                   << PathologyPropertyInfo::IHC_pP70S6K
                   << PathologyPropertyInfo::IHC_pERK
-                  << PathologyPropertyInfo::Mut_PIK3CA_10_21
                   << PathologyPropertyInfo::Fish_PIK3CA
                   << PathologyPropertyInfo::Fish_FGFR1
                   << PathologyPropertyInfo::IHC_ER
@@ -105,6 +96,7 @@ public:
                   << PathologyPropertyInfo::Comb_HER2
                   << PathologyPropertyInfo::Comb_HormoneReceptor
                   << PathologyPropertyInfo::Comb_TripleNegative;
+            addMutations = true;
             break;
         case PatientPropertyModel::AllTumorprofilProfile:
             props << PathologyPropertyInfo::IHC_PTEN
@@ -113,14 +105,8 @@ public:
                   << PathologyPropertyInfo::IHC_ALK
                   << PathologyPropertyInfo::IHC_HER2_DAKO
                   << PathologyPropertyInfo::IHC_pP70S6K
-                  << PathologyPropertyInfo::Mut_KRAS_2
-                  << PathologyPropertyInfo::Mut_EGFR_19_21
-                  << PathologyPropertyInfo::Mut_PIK3CA_10_21
-                  << PathologyPropertyInfo::Mut_BRAF_15
-                  << PathologyPropertyInfo::Mut_DDR2
-                  << PathologyPropertyInfo::Mut_KRAS_3
-                  << PathologyPropertyInfo::Mut_KRAS_4
                   << PathologyPropertyInfo::Fish_FGFR1;
+            addMutations = true;
             break;
         case PatientPropertyModel::EGFRProfile:
             props << PathologyPropertyInfo::Mut_EGFR_19_21
@@ -141,6 +127,10 @@ public:
         foreach (PathologyPropertyInfo::Property property, props)
         {
             infos << PathologyPropertyInfo::info(property);
+        }
+        if (addMutations)
+        {
+            infos += PathologyPropertyInfo::allMutations();
         }
     }
 };
@@ -165,7 +155,6 @@ void PatientPropertyModel::setProfile(Profile profile)
     beginResetModel();
     d->profile = profile;
     d->setInfos();
-    qDebug() << "set infos for" << profile << d->infos.size();
     endResetModel();
 }
 
