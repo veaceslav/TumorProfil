@@ -32,6 +32,8 @@ class EntitySelectionWidgetV2;
 class PathologyPropertiesTableModel;
 class PathologyPropertiesTableFilterModel;
 class PathologyPropertiesTableView;
+class PathologyPropertyInfo;
+class QMenu;
 
 class PatientParsePage : public QWizardPage
 {
@@ -45,8 +47,12 @@ public:
 protected slots:
 
     void showFullText();
+    void addPropertyTriggered(QAction* action);
 
 protected:
+
+    QMenu* buildPropertyMenu();
+    void fillPropertySubmenu(QMenu* menu, const QList<PathologyPropertyInfo>& infos);
 
     PatientParseResults                     results;
     PatientEnterForm*                       patientEnterForm;
