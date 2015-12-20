@@ -50,7 +50,19 @@ void RawTextEnterPage::copyClipboard()
 {
     QClipboard* cb = QApplication::clipboard();
     QTextCursor cursor(textEdit->textCursor());
+    QString text = cb->text();
+    if (!text.endsWith("\n\n"))
+    {
+        if (text.endsWith('\n'))
+        {
+            text += '\n';
+        }
+        else
+        {
+            text += "\n\n";
+        }
+    }
+    textEdit->insertPlainText(text);
     cursor.movePosition(QTextCursor::End, QTextCursor::MoveAnchor);
     textEdit->setTextCursor(cursor);
-    textEdit->insertPlainText(cb->text());
 }
