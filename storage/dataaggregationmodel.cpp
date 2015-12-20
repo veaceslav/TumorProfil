@@ -146,24 +146,6 @@ void DataAggregationModel::resetData()
     }
 }
 
-static bool operator<(const QList<PathologyPropertyInfo>& a,
-                      const QList<PathologyPropertyInfo>& b)
-{
-    if (a.size() == b.size())
-    {
-        const int size = a.size();
-        for (int i=0; i<size; i++)
-        {
-            if (a[i] == b[i])
-            {
-                continue;
-            }
-            return a[i] < b[i];
-        }
-    }
-    return a.size() < b.size();
-}
-
 void DataAggregationModel::computeData()
 {
     QSet<AggregatedDatumInfo> rowFields;
@@ -185,7 +167,6 @@ void DataAggregationModel::computeData()
 
             if (info.isValid())
             {
-                qDebug() << "Column" << col << info.id ;
                 // Aggregate property results
                 DataAggregator aggregator(info);
                 const int sourceRows = d->sourceModel->rowCount();
@@ -224,58 +205,19 @@ void DataAggregationModel::computeData()
     // 2) Combinations of actionable results (single-only numbers and double mutants)
 
     QStringList extraColumnTitles;
-    QMap< QList<PathologyPropertyInfo>, DataAggregator* > actionableCombinations;
+    QList<Patient::Ptr> patientList;
     const int rowCount = d->sourceModel->rowCount();
-    // Find out which combinations of actionable results exist
+    patientList.reserve(rowCount);
     for (int row=0; row<rowCount; ++row)
     {
         QModelIndex index = d->sourceModel->index(row, 0);
-        Patient::Ptr p = PatientModel::retrievePatient(index);
-
-        ActionableResultChecker checker(p, d->actionableResultsFlags);
-        QList<PathologyPropertyInfo> combination = checker.actionableResults();
-        if (!actionableCombinations.contains(combination))
-        {
-            actionableCombinations.insert(combination, new DataAggregator(DataAggregation::Boolean));
-        }
+        patientList << PatientModel::retrievePatient(index);
     }
-    // Aggregate info
-    QMap< QList<PathologyPropertyInfo>,  DataAggregator* >::const_iterator it;
-    for (int row=0; row<rowCount; ++row)
-    {
-        QModelIndex index = d->sourceModel->index(row, 0);
-        Patient::Ptr p = PatientModel::retrievePatient(index);
 
-        ActionableResultChecker checker(p, d->actionableResultsFlags);
-        // Extra measure: If a patient has a combination of two results, he may fit into three combinations etc.
-        // Give the patient to the last in the list (which has the largest number of properties, see operator< above)
-        QList<DataAggregator*> positiveAggregators;
-        for (it = actionableCombinations.begin(); it != actionableCombinations.end(); ++it)
-        {
-            QVariant value = checker.hasResults(it.key());
-            DataAggregator* aggregator = it.value();
-            if (value.toBool())
-            {
-                positiveAggregators << aggregator;
-            }
-            else
-            {
-                *aggregator << value;
-            }
-        }
-        if (!positiveAggregators.isEmpty())
-        {
-            *positiveAggregators.takeLast() << true;
-            foreach (DataAggregator* aggregator, positiveAggregators)
-            {
-                // exclusive for double mutants
-                *aggregator << false;
-                // inclusive for double mutants
-                //*aggregator << true;
-            }
-        }
-    }
+    QMap< QList<PathologyPropertyInfo>, DataAggregator* > actionableCombinations = ActionableResultChecker::actionableCombinations(patientList, d->actionableResultsFlags);
+
     // Read information from DataAggregators, add extra columns
+    QMap< QList<PathologyPropertyInfo>,  DataAggregator* >::const_iterator it;
     for (it = actionableCombinations.begin(); it != actionableCombinations.end(); ++it)
     {
         QMap<AggregatedDatumInfo,QVariant> map = it.value()->values();
