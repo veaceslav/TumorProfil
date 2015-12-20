@@ -75,11 +75,17 @@ public:
         InvalidRegExp,
         RegExpPatientId,
         RegExpIHC,
-        RegExpIHCcMET,
+        RegExpIHCHScore,
+        RegExpIHCMSI,
         RegExpNGSTableHeader,
-        RegExpNGSTableProtein,
+        RegExpNGSTableRow,
         RegExpFISH,
-        RegExpIgnore
+        RegExpIgnore,
+        RegExpPageBreakJunk,
+        RegExpPDL1Header,
+        RegExpPDL1ImmuneReaction,
+        RegExpPDL1HScore,
+        RegExpPDL1HScoreOld
     };
 
     QList<QRegularExpression>& expressions(RegExpVariant var)
@@ -96,11 +102,17 @@ void RegExpContainer::load()
     QMap<QString, RegExpVariant> keywords;
     keywords.insert("patient-id", RegExpPatientId);
     keywords.insert("ihc-global", RegExpIHC);
-    keywords.insert("ihc-cmet", RegExpIHCcMET);
+    keywords.insert("ihc-hscore", RegExpIHCHScore);
+    keywords.insert("ihc-msi", RegExpIHCMSI);
     keywords.insert("ngs-table-header", RegExpNGSTableHeader);
-    keywords.insert("ngs-table-protein", RegExpNGSTableProtein);
+    keywords.insert("ngs-table-row", RegExpNGSTableRow);
     keywords.insert("fish", RegExpFISH);
     keywords.insert("ignore", RegExpIgnore);
+    keywords.insert("page-break-junk", RegExpPageBreakJunk);
+    keywords.insert("", RegExpPDL1Header);
+    keywords.insert("", RegExpPDL1ImmuneReaction);
+    keywords.insert("", RegExpPDL1HScore);
+    keywords.insert("", RegExpPDL1HScoreOld);
 
     // allow override with updated regexps in the current dir
     QFile file(QDir::currentPath() + "/pathology-regexps");
@@ -211,14 +223,20 @@ QList<PatientParseResults> PathologyParser::parse(const QString& s)
 void PathologyParser::splitPerPatient(QTextStream& stream)
 {
     // First tour of parsing: Split into per-patient chunks.
-    // We assume that patient ids are single-line, and the RegExps is exact (^...$)
-    QString line, patientText;
+    // We assume that the RegExps is exact (^...$)
+    QString line, nextLine, patientText;
     PatientParseResults* currentResults = 0;
     while ( !(line = stream.readLine()).isNull() )
     {
         foreach (const QRegularExpression& re, d->regExpContainer.expressions(RegExpContainer::RegExpPatientId))
         {
-            QRegularExpressionMatch match = re.match(line);
+            QRegularExpressionMatch match = re.match(line, 0, QRegularExpression::PartialPreferFirstMatch);
+            // patient id is multi-line
+            while (match.hasPartialMatch() && !(nextLine = stream.readLine()).isNull() )
+            {
+                line += "\n" + nextLine;
+                match = re.match(line, 0, QRegularExpression::PartialPreferCompleteMatch);
+            }
             if (match.hasMatch())
             {
                 d->appendPatientText(currentResults, patientText);
@@ -254,6 +272,13 @@ void PathologyParser::parseText(PatientParseResults& results)
     results.referenceNumbers.clear();
     results.properties.clear();
     results.unrecognizedText.clear();
+
+    // There is junk at the page break of the PDFs. This may be placed just inside any content, confusing the analysis.
+    // So remove it here once and forever (regexp will be very specific)
+    foreach (const QRegularExpression& re, d->regExpContainer.expressions(RegExpContainer::RegExpPageBreakJunk))
+    {
+        results.text.remove(re);
+    }
 
     // we perform global matches with the (very specific) regular expressions
 
@@ -307,7 +332,7 @@ void PathologyParser::parseText(PatientParseResults& results)
             excerpts += boost::icl::interval<int>::right_open(match.capturedStart(), match.capturedEnd());
         }
     }
-    foreach (const QRegularExpression& re, d->regExpContainer.expressions(RegExpContainer::RegExpIHCcMET))
+    foreach (const QRegularExpression& re, d->regExpContainer.expressions(RegExpContainer::RegExpIHCHScore))
     {
         QRegularExpressionMatchIterator it = re.globalMatch(results.text);
         while (it.hasNext())
@@ -315,11 +340,43 @@ void PathologyParser::parseText(PatientParseResults& results)
             QRegularExpressionMatch match = it.next();
             // the capture is empty for "Keine", which then correctly amounts to 0.
             HScore score(match.captured("strong").toInt(), match.captured("medium").toInt(), match.captured("weak").toInt());
-            PathologyPropertyInfo id = PathologyPropertyInfo::info(PathologyPropertyInfo::IHC_cMET);
-            ValueTypeCategoryInfo typeInfo(id);
+            PathologyPropertyInfo::Property id = d->textToIHCProperty(match.captured("protein"));
+            PathologyPropertyInfo info = PathologyPropertyInfo::info(id);
+            ValueTypeCategoryInfo typeInfo(info);
             Property prop;
-            prop.property = id.id;
+            prop.property = info.id;
             typeInfo.fillHSCore(prop, score);
+            results.properties << prop;
+
+            if (id == PathologyPropertyInfo::IHC_PDL1)
+            {
+                id = PathologyPropertyInfo::IHC_PDL1_immunecell;
+                PathologyPropertyInfo info = PathologyPropertyInfo::info(id);
+                ValueTypeCategoryInfo typeInfo(info);
+                Property prop;
+                prop.property = info.id;
+                prop.value    = typeInfo.toPropertyValue(!match.captured("immunecell").contains("keine"));
+                results.properties << prop;
+            }
+
+            excerpts += boost::icl::interval<int>::right_open(match.capturedStart(), match.capturedEnd());
+        }
+    }
+    foreach (const QRegularExpression& re, d->regExpContainer.expressions(RegExpContainer::RegExpIHCMSI))
+    {
+        QRegularExpressionMatchIterator it = re.globalMatch(results.text);
+        while (it.hasNext())
+        {
+            QRegularExpressionMatch match = it.next();
+            PathologyPropertyInfo::Property id = d->textToIHCProperty(match.captured("protein"));
+
+            PathologyPropertyInfo info = PathologyPropertyInfo::info(id);
+            ValueTypeCategoryInfo typeInfo(info);
+            Property prop;
+            prop.property = info.id;
+            QString positivityClause = match.captured("positivity");
+            bool lossOfExpression =  (positivityClause == "Eine");
+            prop.value      = typeInfo.toPropertyValue(!lossOfExpression);
             results.properties << prop;
 
             excerpts += boost::icl::interval<int>::right_open(match.capturedStart(), match.capturedEnd());
@@ -349,7 +406,7 @@ void PathologyParser::parseText(PatientParseResults& results)
             foreach (const QString& line, results.text.mid(begin, end-begin).split('\n', QString::SkipEmptyParts))
             {
                 QRegularExpressionMatch match2;
-                foreach (const QRegularExpression& re, d->regExpContainer.expressions(RegExpContainer::RegExpNGSTableProtein))
+                foreach (const QRegularExpression& re, d->regExpContainer.expressions(RegExpContainer::RegExpNGSTableRow))
                 {
                     match2 = re.match(line);
                     if (match2.hasMatch())
@@ -366,7 +423,7 @@ void PathologyParser::parseText(PatientParseResults& results)
                         results.properties += parseNGSText(protein, mutationText);
                     }
                     // start next round
-                    protein = match2.captured();
+                    protein = match2.captured("protein");
                     mutationText.clear();
                 }
                 else
@@ -459,6 +516,8 @@ QList<Property> PathologyParser::parseNGSText(const QString& protein, const QStr
         return props;
     }
 
+    //TODO: Multiple exon handling with PDF. Rewrite.
+
     // mutation positive. Possibly, multiple exons.
     QRegularExpression exonRegExp("Exon (\\d+(?:\\s*,\\s*\\d+)*)");
     QRegularExpressionMatchIterator it = exonRegExp.globalMatch(text);
@@ -467,8 +526,6 @@ QList<Property> PathologyParser::parseNGSText(const QString& protein, const QStr
         QRegularExpressionMatch match = it.next();
         // get all text from the end of "Exon \d" to the next Exon line, or end of text
         QString mutationText = text.mid(match.capturedEnd(), it.hasNext() ? (it.peekNext().capturedStart() - match.capturedEnd()) : -1);
-        // Remove exon listing from beginning
-        mutationText.remove(QRegularExpression("^[\\d, ]+\n"));
 
         QStringList exonNumber = match.captured().split(',');
         for (int i=0; i<exonNumber.size(); ++i)
@@ -486,6 +543,8 @@ QList<Property> PathologyParser::parseNGSText(const QString& protein, const QStr
             else
             {
                 QString line;
+                // TODO: Check for PDF. Dont know if this works.
+
                 // If there are n exons, each exon has text every n'th line:
                 for (int l=0; !(line = mutationText.section('\n', l, l, QString::SectionSkipEmpty | QString::SectionIncludeTrailingSep)).isNull();
                      l += exonNumber.size())
@@ -701,7 +760,7 @@ IHCScore::Intensity PathologyParser::PathologyParserPriv::textToIntensity(const 
     {
         return IHCScore::MediumIntensity;
     }
-    if (text == "Starke")
+    if (text == "Starke" || text == "Kräftige")
     {
         return IHCScore::StrongIntensity;
     }
@@ -735,7 +794,7 @@ PathologyPropertyInfo::Property PathologyParser::PathologyParserPriv::textToIHCP
     {
         return PathologyPropertyInfo::IHC_ROS1;
     }
-    if (protein == "p-AKTS473")
+    if (protein == "p-AKTS473" || protein == "p-AKT")
     {
         return PathologyPropertyInfo::IHC_pAKT;
     }
@@ -746,6 +805,26 @@ PathologyPropertyInfo::Property PathologyParser::PathologyParserPriv::textToIHCP
     if (protein == "p-p70S6-Kinase" || protein == "p-p70s6-Kinase")
     {
         return PathologyPropertyInfo::IHC_pP70S6K;
+    }
+    if (protein == "c-MET")
+    {
+        return PathologyPropertyInfo::IHC_cMET;
+    }
+    if (protein == "PD-L1")
+    {
+        return PathologyPropertyInfo::IHC_PDL1;
+    }
+    if (protein == "MLH1")
+    {
+        return PathologyPropertyInfo::IHC_MLH1;
+    }
+    if (protein == "MSH2")
+    {
+        return PathologyPropertyInfo::IHC_MSH2;
+    }
+    if (protein == "MSH6")
+    {
+        return PathologyPropertyInfo::IHC_MSH6;
     }
     qDebug() << "Unhandled IHC" << protein << "in scanner";
     return PathologyPropertyInfo::InvalidProperty;
