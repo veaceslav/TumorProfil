@@ -11,7 +11,7 @@
 
 #define SALT_SIZE  10
 #define MASTERKEY_SIZE 40
-#define AESKEY_LENGTH  64
+#define AESKEY_LENGTH  192
 
 QueryUtils::QueryUtils(QObject *parent) : QObject(parent)
 {

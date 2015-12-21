@@ -22,7 +22,7 @@ QString AesUtils::encrypt(QString message, QString aesKey)
     // Hex decode symmetric key:
     HexDecoder decoder;
     string stdAesKey = aesKey.toStdString();
-    decoder.Put((byte*)stdAesKey.data(), 32*2 );
+    decoder.Put((byte*)stdAesKey.data(), aesKey.size());
     decoder.MessageEnd();
     word64 size = decoder.MaxRetrievable();
     char *decodedKey = new char[size];
@@ -45,7 +45,7 @@ QString AesUtils::decrypt(QString message, QString aesKey)
     // Hex decode symmetric key:
     HexDecoder decoder;
     string stdAesKey = aesKey.toStdString();
-    decoder.Put( (byte *)stdAesKey.data(),32*2 );
+    decoder.Put( (byte *)stdAesKey.data(), aesKey.size() );
     decoder.MessageEnd();
     word64 size = decoder.MaxRetrievable();
     char *decodedKey = new char[size];

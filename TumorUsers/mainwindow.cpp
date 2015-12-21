@@ -184,6 +184,9 @@ void MainWindow::slotEditUser()
 {
     QList<QVariant> userData = d->userWidget->selectedRowData();
 
+    if(userData.isEmpty())
+        return;
+
     UserData oldData;
     oldData.userName = userData.at(1).toString();
 
