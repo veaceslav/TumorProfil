@@ -9,6 +9,7 @@
 #include <QStackedWidget>
 
 #include "databasesettings.h"
+#include "encryptionsettings.h"
 
 class MainSettings::Private
 {
@@ -22,6 +23,7 @@ public:
     QDialogButtonBox* buttons;
 
     DatabaseSettings* dbSettings;
+    EncryptionSettings* encryptSettings;
 };
 MainSettings::MainSettings(QWidget *parent)
     : QDialog(parent), d(new Private())
@@ -62,10 +64,25 @@ void MainSettings::accept()
     QDialog::accept();
 }
 
+void MainSettings::slotCurrentPageChanged(int index)
+{
+    d->menuContent->setCurrentIndex(index);
+}
+
 void MainSettings::setContent()
 {
+    connect(d->menuItems, SIGNAL(currentRowChanged(int)), this, SLOT(slotCurrentPageChanged(int)));
     d->dbSettings = new DatabaseSettings(d->menuContent);
     d->menuContent->addWidget(d->dbSettings);
-    d->menuItems->addItem(new QListWidgetItem(tr("Database Options")));
+    QListWidgetItem* dbItem = new QListWidgetItem(tr("Database Options"));
+    dbItem->setTextAlignment(Qt::AlignCenter);
+    d->menuItems->addItem(dbItem);
+
+
+    d->encryptSettings = new EncryptionSettings(d->menuContent);
+    d->menuContent->addWidget(d->encryptSettings);
+    QListWidgetItem* encryptionItem = new QListWidgetItem(tr("Encryption"));
+    encryptionItem->setTextAlignment(Qt::AlignCenter);
+    d->menuItems->addItem(encryptionItem);
 }
 

@@ -11,6 +11,11 @@ TEMPLATE = app
 
 CONFIG += c++11
 
+INCLUDEPATH += /usr/include/cryptopp
+
+LIBS += -lcryptopp
+
+
 SOURCES += main.cpp\
         mainwindow.cpp \
     datamodel/patient.cpp \
@@ -88,7 +93,10 @@ SOURCES += main.cpp\
     ui/import/importwizard.cpp \
     ui/import/rawtextenterpage.cpp \
     ui/import/rawtextsummarypage.cpp \
-    ui/import/patientparsepage.cpp
+    ui/import/patientparsepage.cpp \
+    encryption/aesutils.cpp \
+    encryption/authenticationwindow.cpp \
+    settings/encryptionsettings.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -173,7 +181,10 @@ HEADERS  += mainwindow.h \
     ui/import/importwizard.h \
     ui/import/rawtextenterpage.h \
     ui/import/rawtextsummarypage.h \
-    ui/import/patientparsepage.h
+    ui/import/patientparsepage.h \
+    encryption/aesutils.h \
+    encryption/authenticationwindow.h \
+    settings/encryptionsettings.h
 
 
 INCLUDEPATH += datamodel/ \

@@ -12,6 +12,9 @@ public:
 
 public slots:
     virtual void accept();
+
+private slots:
+    void slotCurrentPageChanged(int index);
 private:
 
     void setContent();
