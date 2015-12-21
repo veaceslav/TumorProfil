@@ -62,6 +62,7 @@
 #include "tnmwidget.h"
 #include "menubar.h"
 
+
 class MainWindow::MainWindowPriv
 {
 public:

@@ -61,6 +61,7 @@ MainSettings::~MainSettings()
 void MainSettings::accept()
 {
     d->dbSettings->applySettings();
+    d->encryptSettings->saveSettings();
     QDialog::accept();
 }
 

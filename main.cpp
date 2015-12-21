@@ -47,6 +47,8 @@
 #include "historyvalidator.h"
 #include "pathologyparser.h"
 #include "pathologypropertiestableview.h"
+#include "settings/encryptionsettings.h"
+#include "encryption/authenticationwindow.h"
 
 /*
 void myMsgHandler(QtMsgType, const char * text)
@@ -54,6 +56,14 @@ void myMsgHandler(QtMsgType, const char * text)
     QMessageBox::information(0, QString(), text);
 }
 */
+
+void handleAuthentication()
+{
+    if(EncryptionSettings::isEncryptionEnabled())
+    {
+        UserData data = AuthenticationWindow::logIn();
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -74,6 +84,8 @@ int main(int argc, char *argv[])
 
     DatabaseParameters params;
     params.readFromConfig();
+
+    handleAuthentication();
 
     if (!PatientManager::instance()->initialize(params))
     {
