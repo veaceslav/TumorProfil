@@ -94,9 +94,10 @@ SOURCES += main.cpp\
     ui/import/rawtextenterpage.cpp \
     ui/import/rawtextsummarypage.cpp \
     ui/import/patientparsepage.cpp \
-    encryption/aesutils.cpp \
     encryption/authenticationwindow.cpp \
-    settings/encryptionsettings.cpp
+    settings/encryptionsettings.cpp \
+    TumorUsers/aesutils.cpp \
+    encryption/userinformation.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -182,9 +183,10 @@ HEADERS  += mainwindow.h \
     ui/import/rawtextenterpage.h \
     ui/import/rawtextsummarypage.h \
     ui/import/patientparsepage.h \
-    encryption/aesutils.h \
     encryption/authenticationwindow.h \
-    settings/encryptionsettings.h
+    settings/encryptionsettings.h \
+    TumorUsers/aesutils.h \
+    encryption/userinformation.h
 
 
 INCLUDEPATH += datamodel/ \
