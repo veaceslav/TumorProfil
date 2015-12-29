@@ -49,6 +49,7 @@
 #include "pathologypropertiestableview.h"
 #include "settings/encryptionsettings.h"
 #include "encryption/authenticationwindow.h"
+#include "encryption/userinformation.h"
 
 /*
 void myMsgHandler(QtMsgType, const char * text)
@@ -61,7 +62,7 @@ void handleAuthentication()
 {
     if(EncryptionSettings::isEncryptionEnabled())
     {
-        UserData data = AuthenticationWindow::logIn();
+        UserInformation::instance()->logIn();
     }
 }
 

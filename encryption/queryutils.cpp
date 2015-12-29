@@ -97,12 +97,14 @@ UserDetails QueryUtils::retrieveUser(QString name, QString password)
     if(QueryUtils::verifyPassword(password, data))
     {
         details.userName = data.first().at(NAME_INDEX).toString();
+        details.id = data.first().at(USERID_INDEX).toInt();
         QString aesFilling = data.first().at(AESFILLING_INDEX).toString();
         QVector<QVector<QVariant> > keys = retrieveMasterKeys(data.first().at(USERID_INDEX).toInt());
         foreach(QVector<QVariant> key, keys)
         {
             QString decryptedKey = decryptMasterKey(password,aesFilling,key.at(KEY_CONTENT_INDEX).toString());
             details.decryptionKeys.insert(key.at(KEY_NAME_INDEX).toString(), decryptedKey);
+            qDebug() << "Added key " << key.at(KEY_NAME_INDEX).toString() << " " << decryptedKey;
         }
     }
 
@@ -118,6 +120,7 @@ bool QueryUtils::verifyPassword(const QString &password , const QVector<QVector<
 
     if(passHash != storedHash)
     {
+        qDebug() << "Authentication problem! Incorrect Password";
         return false;
     }
     else
@@ -155,7 +158,7 @@ bool QueryUtils::openConnection(DatabaseParameters params)
 
         qApp->restoreOverrideCursor();
 
-        database.setDatabaseName(params.databaseName);
+        database.setDatabaseName(params.databaseNameThumbnails);
 
         bool result = database.open();
 
@@ -174,12 +177,7 @@ bool QueryUtils::openConnection(DatabaseParameters params)
 
         result = testQuery->exec();
 
-        if (result)
-        {
-            QMessageBox::information(qApp->activeWindow(), tr("Database connection test"),
-                                     tr("Database connection test successful."));
-        }
-        else
+        if (!result)
         {
             QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
                                   tr("Database connection test was not successful. <p>Error was:" +

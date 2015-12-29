@@ -90,6 +90,8 @@ public:
     ExtraInformationTab *extraTab;
     QList<MainViewTabInterface*> tabs;
 
+    QAction*          loginAction;
+
     bool              historyEnabled;
     bool              editingEnabled;
     bool              adminEnabled;

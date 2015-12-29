@@ -11,6 +11,7 @@ public:
 
 private slots:
     void slotShowSettings();
+    void slotLogIn();
 private:
     class Private;
     Private* d;

@@ -98,7 +98,8 @@ SOURCES += main.cpp\
     settings/encryptionsettings.cpp \
     TumorUsers/aesutils.cpp \
     encryption/userinformation.cpp \
-    encryption/queryutils.cpp
+    encryption/queryutils.cpp \
+    ui/logininfowidget.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -188,7 +189,8 @@ HEADERS  += mainwindow.h \
     settings/encryptionsettings.h \
     TumorUsers/aesutils.h \
     encryption/userinformation.h \
-    encryption/queryutils.h
+    encryption/queryutils.h \
+    ui/logininfowidget.h
 
 
 INCLUDEPATH += datamodel/ \
