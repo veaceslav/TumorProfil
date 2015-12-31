@@ -10,7 +10,7 @@
 #include "databaseaccess.h"
 
 #define SALT_SIZE  10
-#define MASTERKEY_SIZE 40
+#define MASTERKEY_SIZE 192
 #define AESKEY_LENGTH  192
 
 QueryUtils::QueryUtils(QObject *parent) : QObject(parent)
@@ -130,7 +130,7 @@ qlonglong QueryUtils::addMasterKey(QString name, qlonglong userid, QString passw
         masterKey = generateRandomString(MASTERKEY_SIZE);
 
     QString aesKey = password + aesFilling;
-    aesKey.truncate(64);
+    aesKey.truncate(AESKEY_LENGTH);
     QString encodedKey = AesUtils::encrypt(masterKey, aesKey);
 
     QMap<QString, QVariant> bindValues;

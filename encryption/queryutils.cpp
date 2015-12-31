@@ -14,7 +14,7 @@
 #include "constants.h"
 
 #define SALT_SIZE  10
-#define MASTERKEY_SIZE 40
+#define MASTERKEY_SIZE 192
 #define AESKEY_LENGTH  192
 
 #define DATABASE_CONNECTION_NAME "TumorUserConnection"
