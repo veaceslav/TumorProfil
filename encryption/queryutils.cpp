@@ -14,8 +14,6 @@
 #include "constants.h"
 
 #define SALT_SIZE  10
-#define MASTERKEY_SIZE 192
-#define AESKEY_LENGTH  192
 
 #define DATABASE_CONNECTION_NAME "TumorUserConnection"
 
@@ -37,19 +35,20 @@ QString QueryUtils::generateRandomString(int length)
     return str;
 }
 
-QString QueryUtils::encpryptMasterKey(QString password, QString filling, QString masterKey)
-{
-    QString aesKey = password + filling;
-    aesKey.truncate(AESKEY_LENGTH);
-    return AesUtils::encrypt(masterKey, aesKey);
-}
+//QString QueryUtils::encpryptMasterKey(QString password, QString filling, QString masterKey)
+//{
+//    QString aesKey = password + filling;
+//    aesKey.truncate(AESKEY_LENGTH);
+//    return AesUtils::encrypt(masterKey, aesKey);
+//}
 
-QString QueryUtils::decryptMasterKey(QString password, QString filling, QString masterHash)
-{
-    QString decryption = password + filling;
-    decryption.truncate(AESKEY_LENGTH);
-    return AesUtils::decrypt(masterHash, decryption);
-}
+//QString QueryUtils::decryptMasterKey(QString password, QString filling, QString masterHash)
+//{
+//    QString decryption = password + filling;
+//    decryption.truncate(AESKEY_LENGTH);
+//    qDebug() << "Decrypt Aes Key:" << decryption;
+//    return AesUtils::decrypt(masterHash, decryption);
+//}
 
 
 
@@ -99,11 +98,14 @@ UserDetails QueryUtils::retrieveUser(QString name, QString password)
         details.userName = data.first().at(NAME_INDEX).toString();
         details.id = data.first().at(USERID_INDEX).toInt();
         QString aesFilling = data.first().at(AESFILLING_INDEX).toString();
+        qDebug() << "Aes filling:" << aesFilling;
         QVector<QVector<QVariant> > keys = retrieveMasterKeys(data.first().at(USERID_INDEX).toInt());
+
         foreach(QVector<QVariant> key, keys)
         {
-            QString decryptedKey = decryptMasterKey(password,aesFilling,key.at(KEY_CONTENT_INDEX).toString());
+            QString decryptedKey = AesUtils::decryptMasterKey(password, aesFilling, key.at(KEY_CONTENT_INDEX).toString());
             details.decryptionKeys.insert(key.at(KEY_NAME_INDEX).toString(), decryptedKey);
+            //qDebug() << key.at(KEY_CONTENT_INDEX).toString();
             qDebug() << "Added key " << key.at(KEY_NAME_INDEX).toString() << " " << decryptedKey;
         }
     }

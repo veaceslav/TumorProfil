@@ -51,10 +51,6 @@ public:
 
     static QString generateRandomString(int length);
 
-    static QString encpryptMasterKey(QString password, QString filling, QString masterKey);
-
-    static QString decryptMasterKey(QString password, QString filling, QString masterHash);
-
     static qlonglong addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling, QString masterKey = QString());
 
     static QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId);

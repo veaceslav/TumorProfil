@@ -50,12 +50,13 @@ void AdminUser::loadKeys()
 
     foreach (QVector<QVariant> key, result)
     {
-        QString decryptedKey = QueryUtils::decryptMasterKey(d->password,
+        QString decryptedKey = AesUtils::decryptMasterKey(d->password,
                                                             d->aesFilling,
                                                             key.at(MasterKey::VALUE_FIELD).toString());
 
         MasterKey mKey(key.at(MasterKey::NAME_FIELD).toString(),
                        decryptedKey);
+        qDebug() << "Admin added key" << decryptedKey;
         d->masterKeys.insert(mKey.name, mKey);
     }
 }

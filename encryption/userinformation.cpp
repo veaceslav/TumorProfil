@@ -89,6 +89,17 @@ UserInformation::LoginState UserInformation::toggleLogIn()
     }
 }
 
+bool UserInformation::hasKey(QString keyName)
+{
+    return !d->decryptionKey.take(keyName).isEmpty();
+}
+
+
+QString UserInformation::retrieveKey(QString keyName)
+{
+    return d->decryptionKey.take(keyName);
+}
+
 
 UserInformation::UserInformation()
     :d(new Private())

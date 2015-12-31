@@ -6,6 +6,7 @@
 #include <sha.h>
 
 #include <QString>
+#include <QDebug>
 
 using namespace std;
 using namespace CryptoPP;
@@ -18,6 +19,7 @@ AesUtils::AesUtils()
 QString AesUtils::encrypt(QString message, QString aesKey)
 {
     string plain = message.toStdString();
+    qDebug() << "Encrypt" << plain.data() << " " << plain.size();
     string ciphertext;
     // Hex decode symmetric key:
     HexDecoder decoder;
@@ -34,7 +36,7 @@ QString AesUtils::encrypt(QString message, QString aesKey)
     memset( iv, 0x00, AES::BLOCKSIZE );
     CBC_Mode<AES>::Encryption Encryptor( key, sizeof(key), iv );
     StringSource( plain, true, new StreamTransformationFilter( Encryptor,
-                  new HexEncoder(new StringSink( ciphertext ) ) ) );
+                  new HexEncoder(new StringSink( ciphertext )) ) );
     return QString::fromStdString(ciphertext);
 }
 
@@ -42,6 +44,7 @@ QString AesUtils::decrypt(QString message, QString aesKey)
 {
     string plain;
     string encrypted = message.toStdString();
+
     // Hex decode symmetric key:
     HexDecoder decoder;
     string stdAesKey = aesKey.toStdString();
@@ -60,12 +63,30 @@ QString AesUtils::decrypt(QString message, QString aesKey)
         ( key, sizeof(key), iv );
         StringSource( encrypted, true,
                       new HexDecoder(new StreamTransformationFilter( Decryptor,
-                                     new StringSink( plain ) ) ) );
+                                     new StringSink( plain )) ) );
     }
     catch (Exception &e) { // ...
+        qDebug() << "Exception while decrypting " << e.GetWhat().data();
     }
     catch (...) { // ...
     }
+        qDebug() << "decrypt" << plain.data() << " " << AES::BLOCKSIZE;
     return QString::fromStdString(plain);
 }
 
+QString AesUtils::encryptMasterKey(QString password, QString filling, QString masterKey)
+{
+    QString myAesKey = password + filling;
+    myAesKey.truncate(AESKEY_LENGTH);
+    //qDebug() << "Key Encryption: " << aesKey;
+
+    return AesUtils::encrypt(masterKey, myAesKey);
+}
+
+QString AesUtils::decryptMasterKey(QString password, QString filling, QString masterHash)
+{
+    QString myAesKey = password + filling;
+    myAesKey.truncate(AESKEY_LENGTH);
+    //qDebug() << "Key Decryption:" << aesKey;
+    return AesUtils::decrypt(masterHash, myAesKey);
+}

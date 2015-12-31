@@ -31,6 +31,10 @@ public:
 
     LoginState toggleLogIn();
 
+    bool hasKey(QString keyName);
+
+    QString retrieveKey(QString keyName);
+
 protected:
     static QPointer<UserInformation> internalPtr;
     UserInformation();

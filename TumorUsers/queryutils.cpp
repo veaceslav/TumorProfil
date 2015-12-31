@@ -10,8 +10,7 @@
 #include "databaseaccess.h"
 
 #define SALT_SIZE  10
-#define MASTERKEY_SIZE 192
-#define AESKEY_LENGTH  192
+#define MASTERKEY_SIZE 256
 
 QueryUtils::QueryUtils(QObject *parent) : QObject(parent)
 {
@@ -109,19 +108,6 @@ QString QueryUtils::generateRandomString(int length)
     return str;
 }
 
-QString QueryUtils::encpryptMasterKey(QString password, QString filling, QString masterKey)
-{
-    QString aesKey = password + filling;
-    aesKey.truncate(AESKEY_LENGTH);
-    return AesUtils::encrypt(masterKey, aesKey);
-}
-
-QString QueryUtils::decryptMasterKey(QString password, QString filling, QString masterHash)
-{
-    QString decryption = password + filling;
-    decryption.truncate(AESKEY_LENGTH);
-    return AesUtils::decrypt(masterHash, decryption);
-}
 
 qlonglong QueryUtils::addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling, QString masterKey)
 {
@@ -129,9 +115,14 @@ qlonglong QueryUtils::addMasterKey(QString name, qlonglong userid, QString passw
     if(masterKey.isEmpty())
         masterKey = generateRandomString(MASTERKEY_SIZE);
 
-    QString aesKey = password + aesFilling;
-    aesKey.truncate(AESKEY_LENGTH);
-    QString encodedKey = AesUtils::encrypt(masterKey, aesKey);
+    qDebug() << "Helo";
+    QString encodedKey = AesUtils::encryptMasterKey(password, aesFilling, masterKey);
+
+    QString decoded = AesUtils::decryptMasterKey(password, aesFilling, encodedKey);
+
+    qDebug() << "End";
+    if(decoded.compare(masterKey) != 0)
+        qDebug() << "Wrong encryption. Expected: " << masterKey << " Got: " << decoded;
 
     QMap<QString, QVariant> bindValues;
     bindValues[QLatin1String(":keyName")] = name;

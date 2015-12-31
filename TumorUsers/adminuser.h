@@ -14,7 +14,7 @@ public:
     enum Fied
     {
         NAME_FIELD = 1,
-        VALUE_FIELD = 2
+        VALUE_FIELD = 3
     };
 
     MasterKey()

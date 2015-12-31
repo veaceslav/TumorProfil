@@ -23,5 +23,14 @@
 #define KEY_NAME_INDEX       1
 #define KEY_CONTENT_INDEX    3
 
+
+/**
+ * SQl table headers
+ */
+
+#define SQL_PATIENT_NAME "firstName"
+#define SQL_PATIENT_SURNAME "surname"
+#define SQL_PATIENT_DATEOFBIRTH "dataOfBirth"
+
 #endif // CONSTANTS_H
 

@@ -59,6 +59,19 @@ public:
     const Disease& firstDisease() const;
     bool hasPathology() const;
 
+    /**
+     * @brief encrypt - Method used for encrypting patient data
+     *                  before storing in database
+     * @return          true if encryption is enabled and it was successful
+     */
+    bool encrypt();
+
+    /**
+     * @brief decrypt - Method to decrypt patient data after retrieving from storage
+     * @return        - true if decryption is enabled and no errors occured
+     */
+    bool decrypt();
+
     QString             firstName;
     QString             surname;
     QDate               dateOfBirth;
@@ -76,6 +89,7 @@ public:
       from the given Patient. Does not touch properties, diseases or id.
       */
     void setPatientData(const Patient& p);
+
 };
 
 Q_DECLARE_METATYPE(Patient::Ptr)

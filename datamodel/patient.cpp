@@ -22,6 +22,9 @@
 #include <QDebug>
 
 #include "patient.h"
+#include "encryption/userinformation.h"
+#include "TumorUsers/aesutils.h"
+#include "constants.h"
 
 Patient::Patient()
     : gender(UnknownGender),
@@ -72,6 +75,54 @@ bool Patient::hasPathology() const
         return firstDisease().hasPathology();
     }
     return false;
+}
+
+bool Patient::encrypt()
+{
+    if(!UserInformation::instance()->isEncryptionEnabled())
+        return false;
+
+    // The user is not logged in, but we allow to browse anonymous
+    if(!UserInformation::instance()->isLoggedIn())
+        return true;
+
+    UserInformation* user = UserInformation::instance();
+
+    if(user->hasKey(SQL_PATIENT_NAME))
+    {
+        this->firstName = AesUtils::encrypt(this->firstName, user->retrieveKey(SQL_PATIENT_NAME));
+    }
+
+    if(user->hasKey(SQL_PATIENT_SURNAME))
+    {
+        this->surname = AesUtils::encrypt(this->surname, user->retrieveKey(SQL_PATIENT_SURNAME));
+    }
+
+    return true;
+}
+
+bool Patient::decrypt()
+{
+    if(!UserInformation::instance()->isEncryptionEnabled())
+        return false;
+
+    // The user is not logged in, but we allow to browse anonymous
+    if(!UserInformation::instance()->isLoggedIn())
+        return true;
+
+    UserInformation* user = UserInformation::instance();
+
+    if(user->hasKey(SQL_PATIENT_NAME))
+    {
+        this->firstName = AesUtils::decrypt(this->firstName, user->retrieveKey(SQL_PATIENT_NAME));
+    }
+
+    if(user->hasKey(SQL_PATIENT_SURNAME))
+    {
+        this->surname = AesUtils::decrypt(this->surname, user->retrieveKey(SQL_PATIENT_SURNAME));
+    }
+
+    return true;
 }
 
 /*const Pathology& Patient::firstPathology() const
