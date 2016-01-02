@@ -19,7 +19,6 @@ AesUtils::AesUtils()
 QString AesUtils::encrypt(QString message, QString aesKey)
 {
     string plain = message.toStdString();
-    qDebug() << "Encrypt" << plain.data() << " " << plain.size() << " " << aesKey.size();
     string ciphertext;
     // Hex decode symmetric key:
     HexDecoder decoder;
@@ -70,7 +69,6 @@ QString AesUtils::decrypt(QString message, QString aesKey)
     }
     catch (...) { // ...
     }
-        qDebug() << "decrypt" << plain.data() << " " << AES::BLOCKSIZE;
     return QString::fromStdString(plain);
 }
 
@@ -78,7 +76,6 @@ QString AesUtils::encryptMasterKey(QString password, QString filling, QString ma
 {
     QString myAesKey = password + filling;
     myAesKey.truncate(AESKEY_LENGTH);
-    //qDebug() << "Key Encryption: " << aesKey;
 
     return AesUtils::encrypt(masterKey, myAesKey);
 }
@@ -87,6 +84,5 @@ QString AesUtils::decryptMasterKey(QString password, QString filling, QString ma
 {
     QString myAesKey = password + filling;
     myAesKey.truncate(AESKEY_LENGTH);
-    //qDebug() << "Key Decryption:" << aesKey;
     return AesUtils::decrypt(masterHash, myAesKey);
 }
