@@ -98,7 +98,7 @@ UserDetails QueryUtils::editUser(QString name, QueryUtils::UserType userType, QS
 QString QueryUtils::generateRandomString(int length)
 {
     qsrand(time(NULL));
-    QString base("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+    QString base("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()[]{}:;|<>?/+-=");
     QString str;
     for(int i=0;i<length;i++){
         str += base.at(qrand() % base.length());
