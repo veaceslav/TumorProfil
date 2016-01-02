@@ -19,7 +19,7 @@ AesUtils::AesUtils()
 QString AesUtils::encrypt(QString message, QString aesKey)
 {
     string plain = message.toStdString();
-    qDebug() << "Encrypt" << plain.data() << " " << plain.size();
+    qDebug() << "Encrypt" << plain.data() << " " << plain.size() << " " << aesKey.size();
     string ciphertext;
     // Hex decode symmetric key:
     HexDecoder decoder;
@@ -34,7 +34,7 @@ QString AesUtils::encrypt(QString message, QString aesKey)
     StringSource( reinterpret_cast<const char *>(decodedKey), true,
                   new HashFilter(*(new SHA256), new ArraySink(key, AES::MAX_KEYLENGTH)) );
     memset( iv, 0x00, AES::BLOCKSIZE );
-    CBC_Mode<AES>::Encryption Encryptor( key, sizeof(key), iv );
+    CBC_Mode<AES>::Encryption Encryptor( key, AESKEY_LENGTH, iv );
     StringSource( plain, true, new StreamTransformationFilter( Encryptor,
                   new HexEncoder(new StringSink( ciphertext )) ) );
     return QString::fromStdString(ciphertext);
@@ -60,7 +60,7 @@ QString AesUtils::decrypt(QString message, QString aesKey)
     memset( iv, 0x00, AES::BLOCKSIZE );
     try {
         CBC_Mode<AES>::Decryption Decryptor
-        ( key, sizeof(key), iv );
+        ( key, AESKEY_LENGTH, iv );
         StringSource( encrypted, true,
                       new HexDecoder(new StreamTransformationFilter( Decryptor,
                                      new StringSink( plain )) ) );

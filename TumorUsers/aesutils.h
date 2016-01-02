@@ -1,7 +1,7 @@
 #ifndef AESUTILS_H
 #define AESUTILS_H
 
-#define AESKEY_LENGTH  256
+#define AESKEY_LENGTH  32 // 32 bytes = 256 bit
 
 #include <QString>
 
