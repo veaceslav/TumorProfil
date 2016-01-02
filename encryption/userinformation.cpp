@@ -68,7 +68,7 @@ bool UserInformation::isEncryptionEnabled()
 
 bool UserInformation::isLoggedIn()
 {
-    qDebug() << "Is logged in" << d->isLoggedIn;
+    //qDebug() << "Is logged in" << d->isLoggedIn;
     return d->isLoggedIn;
 }
 
@@ -91,13 +91,13 @@ UserInformation::LoginState UserInformation::toggleLogIn()
 
 bool UserInformation::hasKey(QString keyName)
 {
-    return !d->decryptionKey.take(keyName).isEmpty();
+    return !d->decryptionKey.value(keyName).isEmpty();
 }
 
 
 QString UserInformation::retrieveKey(QString keyName)
 {
-    return d->decryptionKey.take(keyName);
+    return d->decryptionKey.value(keyName);
 }
 
 

@@ -23,7 +23,11 @@ QString AesUtils::encrypt(QString message, QString aesKey)
     // Hex decode symmetric key:
     HexDecoder decoder;
     string stdAesKey = aesKey.toStdString();
-    decoder.Put((byte*)stdAesKey.data(), aesKey.size());
+//    qDebug() << "Encrypt " << message;
+
+    // putting full 64 hexes make decryption to fail sometimes
+    // AES 252 bits :D
+    decoder.Put((byte*)stdAesKey.data(), AESKEY_LENGTH-1);
     decoder.MessageEnd();
     word64 size = decoder.MaxRetrievable();
     char *decodedKey = new char[size];
@@ -33,7 +37,7 @@ QString AesUtils::encrypt(QString message, QString aesKey)
     StringSource( reinterpret_cast<const char *>(decodedKey), true,
                   new HashFilter(*(new SHA256), new ArraySink(key, AES::MAX_KEYLENGTH)) );
     memset( iv, 0x00, AES::BLOCKSIZE );
-    CBC_Mode<AES>::Encryption Encryptor( key, AESKEY_LENGTH, iv );
+    CBC_Mode<AES>::Encryption Encryptor( key, AES::MAX_KEYLENGTH, iv );
     StringSource( plain, true, new StreamTransformationFilter( Encryptor,
                   new HexEncoder(new StringSink( ciphertext )) ) );
     return QString::fromStdString(ciphertext);
@@ -47,19 +51,27 @@ QString AesUtils::decrypt(QString message, QString aesKey)
     // Hex decode symmetric key:
     HexDecoder decoder;
     string stdAesKey = aesKey.toStdString();
-    decoder.Put( (byte *)stdAesKey.data(), aesKey.size() );
+//    qDebug() << "decrypting" <<  message;
+
+    // putting full 64 hexes make decryption to fail sometimes
+    // AES 252 bits :D
+
+    decoder.Put( (byte *)stdAesKey.data(), AESKEY_LENGTH-1);
     decoder.MessageEnd();
     word64 size = decoder.MaxRetrievable();
     char *decodedKey = new char[size];
     decoder.Get((byte *)decodedKey, size);
+
+
     // Generate Cipher, Key, and CBC
     byte key[ AES::MAX_KEYLENGTH ], iv[ AES::BLOCKSIZE ];
     StringSource( reinterpret_cast<const char *>(decodedKey), true,
                   new HashFilter(*(new SHA256), new ArraySink(key, AES::MAX_KEYLENGTH)) );
     memset( iv, 0x00, AES::BLOCKSIZE );
+    qDebug() << "DEcoded key" << key << " " << AES::MAX_KEYLENGTH;
     try {
         CBC_Mode<AES>::Decryption Decryptor
-        ( key, AESKEY_LENGTH, iv );
+        ( key, AES::MAX_KEYLENGTH, iv );
         StringSource( encrypted, true,
                       new HexDecoder(new StreamTransformationFilter( Decryptor,
                                      new StringSink( plain )) ) );

@@ -119,7 +119,7 @@ void PatientManager::readDatabase()
     QList<Patient> patients = DatabaseAccess().db()->findPatients();
     QHash<int, int> oldIds = d->patientIdHash;
     QList<Patient::Ptr> newPatientList;
-    foreach (const Patient& data, patients)
+    foreach (Patient data, patients)
     {
         int index = d->patientIdHash.value(data.id, -1);
         oldIds.remove(data.id);

@@ -43,7 +43,6 @@ public:
 
     explicit QueryUtils(QObject *parent = 0);
 
-    static QString generateRandomString(int length);
 
     static QString encpryptMasterKey(QString password, QString filling, QString masterKey);
 

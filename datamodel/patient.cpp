@@ -88,13 +88,16 @@ bool Patient::encrypt()
 
     UserInformation* user = UserInformation::instance();
 
-    if(user->hasKey(SQL_PATIENT_NAME))
+    qDebug() << !(firstName.isEmpty())  << user->hasKey(SQL_PATIENT_NAME);
+    if(!(firstName.isEmpty()) && user->hasKey(SQL_PATIENT_NAME) )
     {
+        qDebug() << "Encrypting first name";
         this->firstName = AesUtils::encrypt(this->firstName, user->retrieveKey(SQL_PATIENT_NAME));
     }
 
-    if(user->hasKey(SQL_PATIENT_SURNAME))
+    if(!(surname.isEmpty()) && user->hasKey(SQL_PATIENT_SURNAME))
     {
+        qDebug() << "Encrypting surname";
         this->surname = AesUtils::encrypt(this->surname, user->retrieveKey(SQL_PATIENT_SURNAME));
     }
 
@@ -112,12 +115,12 @@ bool Patient::decrypt()
 
     UserInformation* user = UserInformation::instance();
 
-    if(user->hasKey(SQL_PATIENT_NAME))
+    if(!this->firstName.isEmpty() && user->hasKey(SQL_PATIENT_NAME))
     {
         this->firstName = AesUtils::decrypt(this->firstName, user->retrieveKey(SQL_PATIENT_NAME));
     }
 
-    if(user->hasKey(SQL_PATIENT_SURNAME))
+    if(!this->surname.isEmpty() && user->hasKey(SQL_PATIENT_SURNAME))
     {
         this->surname = AesUtils::decrypt(this->surname, user->retrieveKey(SQL_PATIENT_SURNAME));
     }

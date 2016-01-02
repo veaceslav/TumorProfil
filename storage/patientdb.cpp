@@ -105,19 +105,24 @@ QString PatientDB::setting(const QString& keyword)
 
 int PatientDB::addPatient(const Patient& p)
 {
+    qDebug() << "Adding patient to db";
     QVariant id;
+    Patient p_copy(p);
+    p_copy.encrypt();
     d->db->execSql("INSERT INTO Patients (firstName, surname, dateOfBirth, gender) "
                    "VALUES (?, ?, ?, ?)",
-                   p.firstName, p.surname, p.dateOfBirth.toString(Qt::ISODate), p.gender, 0, &id);
+                   p_copy.firstName, p_copy.surname, p_copy.dateOfBirth.toString(Qt::ISODate), p_copy.gender, 0, &id);
 
     return id.toInt();
 }
 
 void PatientDB::updatePatient(const Patient& p)
 {
+    Patient p_copy(p);
+    p_copy.encrypt();
     d->db->execSql("UPDATE Patients SET firstName=?, surname=?, dateOfBirth=?, gender=? WHERE id=?;",
-                    QVariantList() << p.firstName << p.surname
-                                   << p.dateOfBirth.toString(Qt::ISODate) << p.gender << p.id);
+                    QVariantList() << p_copy.firstName << p_copy.surname
+                                   << p_copy.dateOfBirth.toString(Qt::ISODate) << p_copy.gender << p_copy.id);
 }
 
 void PatientDB::deletePatient(int id)
@@ -130,28 +135,35 @@ QList<Patient> PatientDB::findPatients(const Patient& p)
 {
     QList<QVariant> values;
 
+    Patient p_copy(p);
+
+    qDebug() << "Find patients" << p.firstName << " " << p.surname << " " << p.gender << " " << p.dateOfBirth;
+    // we can only search for encrypted data
+    // if no encryption, this does nothing
+    p_copy.encrypt();
+
     QString sql = "SELECT id, firstName, surname, dateOfBirth, gender FROM Patients ";
     QString whereClause;
     QVariantList boundValues;
-    if (!p.firstName.isNull())
+    if (!p_copy.firstName.isNull())
     {
         whereClause += "firstName = ? AND ";
-        boundValues << p.firstName;
+        boundValues << p_copy.firstName;
     }
-    if (!p.surname.isNull())
+    if (!p_copy.surname.isNull())
     {
         whereClause += "surname = ? AND ";
-        boundValues << p.surname;
+        boundValues << p_copy.surname;
     }
-    if (p.gender != Patient::UnknownGender)
+    if (p_copy.gender != Patient::UnknownGender)
     {
         whereClause += "gender = ? AND ";
-        boundValues << p.gender;
+        boundValues << p_copy.gender;
     }
-    if (!p.dateOfBirth.isNull())
+    if (!p_copy.dateOfBirth.isNull())
     {
         whereClause += "firstName = ? AND ";
-        boundValues << p.dateOfBirth.toString(Qt::ISODate);
+        boundValues << p_copy.dateOfBirth.toString(Qt::ISODate);
     }
 
     if (!whereClause.isEmpty())
@@ -176,6 +188,9 @@ QList<Patient> PatientDB::findPatients(const Patient& p)
         ++it;
         p.gender      = (Patient::Gender)it->toInt();
         ++it;
+
+        // decrypt found patients
+        p.decrypt();
 
         patients << p;
     }
