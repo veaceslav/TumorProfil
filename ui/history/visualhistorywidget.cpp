@@ -474,7 +474,8 @@ void VisualHistoryWidget::render(QPainter &p, bool widgetOutput)
 
     // Effective DiseaseState
     StateColorDrawer stateDrawer(&p, d, d->history.begin(), margin, currentY, statusHeight);
-    EffectiveStateIterator effectiveState(d->history);
+    EffectiveStateIterator effectiveState;
+    effectiveState.set(d->history);
     if (widgetOutput)
     {
         effectiveState.setProofreader(d->proofreader);
