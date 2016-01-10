@@ -316,6 +316,7 @@ void CombinedValue::combine(const Disease& disease)
         rases << PathologyPropertyInfo::Mut_KRAS_4;
         rases << PathologyPropertyInfo::Mut_NRAS_2_4;
         listOfMutationsResult(disease, rases);
+        break;
     }
     case PathologyPropertyInfo::Comb_KRASMutation:
     {
@@ -324,6 +325,7 @@ void CombinedValue::combine(const Disease& disease)
         rases << PathologyPropertyInfo::Mut_KRAS_3;
         rases << PathologyPropertyInfo::Mut_KRAS_4;
         listOfMutationsResult(disease, rases);
+        break;
     }
     default:
         qDebug() << "Unsupported combined value" << info.id << info.property;
