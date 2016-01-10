@@ -70,4 +70,6 @@ protected:
     QList<PathologyPropertyInfo> negativeFields;
 };
 
+Q_DECLARE_OPERATORS_FOR_FLAGS(ActionableResultChecker::Flags)
+
 #endif // ACTIONABLERESULTCHECKER_H
