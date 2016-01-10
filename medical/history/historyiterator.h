@@ -170,7 +170,7 @@ class EffectiveStateIterator : public HistoryIterator
 {
 public:
 
-    EffectiveStateIterator(const DiseaseHistory& history = DiseaseHistory());
+    EffectiveStateIterator();
 
     virtual bool isInterested(HistoryElement* element);
     virtual bool visit(HistoryElement* element);
@@ -208,6 +208,10 @@ public:
     TherapyGroup(const QList<Therapy*> &);
     bool isContinuation(const Therapy* t) const;
 
+    // First and last by begin/end date (not equivalent to QList::first()/last())
+    Therapy* firstTherapy() const;
+    Therapy* lastTherapy() const;
+
     QDate beginDate() const;
     // can be null
     QDate endDate() const;
@@ -216,6 +220,8 @@ public:
     QSet<QString> substances() const;
     bool hasChemotherapy() const;
     bool hasSubstance(const QString& substance) const;
+    bool hasSurgery() const;
+    bool hasRadiotherapy() const;
 
 protected:
 

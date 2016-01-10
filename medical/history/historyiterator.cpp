@@ -442,12 +442,11 @@ bool ProgressionIterator::visit(HistoryElement* element)
 
 // --------------------------------------------------------
 
-EffectiveStateIterator::EffectiveStateIterator(const DiseaseHistory& history)
+EffectiveStateIterator::EffectiveStateIterator()
     : m_effectiveState(DiseaseState::UnknownState),
       m_definingElement(0),
       m_therapyForValidTo(0)
 {
-    set(history);
 }
 
 bool EffectiveStateIterator::isInterested(HistoryElement*)
@@ -733,47 +732,86 @@ bool TherapyGroup::hasSubstance(const QString& substance) const
 
 QDate TherapyGroup::beginDate() const
 {
-    QDate begin;
-    foreach (const Therapy*t, *this)
+    Therapy* first = firstTherapy();
+    if (first)
     {
-        if (begin.isNull() || t->begin() < begin)
-        {
-            begin = t->begin();
-        }
+        return first->begin();
     }
-    return begin;
+    return QDate();
 }
 
 QDate TherapyGroup::endDate() const
 {
-    QDate end;
-    foreach (const Therapy*t, *this)
+    Therapy* last = lastTherapy();
+    if (last)
+    {
+        if (last->end.isValid())
+        {
+            return last->end;
+        }
+        else
+        {
+            // See comment in lastTherapy() about meaning of a null end value depending on type
+            if (last->type == Therapy::CTx || last->type == Therapy::RCTx)
+            {
+                return QDate();
+            }
+            else
+            {
+                return last->begin();
+            }
+        }
+    }
+    return QDate();
+}
+
+Therapy* TherapyGroup::firstTherapy() const
+{
+    Therapy* first = 0;
+    foreach (Therapy*t, *this)
+    {
+        if (!first || t->begin() < first->begin())
+        {
+            first = t;
+        }
+    }
+    return first;
+}
+
+Therapy* TherapyGroup::lastTherapy() const
+{
+    Therapy* last = 0;
+    foreach (Therapy*t, *this)
     {
         if (t->end.isValid())
         {
-            if (end.isNull() || t->end > end)
+            if (!last || t->end > last->end)
             {
-                end = t->end;
+                last = t;
             }
         }
-        // if a later CTx has no end date = ongoing, remove previous end date
         else
         {
+            // if a CTx has no end date this means ongoing
             if (t->type == Therapy::CTx || t->type == Therapy::RCTx)
             {
-                return QDate();
+                // If there are multiple ongoing therapies, choose the one with the latest begin date
+                if (!last || last->end.isValid() || t->begin() > last->begin())
+                {
+                    last = t;
+                }
             }
             // dont forget single-date therapies (but which is not allowed for chemotherapies, where it means ongoing)
             else
             {
-                if (end.isNull() || t->begin() > end)
+                if (!last || t->begin() > last->end)
                 {
-                    end = t->begin();
+                    last = t;
                 }
             }
         }
     }
-    return end;
+    return last;
 }
 
 QDate TherapyGroup::effectiveEndDate() const
@@ -805,6 +843,30 @@ bool TherapyGroup::hasChemotherapy() const
     foreach (const Therapy*t, *this)
     {
         if (t->type == Therapy::CTx || t->type == Therapy::RCTx)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool TherapyGroup::hasSurgery() const
+{
+    foreach (const Therapy*t, *this)
+    {
+        if (t->type == Therapy::Surgery)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool TherapyGroup::hasRadiotherapy() const
+{
+    foreach (const Therapy*t, *this)
+    {
+        if (t->type == Therapy::RTx || t->type == Therapy::RCTx)
         {
             return true;
         }
