@@ -54,9 +54,12 @@ protected:
     QVariant writeMutationAsDetail(const Disease& disease, PathologyPropertyInfo::Property id);
     void writeIHCPropertySplit(const Disease& disease, PathologyPropertyInfo::Property id);
     void writeIHCIsPositive(const Disease& disease, PathologyPropertyInfo::Property id);
-    virtual void problem(const HistoryElement* element, const QString& problem);
     QList<Patient::Ptr> patientsFromCSV(const QString& path);
     void writeActionableCombinations(const QList<Patient::Ptr>& patients);
+    void reportTTF(const QList<QDate>& ctxLineDates, const CurrentStateIterator& currentStateIterator, int line);
+
+    // HistoryProofreader
+    virtual void problem(const HistoryElement* element, const QString& problem);
 
     CSVFile m_file;
     Patient::Ptr m_currentPatient;

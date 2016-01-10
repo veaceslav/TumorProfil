@@ -22,6 +22,7 @@
 #include "analysisgenerator.h"
 
 #include <QDebug>
+#include <QVector>
 
 #include "actionableresultchecker.h"
 #include "combinedvalue.h"
@@ -714,13 +715,79 @@ void AnalysisGenerator::fishRatioListe()
     m_file.finishWriting();
 }
 
+void AnalysisGenerator::reportTTF(const QList<QDate> &ctxLineDates, const CurrentStateIterator& currentStateIterator, int line)
+{
+    QDate begin = ctxLineDates[line];
+    QDate end;
+    int reachedEndpoint = 0;
+    // If there is a following line of treatment, TTF is reached per definition
+    if (ctxLineDates.size() > line+1)
+    {
+        end = ctxLineDates[line+1];
+        reachedEndpoint = 1;
+    }
+    else
+    {
+        end = currentStateIterator.effectiveHistoryEnd();
+        if (currentStateIterator.effectiveState() == DiseaseState::Deceased)
+        {
+            reachedEndpoint = 1;
+        }
+        else
+        {
+            reachedEndpoint = 0;
+        }
+    }
+    m_file << begin.daysTo(end);
+    m_file << reachedEndpoint;
+}
+
 void AnalysisGenerator::crc2015()
 {
     PatientPropertyModelViewAdapter models;
     models.setReportType(PatientPropertyModelViewAdapter::CRCIHCMut);
 
+    /** Overall substances
+             "Aflibercept"
+             "Raltitrexed"
+             "INKL-S TRIN-2755-I-001"
+             "PIK3-Inhibitor BYL719"
+             "BRAF-Inhibitor LGX818"
+             ""
+             "Tegafur/uracil"
+             "Bevacizumab"
+             "Folins\u00E4ure"
+             "Etoposid"
+             "Oxaliplatin"
+             "Stimuvax"
+             "Simtuzumab"
+             "LGX818 (BRAF-Inhibitor) "
+             "BYL719 (PI3K-Inhibitor)"
+             "Tegafur"
+             "Capecitabin"
+             "Vemurafenib"
+             "Tegafur "
+             "5-FU"
+             "MEK-Inhibitor"
+             "Mitomycin C"
+             "Pan-PI3K-Inhibitor BKM120"
+             "Hedgehog-Inhibitor LDE 225"
+             "Panitumumab"
+             "Regorafenib"
+             "Mitomycin"
+             "Panitunumab"
+             "Raltirexed"
+             "Irinotecan"
+             "Carboplatin"
+             "Cetuximab"
+             "Cyclophosphamid"
+             "BRAF-Inhibitor LGX818 "
+             "PI3K-Inhibitor BYL719 "
+             " Raltitrexed"
+             "Gemcitabin"
+    */
     //m_file.openForWriting("C:\\Users\\wiesweg\\Documents\\Tumorprofil\\HER2-Auswertung 03042014.csv");
-    m_file.openForWriting("/home/marcel/Dokumente/Tumorprofil/CRC-Auswertung 20032015.csv");
+    m_file.openForWriting("/home/marcel/Dokumente/Tumorprofil/CRC Projekt/Auswertung 04.01.2016.csv");
 
     const int reportedLines = 5;
 
@@ -765,15 +832,42 @@ void AnalysisGenerator::crc2015()
         m_file << QString("TTF") + QString::number(i+1) + QString("erreicht");
     }
 
-    //TODO:
-    m_file << "TTF_Ox";
-    m_file << "TTF_Ox_erreicht";
-    m_file << "TTF_Iri";
-    m_file << "TTF_Iri_erreicht";
-    m_file << "TTF_EGFR_AB";
-    m_file << "TTF_EGFR_AB_erreicht";
-    m_file << "TTF_surgery";
-    m_file << "TTF_surgery_erreicht";
+    enum SpecificTherapy
+    {
+        Oxaliplatin,
+        Irinotecan,
+        EGFRAntibody,
+
+        FirstSpecificTherapy = Oxaliplatin,
+        LastSpecificTherapy  = EGFRAntibody
+    };
+
+    QMultiMap<SpecificTherapy, QString> specificTherapySubstances;
+    specificTherapySubstances.insert(Oxaliplatin, "Oxaliplatin");
+    specificTherapySubstances.insert(Irinotecan, "Irinotecan");
+    specificTherapySubstances.insert(EGFRAntibody, "Cetuximab");
+    specificTherapySubstances.insert(EGFRAntibody, "Panitumumab");
+    specificTherapySubstances.insert(EGFRAntibody, "Panitunumab");
+    specificTherapySubstances.insert(EGFRAntibody, "Vectibix");
+    specificTherapySubstances.insert(EGFRAntibody, "Erbitux");
+
+    QMap<SpecificTherapy, QString> specificTherapyShortcuts;
+    specificTherapyShortcuts.insert(Oxaliplatin, "Ox");
+    specificTherapyShortcuts.insert(Irinotecan, "Iri");
+    specificTherapyShortcuts.insert(EGFRAntibody, "EGFR_AB");
+
+    for (int i=FirstSpecificTherapy; i<=LastSpecificTherapy; ++i)
+    {
+        SpecificTherapy specificTherapy = SpecificTherapy(i);
+        const QString& shortCut = specificTherapyShortcuts.value(specificTherapy);
+        m_file << shortCut + "_line_number";
+        m_file << "OS_" + shortCut;
+        m_file << "TTF_" + shortCut;
+        m_file << "TTF_" + shortCut + "_erreicht";
+    }
+
+    m_file << "Therapie_Kategorie";
+
     m_file.newLine();
 
     const int size = models.filterModel()->rowCount();
@@ -854,21 +948,56 @@ void AnalysisGenerator::crc2015()
         writePathologyProperty(disease, PathologyPropertyInfo::Mut_BRAF_15);
 
         /// OS
-        OSIterator it(disease);
-        it.setProofreader(this);
-        m_file << it.days(OSIterator::FromFirstTherapy);
-        m_file << (int)it.endpointReached();
+        OSIterator osIterator(disease);
+        osIterator.setProofreader(this);
+        m_file << osIterator.days(OSIterator::FromFirstTherapy);
+        m_file << (int)osIterator.endpointReached();
 
+        /// Treatment lines
         NewTreatmentLineIterator treatmentLinesIterator;
+        treatmentLinesIterator.setProofreader(this);
         treatmentLinesIterator.set(history);
         treatmentLinesIterator.iterateToEnd();
+        QList<TherapyGroup> therapies = treatmentLinesIterator.therapies();
+
         QDate lastEndDate = history.begin();
         QList<QDate> lineDates, ctxLineDates;
-        foreach (const TherapyGroup& group, treatmentLinesIterator.therapies())
+        QVector<HistoryElement*> firstTherapies(LastSpecificTherapy+1);
+        QVector<int> firstTherapyLines(LastSpecificTherapy+1);
+        foreach (const TherapyGroup& group, therapies)
         {
             if (group.hasChemotherapy())
             {
                 ctxLineDates << group.beginDate();
+            }
+
+            for (int i=FirstSpecificTherapy; i<=LastSpecificTherapy; ++i)
+            {
+                SpecificTherapy specificTherapy = SpecificTherapy(i);
+
+                // already found a first line? Continue
+                if (firstTherapies[specificTherapy])
+                {
+                    continue;
+                }
+
+                // Try all possible substances, check if this line contains the substance
+                foreach (const QString& substance, specificTherapySubstances.values(specificTherapy))
+                {
+                    if (group.hasSubstance(substance))
+                    {
+                        foreach (Therapy*t, group)
+                        {
+                            if (t->elements.hasSubstance(substance))
+                            {
+                                firstTherapies[specificTherapy] = t;
+                                break;
+                            }
+                        }
+                        firstTherapyLines[specificTherapy] = ctxLineDates.size() - 1;
+                        break;
+                    }
+                }
             }
 
             // skip groups fully contained in another group
@@ -888,34 +1017,110 @@ void AnalysisGenerator::crc2015()
         int line = 0;
         for (; line<qMin(reportedLines, ctxLineDates.size()); line++)
         {
-            QDate begin = ctxLineDates[line];
-            QDate end;
-            int reachedEndpoint = 0;
-            if (ctxLineDates.size() > line+1)
-            {
-                end = ctxLineDates[line+1];
-                reachedEndpoint = 1;
-            }
-            else
-            {
-                end = currentStateIterator.effectiveHistoryEnd();
-                if (currentStateIterator.effectiveState() == DiseaseState::Deceased)
-                {
-                    reachedEndpoint = 1;
-                }
-                else
-                {
-                    reachedEndpoint = 0;
-                }
-            }
-            m_file << begin.daysTo(end);
-            m_file << reachedEndpoint;
+            reportTTF(ctxLineDates, currentStateIterator, line);
         }
+        // file empty spaces if actual number of lines is less than reported lines
         for (; line < reportedLines; line++)
         {
             m_file << QVariant();
-            m_file << 0;
+            m_file << QVariant();
         }
+
+        for (int i=FirstSpecificTherapy; i<=LastSpecificTherapy; ++i)
+        {
+            SpecificTherapy specificTherapy = SpecificTherapy(i);
+
+            // Did we see a therapy line with that substance?
+            if (firstTherapies[specificTherapy])
+            {
+                // number of first line with this substance
+                m_file << firstTherapyLines[specificTherapy] + 1; // index is 0-based, line number is one-based
+                // OS
+                m_file << osIterator.days(firstTherapies[specificTherapy]);
+                // TTF
+                reportTTF(ctxLineDates, currentStateIterator, firstTherapyLines[specificTherapy]);
+            }
+            else
+            {
+                m_file << QVariant();
+                m_file << QVariant();
+                m_file << QVariant();
+                m_file << QVariant();
+                continue;
+            }
+
+        }
+
+        /// Categories grouping
+        /// 0 -> no therapy
+        /// 1 -> initial therapy line includes surgery; entered follow-up; no recurrence
+        /// 2 -> initial therapy line includes surgery; entered follow-up; saw recurrence
+        /// 3 -> initially systemic therapy / did never enter follow-up
+        int category;
+        if (therapies.isEmpty())
+        {
+             category = 0;
+        }
+        else
+        {
+            const TherapyGroup& firstGroup = therapies.first();
+            if (firstGroup.hasSurgery())
+            {
+                EffectiveStateIterator effectiveStateIterator;
+                effectiveStateIterator.set(history, firstGroup.firstTherapy());
+                for (; effectiveStateIterator.next() == HistoryIterator::Match; )
+                {
+                    if (effectiveStateIterator.effectiveState() == DiseaseState::FollowUp)
+                    {
+                        break;
+                    }
+                }
+
+                if (effectiveStateIterator.effectiveState() == DiseaseState::FollowUp)
+                {
+                    // Ok, we had a surgery, and we entered Follow Up at some point.
+                    // This fulfills the definition of group 1 or 2. All the rest goes into group 3.
+
+                    // Now, lets have a look. Do we see recurrence?
+                    ProgressionIterator progressionIterator(ProgressionIterator::OnlyRecurrence);
+                    progressionIterator.set(history, firstGroup.firstTherapy());
+                    if (progressionIterator.next() == ProgressionIterator::Match)
+                    {
+                        category = 2;
+                    }
+                    else
+                    {
+                        category = 1;
+                        // double check
+                        for (; effectiveStateIterator.next() == HistoryIterator::Match; )
+                        {
+                            switch (effectiveStateIterator.effectiveState())
+                            {
+                            case DiseaseState::Therapy:
+                            case DiseaseState::WatchAndWait:
+                            case DiseaseState::BestSupportiveCare:
+                            {
+                                qDebug() << "! No recurrence for" << p->surname << p->firstName << "but state" << effectiveStateIterator.effectiveState() << "after FollowUp. Please check. Assuming recurrent disease.";
+                                category = 2;
+                                break;
+                            }
+                            default:
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    category = 3;
+                }
+            }
+            else
+            {
+                category = 3;
+            }
+        }
+        m_file << category;
 
         m_file.newLine();
     }
