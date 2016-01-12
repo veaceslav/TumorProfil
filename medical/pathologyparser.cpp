@@ -308,6 +308,11 @@ void PathologyParser::parseText(PatientParseResults& results)
         while (it.hasNext())
         {
             QRegularExpressionMatch match = it.next();
+            // Some regexps may match the same line. Skip if this excerpt was already parsed.
+            if (boost::icl::contains(excerpts, boost::icl::interval<int>::right_open(match.capturedStart(), match.capturedEnd())))
+            {
+                continue;
+            }
             IHCScore::Intensity intensity = d->textToIntensity(match.captured("intensity"));
             PathologyPropertyInfo::Property id = d->textToIHCProperty(match.captured("protein"));
             PathologyPropertyInfo info = PathologyPropertyInfo::info(id);
@@ -315,7 +320,7 @@ void PathologyParser::parseText(PatientParseResults& results)
 
             Property prop;
             prop.property = info.id;
-            typeInfo.fillIHCScore(prop, intensity, match.captured("percentage"));
+            typeInfo.fillIHCScore(prop, intensity, match.captured("percentage").remove('%'));
 
             results.properties << prop;
 
@@ -375,8 +380,19 @@ void PathologyParser::parseText(PatientParseResults& results)
             Property prop;
             prop.property = info.id;
             QString positivityClause = match.captured("positivity");
-            bool lossOfExpression =  (positivityClause == "Eine");
-            prop.value      = typeInfo.toPropertyValue(!lossOfExpression);
+            IHCScore score;
+            if (positivityClause == "Ein" || positivityClause == "Kompletter")
+            {
+                typeInfo.fillIHCScore(prop, IHCScore::NoIntensity, QString());
+            }
+            else if (positivityClause == "Partieller")
+            {
+                typeInfo.fillIHCScore(prop, IHCScore::WeakIntensity, match.captured("percentage"));
+            }
+            else
+            {
+                typeInfo.fillIHCScore(prop, IHCScore::StrongIntensity, QString());
+            }
             results.properties << prop;
 
             excerpts += boost::icl::interval<int>::right_open(match.capturedStart(), match.capturedEnd());
@@ -424,7 +440,7 @@ void PathologyParser::parseText(PatientParseResults& results)
                     }
                     // start next round
                     protein = match2.captured("protein");
-                    mutationText.clear();
+                    mutationText = line.mid(match2.capturedEnd());
                 }
                 else
                 {

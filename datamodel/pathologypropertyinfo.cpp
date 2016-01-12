@@ -153,11 +153,11 @@ PathologyPropertyInfo PathologyPropertyInfo::info(Property property)
     case IHC_pP70S6K:
         return PathologyPropertyInfo(property, IHCTwoDim, "ihc/p-p70S6k", QObject::tr("p-p70S6K"));
     case IHC_MLH1:
-        return PathologyPropertyInfo(property, IHCBoolean, "ihc/mlh1", QObject::tr("MLH1"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/mlh1", QObject::tr("MLH1"));
     case IHC_MSH2:
-        return PathologyPropertyInfo(property, IHCBoolean, "ihc/msh2", QObject::tr("MSH2"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/msh2", QObject::tr("MSH2"));
     case IHC_MSH6:
-        return PathologyPropertyInfo(property, IHCBoolean, "ihc/msh6", QObject::tr("MSH6"));
+        return PathologyPropertyInfo(property, IHCTwoDim, "ihc/msh6", QObject::tr("MSH6"));
     case PCR_D5S346:
         return PathologyPropertyInfo(property, StableUnstable, "msi/d5s346", QObject::tr("MSI PCR: D5S346"));
     case PCR_BAT26:
@@ -562,21 +562,41 @@ QString ValueTypeCategoryInfo::toLongDisplayString(const Property &prop) const
     {
         IHCScore score(value, prop.detail);
         QString s;
-        switch (score.colorIntensity)
+        if (prop.property == "ihc/mlh1" || prop.property == "ihc/msh2" || prop.property == "ihc/msh6")
         {
-        case IHCScore::InvalidIntensity:
-            return toUILabel(QVariant(QVariant::Bool)); // "n.d."
-        case IHCScore::NoIntensity:
-            return QObject::tr("Negativ (keine Färbung)");
-        case IHCScore::WeakIntensity:
-            s = QObject::tr("Schwache Färbung in %1%");
-            break;
-        case IHCScore::MediumIntensity:
-            s = QObject::tr("Mäßige Färbung in %1%");
-            break;
-        case IHCScore::StrongIntensity:
-            s = QObject::tr("Starke Färbung in %1%");
-            break;
+            switch (score.colorIntensity)
+            {
+            case IHCScore::InvalidIntensity:
+                return toUILabel(QVariant(QVariant::Bool)); // "n.d."
+            case IHCScore::NoIntensity:
+                return QObject::tr("Expressionsverlust");
+            case IHCScore::WeakIntensity:
+            case IHCScore::MediumIntensity: // Medium is not used
+                s = QObject::tr("Partieller Expressionsverlust in %1%");
+                break;
+            case IHCScore::StrongIntensity:
+                return QObject::tr("Kein Expressionsverlust");
+                break;
+            }
+        }
+        else
+        {
+            switch (score.colorIntensity)
+            {
+            case IHCScore::InvalidIntensity:
+                return toUILabel(QVariant(QVariant::Bool)); // "n.d."
+            case IHCScore::NoIntensity:
+                return QObject::tr("Negativ (keine Färbung)");
+            case IHCScore::WeakIntensity:
+                s = QObject::tr("Schwache Färbung in %1%");
+                break;
+            case IHCScore::MediumIntensity:
+                s = QObject::tr("Mäßige Färbung in %1%");
+                break;
+            case IHCScore::StrongIntensity:
+                s = QObject::tr("Starke Färbung in %1%");
+                break;
+            }
         }
         return s.arg(prop.detail);
     }
