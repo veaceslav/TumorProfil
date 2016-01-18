@@ -27,10 +27,10 @@ QString AesUtils::encrypt(QString message, QString aesKey)
 
     // putting full 64 hexes make decryption to fail sometimes
     // AES 252 bits :D
-    decoder.Put((byte*)stdAesKey.data(), AESKEY_LENGTH-1);
+    decoder.Put((byte*)stdAesKey.data(), AESKEY_LENGTH);
     decoder.MessageEnd();
     word64 size = decoder.MaxRetrievable();
-    char *decodedKey = new char[size];
+    char decodedKey[size+2];
     decoder.Get((byte *)decodedKey, size);
     // Generate Cipher, Key, and CBC
     byte key[ AES::MAX_KEYLENGTH ], iv[ AES::BLOCKSIZE ];
@@ -51,15 +51,11 @@ QString AesUtils::decrypt(QString message, QString aesKey)
     // Hex decode symmetric key:
     HexDecoder decoder;
     string stdAesKey = aesKey.toStdString();
-//    qDebug() << "decrypting" <<  message;
 
-    // putting full 64 hexes make decryption to fail sometimes
-    // AES 252 bits :D
-
-    decoder.Put( (byte *)stdAesKey.data(), AESKEY_LENGTH-1);
+    decoder.Put( (byte *)stdAesKey.data(), AESKEY_LENGTH);
     decoder.MessageEnd();
     word64 size = decoder.MaxRetrievable();
-    char *decodedKey = new char[size];
+    char decodedKey[size+2];
     decoder.Get((byte *)decodedKey, size);
 
 
