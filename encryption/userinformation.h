@@ -29,11 +29,17 @@ public:
 
     bool isLoggedIn();
 
-    LoginState toggleLogIn();
+
 
     bool hasKey(QString keyName);
 
     QString retrieveKey(QString keyName);
+
+public slots:
+    LoginState toggleLogIn();
+
+signals:
+    void signalLoginStateChanged();
 
 protected:
     static QPointer<UserInformation> internalPtr;

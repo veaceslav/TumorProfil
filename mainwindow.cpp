@@ -61,6 +61,7 @@
 #include "reportwindow.h"
 #include "tnmwidget.h"
 #include "menubar.h"
+#include "ui/logininfowidget.h"
 
 
 class MainWindow::MainWindowPriv
@@ -163,6 +164,9 @@ void MainWindow::setupToolbar()
                               this, SLOT(showHistory()));
     }
 
+    d->toolBar->addSeparator();
+
+    d->toolBar->addWidget(LoginInfoWidget::instance());
     // Hidden, only via shortcut
     QAction* mergeAction = new QAction(tr("Datenbanken zusammenführen"), this);
     mergeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_M));

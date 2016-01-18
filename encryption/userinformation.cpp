@@ -7,6 +7,7 @@
 #include "authenticationwindow.h"
 #include "queryutils.h"
 #include "settings/encryptionsettings.h"
+#include "ui/logininfowidget.h"
 
 QPointer<UserInformation> UserInformation::internalPtr = QPointer<UserInformation>();
 
@@ -45,6 +46,9 @@ bool UserInformation::logIn()
     d->isLoggedIn = true;
     d->decryptionKey = details.decryptionKeys;
     d->userName = details.userName;
+    LoginInfoWidget::instance()->logInUpdate(details.userName);
+    emit signalLoginStateChanged();
+
     return true;
 }
 
@@ -57,6 +61,8 @@ bool UserInformation::logOut()
     d->userName = QString();
     d->decryptionKey.clear();
     d->isLoggedIn = false;
+    LoginInfoWidget::instance()->logOutUpdate();
+    emit signalLoginStateChanged();
 
     return true;
 }

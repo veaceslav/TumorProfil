@@ -42,6 +42,9 @@ MenuBar::MenuBar(QWidget* parent)
 
     connect(d->settingsAction, SIGNAL(triggered()), this, SLOT(slotShowSettings()));
 
+    connect(UserInformation::instance(), SIGNAL(signalLoginStateChanged()),
+            this, SLOT(updateState()));
+
 }
 
 void MenuBar::slotShowSettings()
@@ -53,9 +56,13 @@ void MenuBar::slotShowSettings()
 
 void MenuBar::slotLogIn()
 {
-    UserInformation::LoginState state =UserInformation::instance()->toggleLogIn();
+    UserInformation::instance()->toggleLogIn();
+    updateState();
+}
 
-    if(state == UserInformation::LOGGEDIN)
+void MenuBar::updateState()
+{
+    if(UserInformation::instance()->isLoggedIn())
         d->loginAction->setText(tr("Abmelden"));
     else
         d->loginAction->setText(tr("Anmelden"));
