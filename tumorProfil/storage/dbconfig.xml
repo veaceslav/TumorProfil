@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseconfig>
+    <version>1</version>
+
+    <database name="QSQLITE">
+        <hostName>TestHost</hostName>
+        <databaseName>DatabaseName</databaseName>
+        <userName>UserName</userName>
+        <password>Password</password>
+        <port>Port</port>
+        <connectoptions>ConnectOptions</connectoptions>
+        <dbservercmd></dbservercmd>
+        <dbinitcmd></dbinitcmd>
+
+        <dbactions>
+            <dbaction name="CreateDB">
+                <statement mode="plain">
+                 CREATE TABLE Patients
+                 (id INTEGER PRIMARY KEY,
+                  firstName TEXT,
+                  surname TEXT,
+                  dateOfBirth DATETIME,
+                  gender INTEGER);
+                </statement>
+                <statement mode="plain">
+                 CREATE TABLE PatientProperties
+                 (patientid INTEGER,
+                  property TEXT,
+                  value TEXT,
+                  detail TEXT);
+                </statement>
+
+                <statement mode="plain">
+                 CREATE TABLE Diseases
+                 (id INTEGER PRIMARY KEY,
+                  patientid INTEGER,
+                  initialDiagnosis DATETIME,
+                  cTNM TEXT,
+                  pTNM TEXT);
+                </statement>
+                <statement mode="plain">
+                 CREATE TABLE DiseaseProperties
+                 (diseaseid INTEGER,
+                  property TEXT,
+                  value TEXT,
+                  detail TEXT);
+                </statement>
+
+                <statement mode="plain">
+                 CREATE TABLE Pathologies
+                 (id INTEGER PRIMARY KEY,
+                  diseaseid INTEGER,
+                  entity INTEGER,
+                  sampleOrigin INTEGER,
+                  context TEXT,
+                  date DATETIME);
+                </statement>
+                <statement mode="plain">
+                 CREATE TABLE PathologyProperties
+                 (pathologyid,
+                  property TEXT,
+                  value TEXT,
+                  detail TEXT);
+                </statement>
+                <statement mode="plain">
+                 CREATE TABLE Settings
+                 (keyword TEXT NOT NULL UNIQUE,
+                  value TEXT)
+                </statement>
+            </dbaction>
+
+            <dbaction name="CreateDBIndices">
+                <statement mode="plain">
+                CREATE INDEX nameIndex ON Patients (surname);
+                </statement>
+                <statement mode="plain">
+                CREATE INDEX dateOfBirthIndex ON Patients (dateOfBirth);
+                </statement>
+                <statement mode="plain">
+                CREATE INDEX pathologyPropertiesIndex ON PathologyProperties (property);
+                </statement>
+            </dbaction>
+            <dbaction name="CreateDBTrigger">
+                <statement mode="plain">
+                CREATE TRIGGER delete_patient DELETE ON Patients
+                BEGIN
+                    DELETE FROM Diseases          WHERE patientid=OLD.id;
+                    DELETE FROM PatientProperties WHERE patientid=OLD.id;
+                END;
+                </statement>
+                <statement mode="plain">
+                CREATE TRIGGER delete_disease DELETE ON Diseases
+                BEGIN
+                    DELETE FROM Pathologies       WHERE diseaseid=OLD.id;
+                END;
+                </statement>
+                <statement mode="plain">
+                CREATE TRIGGER delete_pathology DELETE ON Pathologies
+                BEGIN
+                    DELETE FROM PathologyProperties WHERE pathologyid=OLD.id;
+                END;
+                </statement>
+            </dbaction>
+        </dbactions>
+    </database>
+
+    <database name="QMYSQL">
+        <hostName>TestHost</hostName>
+        <databaseName>DatabaseName</databaseName>
+        <userName>UserName</userName>
+        <password>Password</password>
+        <port>Port</port>
+        <connectoptions>ConnectOptions</connectoptions>
+        <dbservercmd></dbservercmd>
+        <dbinitcmd></dbinitcmd>
+
+        <dbactions>
+            <dbaction name="CreateDB">
+                <statement mode="plain">
+                 CREATE TABLE Patients
+                 (id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                  firstName TEXT,
+                  surname TEXT,
+                  dateOfBirth DATETIME,
+                  gender INTEGER);
+                </statement>
+                <statement mode="plain">
+                 CREATE TABLE PatientProperties
+                 (patientid INTEGER,
+                  property TEXT,
+                  value TEXT,
+                  detail TEXT);
+                </statement>
+
+                <statement mode="plain">
+                 CREATE TABLE Diseases
+                 (id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                  patientid INTEGER,
+                  initialDiagnosis DATETIME,
+                  cTNM TEXT,
+                  pTNM TEXT);
+                </statement>
+                <statement mode="plain">
+                 CREATE TABLE DiseaseProperties
+                 (diseaseid INTEGER,
+                  property TEXT,
+                  value TEXT,
+                  detail TEXT);
+                </statement>
+
+                <statement mode="plain">
+                 CREATE TABLE Pathologies
+                 (id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                  diseaseid INTEGER,
+                  entity INTEGER,
+                  sampleOrigin INTEGER,
+                  context TEXT,
+                  date DATETIME);
+                </statement>
+                <statement mode="plain">
+                 CREATE TABLE PathologyProperties
+                 (pathologyid INTEGER PRIMARY KEY AUTO_INCREMENT,
+                  property TEXT,
+                  value TEXT,
+                  detail TEXT);
+                </statement>
+                <statement mode="plain">
+                 CREATE TABLE Settings
+                 (keyword varchar(150) NOT NULL UNIQUE,
+                  value TEXT)
+                </statement>
+            </dbaction>
+
+            <dbaction name="CreateDBIndices">
+                <statement mode="plain">
+                CREATE INDEX nameIndex ON Patients (surname(40));
+                </statement>
+                <statement mode="plain">
+                CREATE INDEX dateOfBirthIndex ON Patients (dateOfBirth);
+                </statement>
+                <statement mode="plain">
+                CREATE INDEX pathologyPropertiesIndex ON PathologyProperties (property(40));
+                </statement>
+            </dbaction>
+            <dbaction name="CreateDBTrigger">
+                <statement mode="plain">
+                CREATE TRIGGER delete_patient AFTER DELETE ON Patients
+                FOR EACH ROW
+                BEGIN
+                    DELETE FROM Diseases          WHERE patientid=OLD.id;
+                    DELETE FROM PatientProperties WHERE patientid=OLD.id;
+                END;
+                </statement>
+                <statement mode="plain">
+                CREATE TRIGGER delete_disease AFTER DELETE ON Diseases
+                FOR EACH ROW
+                BEGIN
+                    DELETE FROM Pathologies       WHERE diseaseid=OLD.id;
+                END;
+                </statement>
+                <statement mode="plain">
+                CREATE TRIGGER delete_pathology AFTER DELETE ON Pathologies
+                FOR EACH ROW
+                BEGIN
+                    DELETE FROM PathologyProperties WHERE pathologyid=OLD.id;
+                END;
+                </statement>
+            </dbaction>
+        </dbactions>
+    </database>
+</databaseconfig>

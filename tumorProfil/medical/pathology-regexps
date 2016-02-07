@@ -1,0 +1,46 @@
+ihc-global
+(?<intensity>Schwache|Mäßige|Starke|Kräftige|Keine)\s+(?:inkomplette|positive \(komplette\/inkomplette\)|positive) (?:zytoplasmatische|.*membranständige|zytoplasmatische und membranöse|zytoplasmatisch und nukleär|nukleäre)?\s*Reaktivität\s+\(?(?:nukleär\/nukleär|zytoplasmatisch|nukleär und zytoplasmatisch|zytoplasmatisch\/ nukleär|zytoplasmatisch und nukleär|nukleär)?\)?\s*mit dem Antikörper gegen\s+(?<protein>PTEN|c-MET|p-ERK|ALK|ROS1|p-AKTS473|p-p70S6-Kinase|p-p70s6-Kinase)\s+(?|in (?<percentage>\d+)\s*%\s+der\s+Tumorzellen\s+\((?:Gesamts|S)core:\s*(?<score>[\d]+)\+?\s*\)|(?<percentage>)\(Gesamtscore:\s*(?<score>0)\)|(?<percentage>)in \(Gesamtscore:\s*(?<score>0)\)|(?<percentage>)\(Score:\s*(?<score>0)\s*\)|(?<percentage>)in \(Score:\s*(?<score>0)\s*\)|(?<percentage>)\(Score:\s*(?<score>[\d]+)\+?\s*\))
+(?<intensity>Schwache|Mäßige|Starke|Keine)\s+(?:inkomplette|positive \(komplette\/inkomplette\)|positive) (?:zytoplasmatische|.*membranständige|zytoplasmatische und membranöse|zytoplasmatisch und nukleär|nukleäre)?\s*Reaktivität\s+(?:\((?<percentage>\d+%)\) )?mit dem Antikörper gegen\s+(?<protein>HER2\/neu)\s+\(Score:\s*(?<score>[\d]+)\+?\s*\)
+(?<intensity>Schwache|Mäßige|Starke|Keine)\s+(?:inkomplette|komplette|positive komplette|positive inkomplette) (?:zytoplasmatische|membranständige|zytoplasmatische und membranöse|zytoplasmatisch und nukleär|nukleäre)?\s*Reaktivität mit dem Antikörper gegen\s+(?<protein>HER2\/neu)\s+in (?<percentage>\d+)\s?%\s+der\s+Tumorzellen \(Score: (?<score>\d)\+?\)
+(?<intensity>Schwache|Mäßige|Starke|Keine)\s+positive (?:basolaterale und laterale |basolaterale )?(?:zytoplasmatische|membranständige|zytoplasmatische und membranöse|zytoplasmatisch und nukleär|nukleäre)?\s*Reaktivität(?: \((?<percentage>\d+)\s?%\))?\s+mit dem Antikörper gegen\s+(?<protein>HER2\/neu)\s+\(Score:\s+(?<score>\d)\+?\)
+(?<intensity>Schwache|Mäßige|Starke|Keine)\s+positive (?:basolaterale und laterale |basolaterale |laterale )?(?:zytoplasmatische|membranständige|zytoplasmatische und membranöse|zytoplasmatisch und nukleär|nukleäre)?\s*Reaktivität\s+mit dem Antikörper gegen\s+(?<protein>HER2\/neu)\s+in (?<percentage>\d+)\s?%\s+der\s+Tumorzellen\s+\(Score:\s+(?<score>\d)\+?\)
+ihc-hscore
+(?|(?<strong>\d+)\s*%ige|(?<strong>)Keine) starke(?|, (?<medium>\d+)\s*%ige mäßige|(?<medium>), keine mäßige)?(?| und (?<weak>\d+)\s*%ige schwache|(?<weak>) und keine schwache)? zytoplasmatische und membranöse Reaktivität\s+mit\s+dem\s+Antikörper gegen\s+(?<protein>c-MET)\s+\(H-Score:\s*(?<score>\d+)\)
+(?|(?<strong>\d+)\s*%ige|(?<strong>)Keine) starke(?|, (?<medium>\d+)\s*%ige mäßige|(?<medium>), keine mäßige)?(?| und (?<weak>\d+)\s*%ige schwache|(?<weak>) und keine schwache)? (?:zytoplasmatische und membranöse|membranöse) Tumorzell-Reaktivität mit\s+dem\s+Antikörper\s+gegen\s+(?<protein>PD-L1)\s+\(H-Score:\s*(?<score>\d+)\)\s+sowie (?<immunecell>keine beurteilbare|keine|eine) PD-L1-positive tumorassoziierte Immunzell-\s*Reaktivität
+ihc-msi
+(?<positivity>Kein|Ein) immunhistochemischer (?<protein>MLH1|MSH2|MSH6)-Expressionsverlust der Tumorzellkerne
+patient-id
+Journal-Nr\.: Eingang am: (?<inday>\d\d)\.(?<inmonth>\d\d)\.(?<inyear>\d\d\d\d)\s+(?<refNumber>[RE]\d+\/\d+)\s+Name:\s+(?<name>[\w \-äöüÄÖÜß]+),\s*(?<firstName>[\w \-äöüÄÖÜß]+)\s+geb\.:\n(?<day>\d\d)\.(?<month>\d\d)\.(?<year>\d\d\d\d)\s+(?:00:00:00:dd\s\.MM\.yyyy\s+)?Ausgang am:\s+(?<refday>\d\d).(?<refmonth>\d\d).(?<refyear>\d\d\d\d)
+ngs-table-header
+Gen\s+Untersuchte\s+Exone\s+Mutation\s+DNA-Ebene\s+Protein-\s?Ebene\s+Frequenz
+ngs-table-row
+(?<protein>BRAF|DDR2|EGFR|ERBB2|FGFR1|FGFR3|HRAS|KIT|KRAS|MET|NRAS|PDGFRa|PIK3CA|RET|TP53)\s+[\d,-]+\s+(?<result>negativ|)
+fish
+Methode und Ergebnis der (?<protein>HER2) In-situ-Hybridisierung.*?Gen\/Zentromer-Quotient:\s*(?<ratio>[\d,]+)\s+Ergebnis\s*:\s*HER2 CISH (?<positivity>positiv|negativ)
+Das Material wurde unter Verwendung der .*?(?<protein>ROS1|ALK).*? Break Apart (?:FISH )?Probe\)?\s+untersucht\.\s*Bei Evaluation von \d+ Tumornuklei zeigten\s*(?<ratio>\d+)\s*%\s*\(entsprechend (?<positivity>mehr|weniger) als 15%\)
+eine (?<protein>FGFR1)\/CEN 8-Ratio von\s?(?<ratio>[\d,]+).*?Nach diesen Kriterien liegt hier (?:somit )?(?<positivity>eine|keine|eine grenzwertige) FGFR1-Amplifikation
+ignore
+Panel: Custom Lung Cancer V2.0
+Zu näheren Details sehen Sie bitte die (?:angefügte|folgende) tabellarische Auflistung der Sequenzierungsergebnisse.
+^Für die Mutationsanalyse wurde DNA.+?extrahiert\. An diesem Material erfolgte eine Mutationsanalyse mittels Hochdurchsatz-Parallelsequenzierung \(Next Generation Sequencing\) von Multiplex PCR Amplikons\. Dafür wurde  ein GeneRead DNAseq Custom Panel V2 \(Qiagen\) genutzt und anschließend eine Bibliothek unter Verwendung des NEBNext Ultra DNA Library Prep Kit for Illumina \(NEB\) generiert\. Die Sequenzierung wurde auf einem Illumina MiSeq-Gerät durchgeführt und die resultierenden Daten mit Hilfe der Cancer Research Workbench \(CLC Bio\) ausgewertet\.$
+^Mutation(?:en)?.+ weiterhin Wildtyp-Sequenzen in allen weiteren untersuchten Exonen\.$
+^Es wurde folgendes Ergebnis detektiert:$
+^Wildtyp in allen untersuchten Exonen\.$
+^Wie angekündigt, haben wir in der Zwischenzeit an dem vorab übersandten Material.+weiterführende immunhistochemische Untersuchungen durchgeführt:$
+, entsprechend einem (?:positiv|negativ)en INC-Studien-Score \(.+\)\.?$
+^Zudem eine.+nukleäre Reaktivität.$
+^Univ.-Prof. Dr. K.W. Schmid\s+(?:Fr. S. Ting|Dr. H. Reis|Prof. Dr. K.A. Metz)$
+^\s+\(Rückfragen unter 723-\d{4}\)$
+^\.$
+Für die Mutationsanalyse wurde DNA aus einer Region der Biopsie mit einem Tumorzellgehalt von\smindestens \d+ % extrahiert. An diesem Material erfolgte eine Mutationsanalyse mittels Hochdurchsatz-\sParallelsequenzierung \(Next Generation Sequencing\) von Multiplex PCR Amplikons. Dafür wurde ein\sGeneRead DNAseq Custom Panel V2 \(Qiagen\) genutzt und anschließend eine Bibliothek unter Verwendung\sdes NEBNext Ultra DNA Library Prep Kit for Illumina \(NEB\) generiert. Die Sequenzierung wurde auf einem\sIllumina MiSeq-Gerät durchgeführt und die resultierenden Daten mit Hilfe der Cancer Research Workbench\s\(CLC Bio\) ausgewertet.
+pd-l1-header
+(?:Entsprechend|Wie gewünscht) haben wir (?:eine |weitergehende |)immunhistochemische Untersuchungen auf eine (?<protein>PD-L1|PD-1|PD1)
+pd-l1-immune-reaction
+PD-?L?1 positive tumorassoziierte Immunreaktion\s+(?<immune_reaction>nein)
+PD-?L?1 positive tumorassoziierte Immunreaktion\s+(?<immune_reaction>ja)\s+Lymphozyten\s+(?<lymphocytes>ja \(wenige\)|ja \(einzeln\)|ja \(vereinzelt\)|ja|nein)\s+Makrophagen\s+(?<macrophages>ja \(wenige\)|ja \(einzeln\)|ja \(vereinzelt\)|ja|nein)\s+(?:PD-?L?1 prädominanter positiver Zelltyp\s+(?<dominant_type>Lymphozyten|Makrophagen|Tumor))?
+pd-l1-hscore
+H-Score Berechnung:\s+Tumor \(Färbeintensität membranös\) % der Tumorzellen\s+Schwach\s+(?<weak>\d+)\s+Mäßig\s+(?<medium>\d+)\s+Stark\s+(?<strong>\d+)
+pd-l1-hscore-OLD
+Schwach\s+(?<weak>\d+)(?:%| %)?(?: der Tumorzellen)?\n(?:Mäßig\s+(?<medium>\d+)(?:%| %)?(?: der Tumorzellen)?\n)?(?:Stark\s+(?<strong>\d+)(?:%| %)?(?: der Tumorzellen)?\n)?H-Score \(.+\):?\s+\d+ *
+page-break-junk
+Name: Seite Eingang am: \d\d\.\d\d\.\d\d\d\d\n\d\d:\d\d:\d\d:d\nd\.MM\.yyyy\nJournal-Nr\.:\n.+\ngeb\.:\n\d\d\.\d\d\.\d\d\d\d Ausgang am: \d\d\.\d\d\.\d\d\d\d\n\d\d:\d\d:\d\d:d\nd\.MM\.yyyy\n.+
