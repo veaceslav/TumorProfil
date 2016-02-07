@@ -8,6 +8,7 @@
 
 #include "aesutils.h"
 #include "databaseaccess.h"
+#include "time.h"
 
 #define SALT_SIZE  10
 

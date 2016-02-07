@@ -1,4 +1,5 @@
 TEMPLATE = subdirs
 SUBDIRS = cryptopp563 \
-          tumorProfil
+          tumorProfil \
+          TumorUsers
 CONFIG += ordered

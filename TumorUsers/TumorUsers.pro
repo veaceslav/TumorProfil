@@ -13,8 +13,6 @@ TEMPLATE = app
 
 INCLUDEPATH += /usr/include/cryptopp
 
-LIBS += -lcryptopp
-
 SOURCES += main.cpp\
         mainwindow.cpp \
     databaseconfigelement.cpp \
@@ -50,3 +48,13 @@ FORMS    +=
 
 RESOURCES += \
     storage.qrc
+
+unix{
+    LIBS += -lcryptopp
+}
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../cryptopp563/release/ -lcryptopp563
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../cryptopp563/debug/ -lcryptopp563
+
+INCLUDEPATH += $$PWD/../cryptopp563
+DEPENDPATH += $$PWD/../cryptopp563
