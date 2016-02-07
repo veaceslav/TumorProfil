@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/regexps">
-        <file>pathology-regexps</file>
-    </qresource>
-</RCC>
