@@ -77,6 +77,7 @@ public:
     QDate               dateOfBirth;
     Gender              gender; // true = male; false = female
     PropertyList        patientProperties;
+    QString             encryptedDateOfBirth;
 
     QList<Disease>      diseases;
 
@@ -89,6 +90,8 @@ public:
       from the given Patient. Does not touch properties, diseases or id.
       */
     void setPatientData(const Patient& p);
+
+    void defaultDateOfBirth(QString date);
 
 };
 

@@ -111,7 +111,7 @@ int PatientDB::addPatient(const Patient& p)
     p_copy.encrypt();
     d->db->execSql("INSERT INTO Patients (firstName, surname, dateOfBirth, gender) "
                    "VALUES (?, ?, ?, ?)",
-                   p_copy.firstName, p_copy.surname, p_copy.dateOfBirth.toString(Qt::ISODate), p_copy.gender, 0, &id);
+                   p_copy.firstName, p_copy.surname, p_copy.encryptedDateOfBirth, p_copy.gender, 0, &id);
 
     return id.toInt();
 }
@@ -122,7 +122,7 @@ void PatientDB::updatePatient(const Patient& p)
     p_copy.encrypt();
     d->db->execSql("UPDATE Patients SET firstName=?, surname=?, dateOfBirth=?, gender=? WHERE id=?;",
                     QVariantList() << p_copy.firstName << p_copy.surname
-                                   << p_copy.dateOfBirth.toString(Qt::ISODate) << p_copy.gender << p_copy.id);
+                                   << p_copy.encryptedDateOfBirth << p_copy.gender << p_copy.id);
 }
 
 void PatientDB::deletePatient(int id)
@@ -160,10 +160,10 @@ QList<Patient> PatientDB::findPatients(const Patient& p)
         whereClause += "gender = ? AND ";
         boundValues << p_copy.gender;
     }
-    if (!p_copy.dateOfBirth.isNull())
+    if (!p_copy.encryptedDateOfBirth.isEmpty())
     {
         whereClause += "firstName = ? AND ";
-        boundValues << p_copy.dateOfBirth.toString(Qt::ISODate);
+        boundValues << p_copy.encryptedDateOfBirth;
     }
 
     if (!whereClause.isEmpty())
@@ -184,7 +184,7 @@ QList<Patient> PatientDB::findPatients(const Patient& p)
         ++it;
         p.surname     = it->toString();
         ++it;
-        p.dateOfBirth = QDate::fromString(it->toString(), Qt::ISODate);
+        p.encryptedDateOfBirth = it->toString();
         ++it;
         p.gender      = (Patient::Gender)it->toInt();
         ++it;

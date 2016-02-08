@@ -80,11 +80,16 @@ bool Patient::hasPathology() const
 bool Patient::encrypt()
 {
     if(!UserInformation::instance()->isEncryptionEnabled())
+    {
+        encryptedDateOfBirth = dateOfBirth.toString(Qt::ISODate);
         return false;
+    }
 
     // The user is not logged in, but we allow to browse anonymous
-    if(!UserInformation::instance()->isLoggedIn())
+    if(!UserInformation::instance()->isLoggedIn()){
+        encryptedDateOfBirth = dateOfBirth.toString(Qt::ISODate);
         return true;
+    }
 
     UserInformation* user = UserInformation::instance();
 
@@ -101,17 +106,36 @@ bool Patient::encrypt()
         this->surname = AesUtils::encrypt(this->surname, user->retrieveKey(SQL_PATIENT_SURNAME));
     }
 
+    if(dateOfBirth.isValid() && user->hasKey(SQL_PATIENT_DATEOFBIRTH))
+    {
+        qDebug() << "Encrypting date";
+        this->encryptedDateOfBirth = AesUtils::encrypt(this->dateOfBirth.toString(Qt::ISODate),
+                                                       user->retrieveKey(SQL_PATIENT_DATEOFBIRTH));
+    }
+    else
+    {
+        this->encryptedDateOfBirth = this->dateOfBirth.toString(Qt::ISODate);
+    }
+
     return true;
 }
 
 bool Patient::decrypt()
 {
     if(!UserInformation::instance()->isEncryptionEnabled())
+    {
+        // We still need to get the date from encrypted date
+        defaultDateOfBirth(encryptedDateOfBirth);
         return false;
+    }
 
     // The user is not logged in, but we allow to browse anonymous
+    // We try to get the date and if it is encrypted, then set a default
     if(!UserInformation::instance()->isLoggedIn())
+    {
+        defaultDateOfBirth(encryptedDateOfBirth);
         return true;
+    }
 
     UserInformation* user = UserInformation::instance();
 
@@ -123,6 +147,17 @@ bool Patient::decrypt()
     if(!this->surname.isEmpty() && user->hasKey(SQL_PATIENT_SURNAME))
     {
         this->surname = AesUtils::decrypt(this->surname, user->retrieveKey(SQL_PATIENT_SURNAME));
+    }
+
+    if(!this->encryptedDateOfBirth.isEmpty() && user->hasKey(SQL_PATIENT_DATEOFBIRTH))
+    {
+        defaultDateOfBirth(AesUtils::decrypt(this->encryptedDateOfBirth,
+                                         user->retrieveKey(SQL_PATIENT_DATEOFBIRTH)));
+
+    }
+    else
+    {
+        defaultDateOfBirth(QString());
     }
 
     return true;
@@ -139,6 +174,15 @@ void Patient::setPatientData(const Patient& p)
     surname     = p.surname;
     gender      = p.gender;
     dateOfBirth = p.dateOfBirth;
+}
+
+void Patient::defaultDateOfBirth(QString date)
+{
+    dateOfBirth = QDate::fromString(date, Qt::ISODate);
+    if(!dateOfBirth.isValid())
+    {
+        dateOfBirth = QDate::fromString("1900-01-01", Qt::ISODate);
+    }
 }
 
 bool Patient::operator==(const Patient& other) const

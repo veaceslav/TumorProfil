@@ -30,7 +30,7 @@
 
 #define SQL_PATIENT_NAME "firstName"
 #define SQL_PATIENT_SURNAME "surname"
-#define SQL_PATIENT_DATEOFBIRTH "dataOfBirth"
+#define SQL_PATIENT_DATEOFBIRTH "dateOfBirth"
 
 #endif // CONSTANTS_H
 

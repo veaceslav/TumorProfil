@@ -19,7 +19,7 @@
                  (id INTEGER PRIMARY KEY,
                   firstName TEXT,
                   surname TEXT,
-                  dateOfBirth DATETIME,
+                  dateOfBirth TEXT,
                   gender INTEGER);
                 </statement>
                 <statement mode="plain">
@@ -71,10 +71,10 @@
 
             <dbaction name="CreateDBIndices">
                 <statement mode="plain">
-                CREATE INDEX nameIndex ON Patients (surname);
+                CREATE INDEX nameIndex ON Patients (surname(40));
                 </statement>
                 <statement mode="plain">
-                CREATE INDEX dateOfBirthIndex ON Patients (dateOfBirth);
+                CREATE INDEX dateOfBirthIndex ON Patients (dateOfBirth(50));
                 </statement>
                 <statement mode="plain">
                 CREATE INDEX pathologyPropertiesIndex ON PathologyProperties (property);
@@ -121,7 +121,7 @@
                  (id INTEGER PRIMARY KEY AUTO_INCREMENT,
                   firstName TEXT,
                   surname TEXT,
-                  dateOfBirth DATETIME,
+                  dateOfBirth TEXT,
                   gender INTEGER);
                 </statement>
                 <statement mode="plain">
@@ -176,7 +176,7 @@
                 CREATE INDEX nameIndex ON Patients (surname(40));
                 </statement>
                 <statement mode="plain">
-                CREATE INDEX dateOfBirthIndex ON Patients (dateOfBirth);
+                CREATE INDEX dateOfBirthIndex ON Patients (dateOfBirth(64));
                 </statement>
                 <statement mode="plain">
                 CREATE INDEX pathologyPropertiesIndex ON PathologyProperties (property(40));
