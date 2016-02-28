@@ -11,7 +11,6 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = TumorUsers
 TEMPLATE = app
 
-INCLUDEPATH += /usr/include/cryptopp
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -50,11 +49,14 @@ RESOURCES += \
     storage.qrc
 
 unix{
+    INCLUDEPATH += /usr/include/cryptopp
     LIBS += -lcryptopp
 }
 
+win32{
+    INCLUDEPATH += $$PWD/../cryptopp563
+    DEPENDPATH += $$PWD/../cryptopp563
+}
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../cryptopp563/release/ -lcryptopp563
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../cryptopp563/debug/ -lcryptopp563
 
-INCLUDEPATH += $$PWD/../cryptopp563
-DEPENDPATH += $$PWD/../cryptopp563

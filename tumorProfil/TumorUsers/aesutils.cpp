@@ -31,6 +31,7 @@ QString AesUtils::encrypt(QString message, QString aesKey)
     decoder.MessageEnd();
     word64 size = decoder.MaxRetrievable();
     char decodedKey[size+2];
+    memset(decodedKey, 0, size+2);
     decoder.Get((byte *)decodedKey, size);
     // Generate Cipher, Key, and CBC
     byte key[ AES::MAX_KEYLENGTH ], iv[ AES::BLOCKSIZE ];
@@ -56,6 +57,7 @@ QString AesUtils::decrypt(QString message, QString aesKey)
     decoder.MessageEnd();
     word64 size = decoder.MaxRetrievable();
     char decodedKey[size+2];
+    memset(decodedKey, 0, size+2);
     decoder.Get((byte *)decodedKey, size);
 
 
@@ -85,6 +87,7 @@ QString AesUtils::encryptMasterKey(QString password, QString filling, QString ma
     QString myAesKey = password + filling;
     myAesKey.truncate(AESKEY_LENGTH);
 
+    qDebug() << "MyAESkey for encryption: " << myAesKey << " " << myAesKey.size();
     return AesUtils::encrypt(masterKey, myAesKey);
 }
 
@@ -92,5 +95,7 @@ QString AesUtils::decryptMasterKey(QString password, QString filling, QString ma
 {
     QString myAesKey = password + filling;
     myAesKey.truncate(AESKEY_LENGTH);
+
+    qDebug() << "MyAESkey for decryption: " << myAesKey << " " << myAesKey.size();
     return AesUtils::decrypt(masterHash, myAesKey);
 }
