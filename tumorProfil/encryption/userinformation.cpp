@@ -3,6 +3,7 @@
 #include <QTimer>
 #include <QMap>
 #include <QDebug>
+#include <QMutex>
 
 #include "authenticationwindow.h"
 #include "queryutils.h"
@@ -22,6 +23,7 @@ public:
 
     bool isLoggedIn;
     bool encryptionEnabled;
+    QMutex mutex;
     QString userName;
     QMap<QString, QString> decryptionKey;
 
@@ -78,6 +80,12 @@ bool UserInformation::isLoggedIn()
     return d->isLoggedIn;
 }
 
+void UserInformation::setEncryptionEnabled(bool value)
+{
+    QMutexLocker(&d->mutex);
+    d->encryptionEnabled = value;
+}
+
 UserInformation::LoginState UserInformation::toggleLogIn()
 {
     if(!d->isLoggedIn)
@@ -110,5 +118,6 @@ QString UserInformation::retrieveKey(QString keyName)
 UserInformation::UserInformation()
     :d(new Private())
 {
+    QMutexLocker(&d->mutex);
     d->encryptionEnabled = EncryptionSettings::isEncryptionEnabled();
 }

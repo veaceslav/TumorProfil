@@ -12,6 +12,7 @@ public:
     void loadSettings();
     void saveSettings();
 
+    enum EncryptAction { ENCRYPTION = 1, DECRYPTION = 2};
     /**
      * @brief isEncryptionEnabled -check if encryption is enabled in settings
      *        The method is static because we check at the program start-up if
@@ -21,6 +22,8 @@ public:
     static bool isEncryptionEnabled();
 private:
     void setupUi();
+
+    void encryptDecryptAll(EncryptAction action);
 
     class Private;
     Private* d;

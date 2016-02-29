@@ -29,7 +29,7 @@ public:
 
     bool isLoggedIn();
 
-
+    void setEncryptionEnabled(bool value);
 
     bool hasKey(QString keyName);
 

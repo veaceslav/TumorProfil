@@ -57,6 +57,10 @@ bool SchemaUpdater::update()
     bool success = startUpdates();
 
     // even on failure, try to set current version - it may have incremented
+
+    if(!success){
+        deleteTables();
+    }
     if (m_currentVersion)
     {
         m_access->db()->setSetting("DBVersion", QString::number(m_currentVersion));
@@ -67,12 +71,26 @@ bool SchemaUpdater::update()
         m_access->db()->setSetting("DBVersionRequired", QString::number(m_currentRequiredVersion));
     }
 
+    if(m_access->db()->setting("DBEncrypted").isEmpty())
+    {
+        m_access->db()->setSetting("DBEncrypted", QString::number(0));
+    }
+
+    if(m_access->db()->setting("DBAboutToBeEncrypted").isEmpty())
+    {
+        m_access->db()->setSetting("DBAboutToBeEncrypted", QString::number(0));
+    }
     return success;
 }
 
 void SchemaUpdater::setObserver(InitializationObserver* observer)
 {
     m_observer = observer;
+}
+
+void SchemaUpdater::deleteTables()
+{
+    m_access->backend()->execDBAction(m_access->backend()->getDBAction(QString("DeleteDB")));
 }
 
 bool SchemaUpdater::startUpdates()
@@ -168,7 +186,7 @@ bool SchemaUpdater::startUpdates()
                 m_observer->error(errorMsg);
                 m_observer->finishedSchemaUpdate(InitializationObserver::UpdateErrorMustAbort);
             }
-
+            deleteTables();
             return false;
         }
 

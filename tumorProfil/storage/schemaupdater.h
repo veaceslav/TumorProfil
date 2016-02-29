@@ -43,6 +43,11 @@ public:
 
 private:
 
+    /**
+     * @brief deleteTables - drop all tables and cleanup database
+     *                       if initial creation failed
+     */
+    void deleteTables();
     bool startUpdates();
     bool makeUpdates();
     bool createDatabase();

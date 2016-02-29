@@ -206,6 +206,29 @@
                 END;
                 </statement>
             </dbaction>
+            <dbaction name="DeleteDB">
+                <statement mode="plain">
+                    DROP table Patients;
+                </statement>
+                <statement mode="plain">
+                    DROP table Settings;
+                </statement>
+                <statement mode="plain">
+                    DROP table DiseaseProperties;
+                </statement>
+                <statement mode="plain">
+                    DROP table Diseases;
+                </statement>
+                <statement mode="plain">
+                    DROP table Pathologies;
+                </statement>
+                <statement mode="plain">
+                    DROP table PathologyProperties;
+                </statement>
+                <statement mode="plain">
+                    DROP table PatientProperties;
+                </statement>
+            </dbaction>
         </dbactions>
     </database>
 </databaseconfig>

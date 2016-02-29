@@ -5,6 +5,7 @@
 #include <QVBoxLayout>
 #include <QGroupBox>
 #include <QSettings>
+#include <QPushButton>
 
 namespace
 {
@@ -20,6 +21,7 @@ public:
 
     }
     QCheckBox* enableEncryption;
+    QPushButton* encryptButton;
 };
 EncryptionSettings::EncryptionSettings(QWidget *parent)
     : QWidget(parent), d(new Private())
@@ -72,7 +74,14 @@ void EncryptionSettings::setupUi()
     QVBoxLayout* const vlay    = new QVBoxLayout(dbPathBox);
 
     d->enableEncryption = new QCheckBox(tr("Enable Encryption"));
+    d->encryptButton    = new QPushButton(tr("Encrypt/Decrypt Database"));
     vlay->addWidget(d->enableEncryption);
+    vlay->addWidget(d->encryptButton);
     layout->addWidget(dbPathBox);
 
+}
+
+void EncryptionSettings::encryptDecryptAll(EncryptionSettings::EncryptAction action)
+{
+    //QList<Patients> patients = DatabaseAccess().db()->findPatients();
 }
