@@ -228,32 +228,25 @@ DatabaseParameters DatabaseSettings::getDatabaseParameters()
 {
     DatabaseParameters parameters;
 
-//    if (currentDatabaseType() == QString(DatabaseParameters::SQLiteDatabaseType()))
-//    {
-        parameters.connectOptions = d->connectionOptions->text();
-        parameters.databaseType   = currentDatabaseType();
-        parameters.hostName       = d->hostName->text();
-        parameters.password       = d->password->text();
-        parameters.port           = d->hostPort->text().toInt();
-        parameters.userName       = d->userName->text();
+    parameters.connectOptions = d->connectionOptions->text();
+    parameters.databaseType   = currentDatabaseType();
+    parameters.hostName       = d->hostName->text();
+    parameters.password       = d->password->text();
+    parameters.port           = d->hostPort->text().toInt();
+    parameters.userName       = d->userName->text();
 
-        if (parameters.databaseType == QString(DatabaseParameters::SQLiteDatabaseType()))
-        {
-            // TODO: fix this
-            parameters.databaseName = QDir::cleanPath(d->sqlitePath->text() + QLatin1Char('/') + QLatin1String("digikam4.db"));
-            parameters.databaseNameThumbnails = parameters.databaseName;
-        }
-        else
-        {
-            parameters.databaseName = d->databaseName->text();
-            parameters.databaseNameThumbnails = d->databaseNameUsers->text();
-        }
-//    }
-//    else
-//    {
-//        parameters = DatabaseParameters::defaultParameters(currentDatabaseType());
-////        DatabaseServerStarter::startServerManagerProcess(currentDatabaseType());
-//    }
+    if (parameters.databaseType == QString(DatabaseParameters::SQLiteDatabaseType()))
+    {
+        // TODO: fix this
+        parameters.databaseName = QDir::cleanPath(d->sqlitePath->text() + QLatin1Char('/') + QLatin1String("digikam4.db"));
+        parameters.databaseNameThumbnails = parameters.databaseName;
+    }
+    else
+    {
+        parameters.databaseName = d->databaseName->text();
+        parameters.databaseNameThumbnails = d->databaseNameUsers->text();
+    }
+
 
     return parameters;
 }

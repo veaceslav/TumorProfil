@@ -13,7 +13,7 @@ public:
     void loadSettings();
     void saveSettings(bool& schedulerReboot);
 
-    enum EncryptAction { ENCRYPTION = 1, DECRYPTION = 2};
+    enum EncryptAction { ENCRYPTION = 1, DECRYPTION = 0};
     /**
      * @brief isEncryptionEnabled -check if encryption is enabled in settings
      *        The method is static because we check at the program start-up if
@@ -29,9 +29,18 @@ private slots:
      */
     void checkDatabaseEncryptionStatus(bool value);
 
+    /**
+     * @brief slotEncryptDecrypt perform authentication checks and call encrypt/decrypt method
+     */
+    void slotEncryptDecrypt();
+
 private:
     void setupUi();
 
+    /**
+     * @brief encryptDecryptAll perfrom encrypt/decrypt
+     * @param action Encrypt or decrypt action
+     */
     void encryptDecryptAll(EncryptAction action);
 
     class Private;

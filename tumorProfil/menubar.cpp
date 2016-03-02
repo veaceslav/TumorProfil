@@ -8,7 +8,7 @@ class MenuBar::Private
 public:
     Private()
     {
-
+        loginAction = 0;
     }
     QMenu* fileMenu;
     QMenu* extraMenu;
@@ -62,6 +62,10 @@ void MenuBar::slotLogIn()
 
 void MenuBar::updateState()
 {
+    if(!d->loginAction)
+    {
+        d->loginAction = new QAction(tr("Abmelden"), this);
+    }
     if(UserInformation::instance()->isLoggedIn())
         d->loginAction->setText(tr("Abmelden"));
     else

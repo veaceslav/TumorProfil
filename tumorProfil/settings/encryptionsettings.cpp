@@ -8,6 +8,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QFormLayout>
+#include <QMessageBox>
 
 #include "patient.h"
 #include "databaseaccess.h"
@@ -37,6 +38,11 @@ EncryptionSettings::EncryptionSettings(QWidget *parent)
 {
     setupUi();
     loadSettings();
+
+    connect(d->enableEncryption, SIGNAL(toggled(bool)),
+            this, SLOT(checkDatabaseEncryptionStatus(bool)));
+    connect(d->encryptButton, SIGNAL(clicked(bool)), this,
+            SLOT(slotEncryptDecrypt()));
 }
 
 void EncryptionSettings::loadSettings()
@@ -102,7 +108,7 @@ void EncryptionSettings::checkDatabaseEncryptionStatus(bool value)
         if((DatabaseAccess().db()->setting(DB_ENCRYPTED) == QLatin1String("1"))
            || (DatabaseAccess().db()->setting(DB_ABOUT_TO_BE_ENCRYPTED) == QLatin1String("1")))
         {
-            d->notificationLabel->setText(tr("The database is encrypted, please dencrypt"
+            d->notificationLabel->setText(tr("The database is encrypted, please dencrypt \n"
                                              "the database by pressing encrypt/decrypt button"));
             d->notificationLabel->show();
             d->encryptButton->setEnabled(true);
@@ -114,6 +120,32 @@ void EncryptionSettings::checkDatabaseEncryptionStatus(bool value)
             d->encryptButton->setEnabled(false);
         }
     }
+}
+
+void EncryptionSettings::slotEncryptDecrypt()
+{
+    if(!UserInformation::instance()->isLoggedIn())
+    {
+        UserInformation::instance()->logIn();
+    }
+
+    if(!UserInformation::instance()->isLoggedIn())
+    {
+        QMessageBox::critical(this, tr("Encrypt Database"),
+                              tr("You need to be logged in to perform this action")
+                              );
+        return;
+    }
+
+    if(d->enableEncryption->isChecked())
+    {
+        encryptDecryptAll(EncryptionSettings::ENCRYPTION);
+    }
+    else
+    {
+        encryptDecryptAll(EncryptionSettings::DECRYPTION);
+    }
+
 }
 
 void EncryptionSettings::setupUi()
@@ -130,8 +162,6 @@ void EncryptionSettings::setupUi()
     d->encryptButton    = new QPushButton(tr("Encrypt/Decrypt Database"));
     d->notificationLabel = new QLabel();
 
-    connect(d->enableEncryption, SIGNAL(toggled(bool)),
-            this, SLOT(checkDatabaseEncryptionStatus(bool)));
 
     d->encryptButton->setEnabled(false);
 
@@ -152,6 +182,26 @@ void EncryptionSettings::setupUi()
 
 void EncryptionSettings::encryptDecryptAll(EncryptionSettings::EncryptAction action)
 {
+
+    if(DatabaseAccess().db()->setting(DB_ABOUT_TO_BE_ENCRYPTED) == QLatin1String("1"))
+    {
+        QMessageBox msg;
+        msg.setIcon(QMessageBox::Information);
+        msg.setWindowTitle(tr("Database Encryption"));
+        msg.setText(tr("Other Program is performing the encryption. \n"
+                       "If you think it is an error and no other program is \n"
+                       "performing the encryption, press overwrite"));
+
+        QPushButton* overwrite = new QPushButton("Overwrite");
+        msg.addButton(overwrite, QMessageBox::ResetRole);
+        msg.exec();
+
+        if(msg.clickedButton() != overwrite)
+            return;
+    }
+
+    DatabaseAccess().db()->setSetting(DB_ABOUT_TO_BE_ENCRYPTED, QString::number(1));
+
     if(action == EncryptionSettings::ENCRYPTION)
     {
         UserInformation::instance()->setEncryptionEnabled(false);
@@ -176,4 +226,11 @@ void EncryptionSettings::encryptDecryptAll(EncryptionSettings::EncryptAction act
     {
         DatabaseAccess().db()->updatePatient(p);
     }
+
+    DatabaseAccess().db()->setSetting(DB_ABOUT_TO_BE_ENCRYPTED, QString::number(0));
+
+    DatabaseAccess().db()->setSetting(DB_ENCRYPTED, QString::number((int)action));
+
+    checkDatabaseEncryptionStatus(d->enableEncryption->isChecked());
+
 }
