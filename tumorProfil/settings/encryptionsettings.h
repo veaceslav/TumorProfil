@@ -6,11 +6,12 @@
 
 class EncryptionSettings : public QWidget
 {
+    Q_OBJECT
 public:
     EncryptionSettings(QWidget* parent = 0);
 
     void loadSettings();
-    void saveSettings();
+    void saveSettings(bool& schedulerReboot);
 
     enum EncryptAction { ENCRYPTION = 1, DECRYPTION = 2};
     /**
@@ -20,6 +21,14 @@ public:
      * @return return true if encryption is enabled.
      */
     static bool isEncryptionEnabled();
+
+private slots:
+    /**
+     * @brief checkDatabaseEncryptionStatus - when enabling/disabling encryption,
+     *        we must check if database is encrypted/decrypted and display the appropriate message
+     */
+    void checkDatabaseEncryptionStatus(bool value);
+
 private:
     void setupUi();
 

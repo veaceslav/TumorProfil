@@ -71,14 +71,14 @@ bool SchemaUpdater::update()
         m_access->db()->setSetting("DBVersionRequired", QString::number(m_currentRequiredVersion));
     }
 
-    if(m_access->db()->setting("DBEncrypted").isEmpty())
+    if(m_access->db()->setting(DB_ENCRYPTED).isEmpty())
     {
-        m_access->db()->setSetting("DBEncrypted", QString::number(0));
+        m_access->db()->setSetting(DB_ENCRYPTED, QString::number(0));
     }
 
-    if(m_access->db()->setting("DBAboutToBeEncrypted").isEmpty())
+    if(m_access->db()->setting(DB_ABOUT_TO_BE_ENCRYPTED).isEmpty())
     {
-        m_access->db()->setSetting("DBAboutToBeEncrypted", QString::number(0));
+        m_access->db()->setSetting(DB_ABOUT_TO_BE_ENCRYPTED, QString::number(0));
     }
     return success;
 }

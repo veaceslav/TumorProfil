@@ -7,6 +7,7 @@
 #include <QPushButton>
 #include <QListWidget>
 #include <QStackedWidget>
+#include <QMessageBox>
 
 #include "databasesettings.h"
 #include "encryptionsettings.h"
@@ -60,8 +61,15 @@ MainSettings::~MainSettings()
 
 void MainSettings::accept()
 {
+    bool scheduleRestart = false;
     d->dbSettings->applySettings();
-    d->encryptSettings->saveSettings();
+    d->encryptSettings->saveSettings(scheduleRestart);
+
+    if(scheduleRestart)
+    {
+        QMessageBox::information(this, tr("Program will restart"),
+                                 tr("One or more settings require the program to restart."));
+    }
     QDialog::accept();
 }
 

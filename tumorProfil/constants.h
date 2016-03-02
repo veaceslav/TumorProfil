@@ -32,5 +32,12 @@
 #define SQL_PATIENT_SURNAME "surname"
 #define SQL_PATIENT_DATEOFBIRTH "dateOfBirth"
 
+/**
+ * SQl settings constains
+ */
+
+#define DB_ENCRYPTED "DBEncrypted"
+#define DB_ABOUT_TO_BE_ENCRYPTED "DBAboutToBeEncrypted"
+
 #endif // CONSTANTS_H
 

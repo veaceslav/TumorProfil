@@ -19,6 +19,7 @@ public:
     Private()
     {
         isLoggedIn = false;
+        encryptionEnabled = false;
     }
 
     bool isLoggedIn;
