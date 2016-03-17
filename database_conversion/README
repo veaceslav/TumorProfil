@@ -1,0 +1,14 @@
+This python script will help convert sqlite databases to MySql
+
+To run this script you need:
+* Python 3
+* Python mysql connector
+
+How to run:
+
+python sqliteToMySql.py --sqlite-file <sqlite database> --mysql-user <mysql user> --mysql-password <mysql password> --mysql-database <mysql database>
+
+
+Example:
+
+python sqliteToMySql.py --sqlite-file tumorprofil_short_anon.db --mysql-user root --mysql-password 1234 --mysql-database tumorprofil
