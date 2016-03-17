@@ -1,5 +1,7 @@
 This python script will help convert sqlite databases to MySql
 
+WARNING: Please run TumorProfil first, and allow it to create the databases and indices first, then run this script.
+
 To run this script you need:
 * Python 3
 * Python mysql connector
