@@ -54,9 +54,9 @@ unix{
 }
 
 win32{
-    INCLUDEPATH += $$PWD/../cryptopp563
-    DEPENDPATH += $$PWD/../cryptopp563
+    INCLUDEPATH += $$PWD/../../cryptopp563
+    DEPENDPATH += $$PWD/../../cryptopp563
 }
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../cryptopp563/release/ -lcryptopp563
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../cryptopp563/debug/ -lcryptopp563
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../cryptopp563/release/ -lcryptopp563
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../cryptopp563/debug/ -lcryptopp563
 
