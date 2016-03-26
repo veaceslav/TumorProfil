@@ -288,7 +288,16 @@ int OSIterator::days(const QDate& begin) const
                        + initialDiagnosis.toString());
         return -1;
     }
+    QDate end = endDate();
+    if (end < begin)
+    {
+        reportProblem(0, "The given begin date is beyond the endpoint");
+    }
+    return begin.daysTo(end);
+}
 
+QDate OSIterator::endDate() const
+{
     QDate end;
     if (endpointElement)
     {
@@ -319,11 +328,7 @@ int OSIterator::days(const QDate& begin) const
     {
         reportProblem(0, "Empty history, no OS");
     }
-    if (end < begin)
-    {
-        reportProblem(0, "The given begin date is beyond the endpoint");
-    }
-    return begin.daysTo(end);
+    return end;
 }
 
 bool OSIterator::endpointReached() const
