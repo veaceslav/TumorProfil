@@ -39,7 +39,8 @@ public:
         NoFlags     = 0,
         IncludeRAS = 1 << 0,
         IncludeReceptorStatus = 1 << 1,
-        IncludePTEN = 1 << 2
+        IncludePTEN = 1 << 2,
+        IncludeP53
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

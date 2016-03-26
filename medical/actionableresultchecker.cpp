@@ -90,7 +90,15 @@ void ActionableResultChecker::fillFields(const Disease &disease)
             if (info.property == PathologyPropertyInfo::Mut_KRAS_2 ||
                 info.property == PathologyPropertyInfo::Mut_KRAS_3 ||
                 info.property == PathologyPropertyInfo::Mut_KRAS_4 ||
-                info.property == PathologyPropertyInfo::Mut_NRAS_2_4)
+                info.property == PathologyPropertyInfo::Mut_NRAS_2_4 ||
+                info.property == PathologyPropertyInfo::Mut_HRAS_2_4)
+            {
+                continue;
+            }
+        }
+        if (!(flags & IncludeP53))
+        {
+            if (info.property == PathologyPropertyInfo::Mut_TP53)
             {
                 continue;
             }
