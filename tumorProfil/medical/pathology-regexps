@@ -8,7 +8,7 @@ ihc-hscore
 (?|(?<strong>\d+)\s*%ige|(?<strong>)Keine) starke(?|, (?<medium>\d+)\s*%ige mäßige|(?<medium>), keine mäßige)?(?| und (?<weak>\d+)\s*%ige schwache|(?<weak>) und keine schwache)? zytoplasmatische und membranöse Reaktivität\s+mit\s+dem\s+Antikörper gegen\s+(?<protein>c-MET)\s+\(H-Score:\s*(?<score>\d+)\)
 (?|(?<strong>\d+)\s*%ige|(?<strong>)Keine) starke(?|, (?<medium>\d+)\s*%ige mäßige|(?<medium>), keine mäßige)?(?| und (?<weak>\d+)\s*%ige schwache|(?<weak>) und keine schwache)? (?:zytoplasmatische und membranöse|membranöse) Tumorzell-Reaktivität mit\s+dem\s+Antikörper\s+gegen\s+(?<protein>PD-L1)\s+\(H-Score:\s*(?<score>\d+)\)\s+sowie (?<immunecell>keine beurteilbare|keine|eine) PD-L1-positive tumorassoziierte Immunzell-\s*Reaktivität
 ihc-msi
-(?<positivity>Kein|Ein) immunhistochemischer (?<protein>MLH1|MSH2|MSH6)-Expressionsverlust der Tumorzellkerne
+(?<positivity>Kein|Ein|Kompletter|Partieller)(?:\s+\((?<percentage>\d+)\s*%\))? immunhistochemischer (?<protein>MLH1|MSH2|MSH6)-Expressionsverlust der Tumorzellkerne
 patient-id
 Journal-Nr\.: Eingang am: (?<inday>\d\d)\.(?<inmonth>\d\d)\.(?<inyear>\d\d\d\d)\s+(?<refNumber>[RE]\d+\/\d+)\s+Name:\s+(?<name>[\w \-äöüÄÖÜß]+),\s*(?<firstName>[\w \-äöüÄÖÜß]+)\s+geb\.:\n(?<day>\d\d)\.(?<month>\d\d)\.(?<year>\d\d\d\d)\s+(?:00:00:00:dd\s\.MM\.yyyy\s+)?Ausgang am:\s+(?<refday>\d\d).(?<refmonth>\d\d).(?<refyear>\d\d\d\d)
 ngs-table-header

@@ -24,6 +24,7 @@
 #include <QDebug>
 #include <QLocale>
 #include <QRegExp>
+#include <QVector>
 
 // Local includes
 
@@ -31,13 +32,18 @@
 #include "ihcscore.h"
 
 CombinedValue::CombinedValue(const PathologyPropertyInfo& info)
-    : info(info)
+    : info(info), missingValueBehavior(StrictMissingValueBehavior)
 {
 }
 
 bool CombinedValue::isValid() const
 {
     return !resultValue.isNull();
+}
+
+void CombinedValue::setMissingValueBehavior(MissingValueBehavior behavior)
+{
+    missingValueBehavior = behavior;
 }
 
 static float textCENRatioToFloat(const QString& ratio)
@@ -125,15 +131,20 @@ QVariant CombinedValue::fishResult(const Disease& disease, const Property& prop)
     return QVariant();
 }
 
-void CombinedValue::listOfMutationsResult(const Disease& disease, const QList<PathologyPropertyInfo::Property>& propIds)
+void CombinedValue::listOfMutationsResult(const Disease& disease, const QList<PathologyPropertyInfo::Property>& propIds, const QList<PathologyPropertyInfo::Property>& criticalIds)
 {
-    int sawMutation = 0;
+    int analysesSeen = 0;
+    bool sawAllCriticalAnalyses = true;
     foreach (PathologyPropertyInfo::Property propertyId, propIds)
     {
         PathologyPropertyInfo info(propertyId);
         Property mut = disease.pathologyProperty(info.id);
         if (mut.isNull())
         {
+            if (sawAllCriticalAnalyses && criticalIds.contains(propertyId))
+            {
+                sawAllCriticalAnalyses = false;
+            }
             continue;
         }
         ValueTypeCategoryInfo mutType(propertyId);
@@ -143,13 +154,30 @@ void CombinedValue::listOfMutationsResult(const Disease& disease, const QList<Pa
             determiningProperty = mut;
             break;
         }
-        sawMutation++;
+        analysesSeen++;
     }
-    // If we did not see a mutation, but saw all mutation analyses as wildtype, result is valid.
-    // Result is not valid if we did not see all for this combined value.
-    if (resultValue.isNull() && sawMutation == propIds.size())
+
+    // Handle the case of not having seen a positive mutation, but (possibly) negative mutation results
+    if (resultValue.isNull())
     {
-        resultValue = false;
+        switch (missingValueBehavior)
+        {
+        case StrictMissingValueBehavior:
+            // If we did not see a mutation, but saw all mutation analyses as wildtype, result is valid.
+            // Result is not valid if we did not see all for this combined value.
+            if (analysesSeen == propIds.size())
+            {
+                resultValue = false;
+            }
+            break;
+        case PragmaticMissingValueBehavior:
+            // If we saw any results, including all critical ones, be confident to give the "relaxed" negativ result
+            if (analysesSeen >= 1 && sawAllCriticalAnalyses)
+            {
+                resultValue = false;
+            }
+            break;
+        }
     }
 }
 
@@ -310,21 +338,24 @@ void CombinedValue::combine(const Disease& disease)
     }
     case PathologyPropertyInfo::Comb_RASMutation:
     {
-        QList<PathologyPropertyInfo::Property> rases;
+        QList<PathologyPropertyInfo::Property> rases, criticalRas;
         rases << PathologyPropertyInfo::Mut_KRAS_2;
         rases << PathologyPropertyInfo::Mut_KRAS_3;
         rases << PathologyPropertyInfo::Mut_KRAS_4;
         rases << PathologyPropertyInfo::Mut_NRAS_2_4;
-        listOfMutationsResult(disease, rases);
+        rases << PathologyPropertyInfo::Mut_HRAS_2_4;
+        criticalRas << PathologyPropertyInfo::Mut_KRAS_2;
+        listOfMutationsResult(disease, rases, criticalRas);
         break;
     }
     case PathologyPropertyInfo::Comb_KRASMutation:
     {
-        QList<PathologyPropertyInfo::Property> rases;
+        QList<PathologyPropertyInfo::Property> rases, criticalRas;
         rases << PathologyPropertyInfo::Mut_KRAS_2;
         rases << PathologyPropertyInfo::Mut_KRAS_3;
         rases << PathologyPropertyInfo::Mut_KRAS_4;
-        listOfMutationsResult(disease, rases);
+        criticalRas << PathologyPropertyInfo::Mut_KRAS_2;
+        listOfMutationsResult(disease, rases, criticalRas);
         break;
     }
     default:
@@ -346,6 +377,11 @@ Property CombinedValue::result() const
 QVariant CombinedValue::toValue() const
 {
     return resultValue;
+}
+
+Property CombinedValue::originalProperty() const
+{
+    return determiningProperty;
 }
 
 QVariant CombinedValue::toCombinedVariant() const
