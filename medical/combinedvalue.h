@@ -31,8 +31,24 @@ class CombinedValue
 public:
     CombinedValue(const PathologyPropertyInfo& info);
 
+    enum MissingValueBehavior
+    {
+        /// How to handle cases where a combined value would require to see multiple values, but some are not available.
+        /// Example: RAS status, and only KRAS available
+
+        /// Strict: Require all values to be present
+        StrictMissingValueBehavior,
+
+        /// Pragmatic: Require important values to be present (with medical knowledge)
+        PragmaticMissingValueBehavior
+    };
+
+    void setMissingValueBehavior(MissingValueBehavior behavior);
+
     void combine(const Disease& disease);
     Property result() const;
+    // If result is positive, contains - if there is such - the property that determined the positiveness.
+    Property originalProperty() const;
     QString  toDisplayString() const;
     QVariant toValue() const;
     QVariant toCombinedVariant() const;
@@ -45,12 +61,13 @@ public:
 
 protected:
 
-    void listOfMutationsResult(const Disease& disease, const QList<PathologyPropertyInfo::Property>& propIds);
+    void listOfMutationsResult(const Disease& disease, const QList<PathologyPropertyInfo::Property>& propIds, const QList<PathologyPropertyInfo::Property>& criticalIds);
 
     QVariant resultValue;
     Property determiningProperty;
 
     const PathologyPropertyInfo info;
+    MissingValueBehavior missingValueBehavior;
 };
 
 #endif // COMBINEDVALUE_H
