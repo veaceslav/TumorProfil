@@ -45,6 +45,8 @@ public:
     void nsclcSCNE21PathologyDates();
     void nsclcSCNE21ActionableResults();
     void ros1Project();
+    void listsForRadiologyProject();
+    void cmetListFromCSV();
 
 protected:
 
@@ -56,7 +58,7 @@ protected:
     void writeIHCIsPositive(const Disease& disease, PathologyPropertyInfo::Property id);
     QList<Patient::Ptr> patientsFromCSV(const QString& path);
     void writeActionableCombinations(const QList<Patient::Ptr>& patients);
-    void reportTTF(const QList<QDate>& ctxLineDates, const CurrentStateIterator& currentStateIterator, int line);
+    void reportTTF(const QList<QDate>& ctxLineDates, const OSIterator& currentStateIterator, int line, const QDate& sharpBegin = QDate());
 
     // HistoryProofreader
     virtual void problem(const HistoryElement* element, const QString& problem);
