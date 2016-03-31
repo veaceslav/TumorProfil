@@ -2,11 +2,20 @@ TEMPLATE = subdirs
 
 
 tumorProfil.subdir = tumorProfil
-tumorProfil.depends = cryptopp563
+
+win32{
+    tumorProfil.depends = cryptopp563
+}
 
 tumorUsers.subdir = tumorProfil/TumorUsers
-tumorUsers.depends = cryptopp563
 
-SUBDIRS = cryptopp563 \
-          tumorProfil \
+win32{
+    tumorUsers.depends = cryptopp563
+}
+
+SUBDIRS = tumorProfil \
           tumorUsers
+
+win32 {
+    SUBDIRS+= cryptopp563
+}
