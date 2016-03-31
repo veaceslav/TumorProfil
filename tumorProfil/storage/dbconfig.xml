@@ -2,16 +2,18 @@
 <databaseconfig>
     <version>1</version>
 
-    <database name="QSQLITE">
-        <hostName>TestHost</hostName>
-        <databaseName>DatabaseName</databaseName>
-        <userName>UserName</userName>
-        <password>Password</password>
-        <port>Port</port>
-        <connectoptions>ConnectOptions</connectoptions>
-        <dbservercmd></dbservercmd>
-        <dbinitcmd></dbinitcmd>
+    <hostName>TestHost</hostName>
+    <databaseName>DatabaseName</databaseName>
+    <userDatabaseName>UserDatabaseName</userDatabaseName>
+    <userName>UserName</userName>
+    <password>Password</password>
+    <port>Port</port>
+    <connectoptions>ConnectOptions</connectoptions>
+    <sqlitePath></sqlitePath>
+    <dbservercmd></dbservercmd>
+    <dbinitcmd></dbinitcmd>
 
+    <database name="QSQLITE">
         <dbactions>
             <dbaction name="CreateDB">
                 <statement mode="plain">
@@ -105,14 +107,6 @@
     </database>
 
     <database name="QMYSQL">
-        <hostName>TestHost</hostName>
-        <databaseName>DatabaseName</databaseName>
-        <userName>UserName</userName>
-        <password>Password</password>
-        <port>Port</port>
-        <connectoptions>ConnectOptions</connectoptions>
-        <dbservercmd></dbservercmd>
-        <dbinitcmd></dbinitcmd>
 
         <dbactions>
             <dbaction name="CreateDB">

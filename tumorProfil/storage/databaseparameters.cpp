@@ -99,16 +99,6 @@ DatabaseParameters::DatabaseParameters(const QUrl& url)
         port = queryPort.toInt();
     }
 
-#ifdef HAVE_INTERNALMYSQL
-    QString queryServer = url.queryItemValue("internalServer");
-
-    if (!queryServer.isNull())
-    {
-        internalServer = (queryServer == "true");
-    }
-#else
-    internalServer = false;
-#endif // HAVE_INTERNALMYSQL
 
     userName       = urlQuery.queryItemValue("userName");
     password       = urlQuery.queryItemValue("password");
@@ -367,10 +357,6 @@ DatabaseParameters DatabaseParameters::defaultParameters(const QString databaseT
     parameters.password         = config.password;
     parameters.port             = config.port.toInt();
 
-    /*const QString miscDir     = KStandardDirs::locateLocal("data", "digikam/db_misc");
-    QString connectOptions = config.connectOptions;
-    connectOptions.replace(QString("$$DBMISCPATH$$"), miscDir);
-    parameters.connectOptions   = connectOptions;*/
 
     qDebug() << "ConnectOptions "<< parameters.connectOptions;
     return parameters;

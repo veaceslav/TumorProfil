@@ -54,7 +54,7 @@ public:
     QMap<QString, DatabaseConfigElement> databaseConfigs;
 
     bool readConfig();
-    DatabaseConfigElement readDatabase(QDomElement& databaseElement);
+    DatabaseConfigElement readDatabase(QDomElement& databaseElement, QDomElement &parent);
     void readDBActions(QDomElement& sqlStatementElements, DatabaseConfigElement& configElement);
 
     bool isValid;
@@ -72,7 +72,7 @@ DatabaseConfigElementLoader::DatabaseConfigElementLoader()
     }
 }
 
-DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& databaseElement)
+DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& databaseElement, QDomElement& parent)
 {
     DatabaseConfigElement configElement;
     configElement.databaseID="Unidentified";
@@ -84,7 +84,7 @@ DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& dat
 
     configElement.databaseID = databaseElement.attribute("name");
 
-    QDomElement element =  databaseElement.namedItem("databaseName").toElement();
+    QDomElement element =  parent.namedItem("databaseName").toElement();
 
     if (element.isNull())
     {
@@ -93,7 +93,7 @@ DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& dat
 
     configElement.databaseName = element.text();
 
-    element =  databaseElement.namedItem("userName").toElement();
+    element =  parent.namedItem("userName").toElement();
 
     if (element.isNull())
     {
@@ -102,7 +102,7 @@ DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& dat
 
     configElement.userName = element.text();
 
-    element =  databaseElement.namedItem("password").toElement();
+    element =  parent.namedItem("password").toElement();
 
     if (element.isNull())
     {
@@ -111,7 +111,7 @@ DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& dat
 
     configElement.password = element.text();
 
-    element =  databaseElement.namedItem("hostName").toElement();
+    element =  parent.namedItem("hostName").toElement();
 
     if (element.isNull())
     {
@@ -120,7 +120,7 @@ DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& dat
 
     configElement.hostName = element.text();
 
-    element =  databaseElement.namedItem("port").toElement();
+    element =  parent.namedItem("port").toElement();
 
     if (element.isNull())
     {
@@ -129,7 +129,7 @@ DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& dat
 
     configElement.port = element.text();
 
-    element =  databaseElement.namedItem("connectoptions").toElement();
+    element =  parent.namedItem("connectoptions").toElement();
 
     if (element.isNull())
     {
@@ -138,7 +138,7 @@ DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& dat
 
     configElement.connectOptions = element.text();
 
-    element =  databaseElement.namedItem("dbservercmd").toElement();
+    element =  parent.namedItem("dbservercmd").toElement();
 
     if (element.isNull())
     {
@@ -147,7 +147,7 @@ DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& dat
 
     configElement.dbServerCmd = element.text();
 
-    element =  databaseElement.namedItem("dbinitcmd").toElement();
+    element =  parent.namedItem("dbinitcmd").toElement();
 
     if (element.isNull())
     {
@@ -273,7 +273,7 @@ bool DatabaseConfigElementLoader::readConfig()
 
     for ( ; !databaseElement.isNull();  databaseElement=databaseElement.nextSiblingElement("database"))
     {
-        DatabaseConfigElement l_DBCfgElement = readDatabase(databaseElement);
+        DatabaseConfigElement l_DBCfgElement = readDatabase(databaseElement, element);
         databaseConfigs.insert(l_DBCfgElement.databaseID, l_DBCfgElement);
     }
 
