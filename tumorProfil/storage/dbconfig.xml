@@ -71,10 +71,10 @@
 
             <dbaction name="CreateDBIndices">
                 <statement mode="plain">
-                CREATE INDEX nameIndex ON Patients (surname(40));
+                CREATE INDEX nameIndex ON Patients (surname);
                 </statement>
                 <statement mode="plain">
-                CREATE INDEX dateOfBirthIndex ON Patients (dateOfBirth(50));
+                CREATE INDEX dateOfBirthIndex ON Patients (dateOfBirth);
                 </statement>
                 <statement mode="plain">
                 CREATE INDEX pathologyPropertiesIndex ON PathologyProperties (property);
