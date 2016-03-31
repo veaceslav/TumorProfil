@@ -63,13 +63,15 @@ public:
 
     QString                       databaseID;
     QString                       hostName;
-    QString                       port;
+    int                           port;
     QString                       connectOptions;
     QString                       databaseName;
+    QString                       userDatabaseName;
     QString                       userName;
     QString                       password;
     QString                       dbServerCmd;
     QString                       dbInitCmd;
+    QString                       sqlitePath;
     QMap<QString, DatabaseAction> sqlStatements;
 };
 

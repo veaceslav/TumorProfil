@@ -205,21 +205,25 @@ void DatabaseParameters::readFromConfig(const QString& programName, const QStrin
     qs.beginGroup(QLatin1String(configGroupDatabase));
 
     databaseType = qs.value(configDatabaseType,DatabaseParameters::SQLiteDatabaseType()).toString();
-    databaseName            = qs.value(configDatabaseName, QString()).toString();
-    databaseNameThumbnails  = qs.value(configDatabaseNameThumbnails, QString()).toString();
-    hostName                = qs.value(configDatabaseHostName, QString()).toString();
-    userName                = qs.value(configDatabaseUsername, QString()).toString();
-    password                = qs.value(configDatabasePassword, QString()).toString();
-    connectOptions          = qs.value(configDatabaseConnectOptions, QString()).toString();
-    port                    = qs.value(configDatabasePort, -1).toInt();
 
-    sqliteDatabasePath      = qs.value(configDatabaseFilePathEntry, QDir::current().absolutePath()).toString();
+    // only the database name is needed
+    DatabaseConfigElement config = DatabaseConfigElement::element(databaseType);
+
+    databaseName            = qs.value(configDatabaseName, config.databaseName).toString();
+    databaseNameThumbnails  = qs.value(configDatabaseNameThumbnails, config.userDatabaseName).toString();
+    hostName                = qs.value(configDatabaseHostName, config.hostName).toString();
+    userName                = qs.value(configDatabaseUsername, config.userName).toString();
+    password                = qs.value(configDatabasePassword, config.password).toString();
+    connectOptions          = qs.value(configDatabaseConnectOptions, config.connectOptions).toString();
+    port                    = qs.value(configDatabasePort, config.port).toInt();
+
+    sqliteDatabasePath      = qs.value(configDatabaseFilePathEntry, config.sqlitePath).toString();
     sqliteDatabaseName      = qs.value(configSqliteDatabaseName, QString()).toString();
     sqliteUserDatabaseName  = qs.value(configSqliteUserDatabaseName, QString()).toString();
 
     if (isSQLite() && sqliteDatabaseName.isEmpty() && sqliteUserDatabaseName.isEmpty())
     {
-        if(sqliteDatabasePath.isEmpty())
+        if(sqliteDatabasePath.isEmpty() || !QDir(sqliteDatabasePath).exists())
             sqliteDatabasePath = QDir::current().absolutePath();
 
         QString orgName = sqliteDatabasePath;
@@ -355,7 +359,7 @@ DatabaseParameters DatabaseParameters::defaultParameters(const QString databaseT
     parameters.hostName         = config.hostName;
     parameters.userName         = config.userName;
     parameters.password         = config.password;
-    parameters.port             = config.port.toInt();
+    parameters.port             = config.port;
 
 
     qDebug() << "ConnectOptions "<< parameters.connectOptions;

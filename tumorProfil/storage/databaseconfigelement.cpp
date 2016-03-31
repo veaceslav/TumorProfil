@@ -127,7 +127,14 @@ DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& dat
         qDebug() << "Missing element <port>.";
     }
 
-    configElement.port = element.text();
+    bool ok = false;
+
+    configElement.port = element.text().toInt(&ok,10);
+
+    if(!ok)
+    {
+        configElement.port = -1;
+    }
 
     element =  parent.namedItem("connectoptions").toElement();
 
@@ -155,6 +162,24 @@ DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& dat
     }
 
     configElement.dbInitCmd = element.text();
+
+    element =  parent.namedItem("userDatabaseName").toElement();
+
+    if (element.isNull())
+    {
+        qDebug() << "Missing element <userDatabaseName>.";
+    }
+
+    configElement.userDatabaseName = element.text();
+
+    element =  parent.namedItem("sqlitePath").toElement();
+
+    if (element.isNull())
+    {
+        qDebug() << "Missing element <sqlitePath>.";
+    }
+
+    configElement.sqlitePath = element.text();
 
     element =  databaseElement.namedItem("dbactions").toElement();
 
