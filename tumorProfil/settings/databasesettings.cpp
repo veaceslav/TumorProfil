@@ -85,6 +85,72 @@ void DatabaseSettings::applySettings()
     dp.writeToConfig();
 }
 
+bool DatabaseSettings::checkDatabaseConnection(DatabaseParameters parameters)
+{
+    qApp->setOverrideCursor(Qt::WaitCursor);
+    QString databaseID(QLatin1String("TumorDbConnectionTest"));
+    bool result;
+    {
+        QSqlDatabase testDatabase     = QSqlDatabase::addDatabase(parameters.databaseType, databaseID);
+        if(!testDatabase.isValid())
+        {
+            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
+                                  tr("Database connection test was not successful. <p>Error was:" +
+                                       testDatabase.lastError().text().toLatin1() +  "</p>") );
+
+            return false;
+        }
+
+        qDebug() << parameters;
+        if(!parameters.isValid())
+        {
+            qApp->restoreOverrideCursor();
+            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
+                                  tr("Database connection test was not successful. <p>Error was:" +
+                                      QString("Database parameters are invalid").toLatin1() +  "</p>") );
+
+            return false;
+        }
+        testDatabase.setHostName(parameters.hostName);
+        testDatabase.setPort(parameters.port);
+        testDatabase.setUserName(parameters.userName);
+        testDatabase.setPassword(parameters.password);
+        testDatabase.setConnectOptions(parameters.connectOptions);
+
+        qApp->restoreOverrideCursor();
+
+        testDatabase.setDatabaseName(parameters.databaseName);
+
+        result = testDatabase.open();
+
+        if (!result)
+        {
+            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
+                                  tr("Database connection test was not successful. <p>Error was:" +
+                                       testDatabase.lastError().text().toLatin1() +  "</p>") );
+            return false;
+        }
+
+        QSqlQuery* testQuery = new QSqlQuery(testDatabase);
+        testQuery->prepare(QLatin1String("show tables"));
+
+        result = testQuery->exec();
+
+        if (!result)
+        {
+            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
+                                  tr("Database connection test was not successful. <p>Error was:" +
+                                       testQuery->lastError().text().toLatin1() +  "</p>") );
+            return false;
+        }
+
+        testDatabase.close();
+    }
+    QSqlDatabase::removeDatabase(databaseID);
+
+    return result;
+}
+
 void DatabaseSettings::slotHandleDBTypeIndexChanged(int index)
 {
     const QString& dbType = d->databaseType->itemData(index).toString();
@@ -262,73 +328,12 @@ void DatabaseSettings::slotSetDatabasePath()
 
 void DatabaseSettings::slotCheckDatabaseConnection()
 {
-    // TODO : if check DB connection operations can be threaded, use DBusyDlg dialog there...
+    DatabaseParameters parameters = getDatabaseParameters();
+    bool result = checkDatabaseConnection(parameters);
 
-    qApp->setOverrideCursor(Qt::WaitCursor);
-    QString databaseID(QLatin1String("TumorDbConnectionTest"));
-
+    if(result)
     {
-
-        QSqlDatabase testDatabase     = QSqlDatabase::addDatabase(currentDatabaseType(), databaseID);
-        DatabaseParameters parameters = getDatabaseParameters();
-
-        if(!testDatabase.isValid())
-        {
-            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
-                                  tr("Database connection test was not successful. <p>Error was:" +
-                                       testDatabase.lastError().text().toLatin1() +  "</p>") );
-
-            return;
-        }
-
-        qDebug() << parameters;
-        if(!parameters.isValid())
-        {
-            qApp->restoreOverrideCursor();
-            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
-                                  tr("Database connection test was not successful. <p>Error was:" +
-                                      QString("Database parameters are invalid").toLatin1() +  "</p>") );
-
-            return;
-        }
-        testDatabase.setHostName(parameters.hostName);
-        testDatabase.setPort(parameters.port);
-        testDatabase.setUserName(parameters.userName);
-        testDatabase.setPassword(parameters.password);
-        testDatabase.setConnectOptions(parameters.connectOptions);
-
-        qApp->restoreOverrideCursor();
-
-        testDatabase.setDatabaseName(parameters.databaseName);
-
-        bool result = testDatabase.open();
-
-        if (!result)
-        {
-            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
-                                  tr("Database connection test was not successful. <p>Error was:" +
-                                       testDatabase.lastError().text().toLatin1() +  "</p>") );
-        }
-
-        QSqlQuery* testQuery = new QSqlQuery(testDatabase);
-        testQuery->prepare(QLatin1String("show tables"));
-
-        result = testQuery->exec();
-
-        if (result)
-        {
-            QMessageBox::information(qApp->activeWindow(), tr("Database connection test"),
-                                     tr("Database connection test successful."));
-        }
-        else
-        {
-            QMessageBox::critical(qApp->activeWindow(), tr("Database connection test"),
-                                  tr("Database connection test was not successful. <p>Error was:" +
-                                       testQuery->lastError().text().toLatin1() +  "</p>") );
-        }
-
-        testDatabase.close();
+        QMessageBox::information(qApp->activeWindow(), tr("Database connection test"),
+                                 tr("Database connection test successful."));
     }
-    QSqlDatabase::removeDatabase(databaseID);
-
 }

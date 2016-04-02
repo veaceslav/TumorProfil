@@ -17,7 +17,11 @@ class MainSettings::Private
 public:
     Private()
     {
-
+        menuItems       = 0;
+        menuContent     = 0;
+        buttons         = 0;
+        dbSettings      = 0;
+        encryptSettings = 0;
     }
     QListWidget* menuItems;
     QStackedWidget* menuContent;
@@ -25,8 +29,10 @@ public:
 
     DatabaseSettings* dbSettings;
     EncryptionSettings* encryptSettings;
+
+    bool dbOnly;
 };
-MainSettings::MainSettings(QWidget *parent)
+MainSettings::MainSettings(bool dbOnly, QWidget *parent)
     : QDialog(parent), d(new Private())
 {
     d->menuItems = new QListWidget(this);
@@ -42,7 +48,7 @@ MainSettings::MainSettings(QWidget *parent)
     mainArea->addWidget(d->menuContent, 6);
     mainLayout->addLayout(mainArea);
     mainLayout->addWidget(d->buttons);
-    setContent();
+    setContent(dbOnly);
 
 
     connect(d->buttons->button(QDialogButtonBox::Ok), SIGNAL(clicked()),
@@ -62,8 +68,11 @@ MainSettings::~MainSettings()
 void MainSettings::accept()
 {
     bool scheduleRestart = false;
-    d->dbSettings->applySettings();
-    d->encryptSettings->saveSettings(scheduleRestart);
+    if(d->dbSettings != 0)
+        d->dbSettings->applySettings();
+
+    if(d->encryptSettings != 0)
+        d->encryptSettings->saveSettings(scheduleRestart);
 
     if(scheduleRestart)
     {
@@ -78,7 +87,7 @@ void MainSettings::slotCurrentPageChanged(int index)
     d->menuContent->setCurrentIndex(index);
 }
 
-void MainSettings::setContent()
+void MainSettings::setContent(bool dbOnly)
 {
     connect(d->menuItems, SIGNAL(currentRowChanged(int)), this, SLOT(slotCurrentPageChanged(int)));
     d->dbSettings = new DatabaseSettings(d->menuContent);
@@ -88,10 +97,13 @@ void MainSettings::setContent()
     d->menuItems->addItem(dbItem);
 
 
-    d->encryptSettings = new EncryptionSettings(d->menuContent);
-    d->menuContent->addWidget(d->encryptSettings);
-    QListWidgetItem* encryptionItem = new QListWidgetItem(tr("Encryption"));
-    encryptionItem->setTextAlignment(Qt::AlignCenter);
-    d->menuItems->addItem(encryptionItem);
+    if(!dbOnly)
+    {
+        d->encryptSettings = new EncryptionSettings(d->menuContent);
+        d->menuContent->addWidget(d->encryptSettings);
+        QListWidgetItem* encryptionItem = new QListWidgetItem(tr("Encryption"));
+        encryptionItem->setTextAlignment(Qt::AlignCenter);
+        d->menuItems->addItem(encryptionItem);
+    }
 }
 

@@ -48,6 +48,8 @@
 #include "pathologyparser.h"
 #include "pathologypropertiestableview.h"
 #include "settings/encryptionsettings.h"
+#include "settings/databasesettings.h"
+#include "settings/mainsettings.h"
 #include "encryption/authenticationwindow.h"
 #include "encryption/userinformation.h"
 
@@ -63,6 +65,21 @@ void handleAuthentication()
     if(EncryptionSettings::isEncryptionEnabled())
     {
         UserInformation::instance()->logIn();
+    }
+}
+
+void checkDbConnection()
+{
+    DatabaseParameters params;
+    params.readFromConfig();
+
+    bool result = DatabaseSettings::checkDatabaseConnection(params);
+
+    if(!result)
+    {
+        /** Db Options only **/
+        MainSettings* settingsDialog = new MainSettings(true);
+        settingsDialog->exec();
     }
 }
 
@@ -86,12 +103,15 @@ int main(int argc, char *argv[])
     DatabaseParameters params;
     params.readFromConfig();
 
+    checkDbConnection();
+
     handleAuthentication();
 
     if (!PatientManager::instance()->initialize(params))
     {
         return 1;
     }
+
     PatientManager::instance()->readDatabase();
 
 

@@ -15,6 +15,14 @@ public:
 
     void loadSettings();
     void applySettings();
+
+    /**
+     * @brief checkDatabaseConnection - check if program can connect to MySQL database
+     * @param parameters - database parameters such as host, port, username etc...
+     * @return
+     */
+    static bool checkDatabaseConnection(DatabaseParameters parameters);
+
 private Q_SLOTS:
     void slotHandleDBTypeIndexChanged(int index);
     void slotSetDatabasePath();

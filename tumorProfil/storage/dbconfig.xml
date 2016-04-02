@@ -2,12 +2,12 @@
 <databaseconfig>
     <version>1</version>
 
-    <hostName>TestHost</hostName>
-    <databaseName>DatabaseName</databaseName>
-    <userDatabaseName>UserDatabaseName</userDatabaseName>
+    <hostName>127.0.0.1</hostName>
+    <databaseName>tumorprofil</databaseName>
+    <userDatabaseName>tumorusers</userDatabaseName>
     <userName>UserName</userName>
     <password>Password</password>
-    <port>Port</port>
+    <port>3306</port>
     <connectoptions>ConnectOptions</connectoptions>
     <sqlitePath></sqlitePath>
     <dbservercmd></dbservercmd>
