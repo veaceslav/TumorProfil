@@ -273,8 +273,6 @@ void DatabaseSettings::setDatabaseInputFields(const QString &currentIndexStr)
         d->expertSettings->setVisible(false);
 
         connect(d->sqliteBrowse, SIGNAL(clicked(bool)), this, SLOT(slotSetDatabasePath()));
-//        connect(databasePathEdit->lineEdit(), SIGNAL(textChanged(QString)),
-//                this, SLOT(slotDatabasePathEditedDelayed()));
     }
     else
     {
@@ -284,8 +282,6 @@ void DatabaseSettings::setDatabaseInputFields(const QString &currentIndexStr)
         d->expertSettings->setVisible(true);
 
         disconnect(d->sqliteBrowse, SIGNAL(clicked(bool)), this, SLOT(slotSetDatabasePath()));
-//      disconnect(databasePathEdit->lineEdit(), SIGNAL(textChanged(QString)),
-//                   this, SLOT(slotDatabasePathEditedDelayed()));
     }
 
 }
@@ -301,18 +297,9 @@ DatabaseParameters DatabaseSettings::getDatabaseParameters()
     parameters.port           = d->hostPort->text().toInt();
     parameters.userName       = d->userName->text();
 
-    if (parameters.databaseType == QString(DatabaseParameters::SQLiteDatabaseType()))
-    {
-        // TODO: fix this
-        parameters.databaseName = QDir::cleanPath(d->sqlitePath->text() + QLatin1Char('/') + QLatin1String("digikam4.db"));
-        parameters.databaseNameThumbnails = parameters.databaseName;
-    }
-    else
-    {
-        parameters.databaseName = d->databaseName->text();
-        parameters.databaseNameThumbnails = d->databaseNameUsers->text();
-    }
-
+    parameters.sqliteDatabasePath = d->sqlitePath->text();
+    parameters.databaseNameThumbnails = d->databaseNameUsers->text();
+    parameters.databaseName = d->databaseName->text();
 
     return parameters;
 }

@@ -68,10 +68,21 @@ void handleAuthentication()
     }
 }
 
+
+void requestDbPassword()
+{
+
+}
 void checkDbConnection()
 {
     DatabaseParameters params;
     params.readFromConfig();
+
+    if(params.isMySQL()){
+        requestDbPassword();
+    } else {
+        return;
+    }
 
     bool result = DatabaseSettings::checkDatabaseConnection(params);
 
