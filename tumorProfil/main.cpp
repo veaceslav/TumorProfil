@@ -52,6 +52,7 @@
 #include "settings/mainsettings.h"
 #include "encryption/authenticationwindow.h"
 #include "encryption/userinformation.h"
+#include "authentication/dbuserinformation.h"
 
 /*
 void myMsgHandler(QtMsgType, const char * text)
@@ -71,8 +72,9 @@ void handleAuthentication()
 
 void requestDbPassword()
 {
-
+    DbUserInformation::instance()->loginDbUser();
 }
+
 void checkDbConnection()
 {
     DatabaseParameters params;
@@ -84,14 +86,6 @@ void checkDbConnection()
         return;
     }
 
-    bool result = DatabaseSettings::checkDatabaseConnection(params);
-
-    if(!result)
-    {
-        /** Db Options only **/
-        MainSettings* settingsDialog = new MainSettings(true);
-        settingsDialog->exec();
-    }
 }
 
 int main(int argc, char *argv[])

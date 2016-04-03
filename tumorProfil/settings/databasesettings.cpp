@@ -20,6 +20,8 @@
 
 #include "databaseparameters.h"
 #include "constants.h"
+#include "authentication/dbuserinformation.h"
+
 
 
 class DatabaseSettings::Private
@@ -82,6 +84,11 @@ void DatabaseSettings::loadSettings()
 void DatabaseSettings::applySettings()
 {
     DatabaseParameters dp = getDatabaseParameters();
+    // Clear the password. Do not set it to config file
+    DbUserInformation::instance()->setUsername(dp.userName);
+    DbUserInformation::instance()->setPassword(dp.password);
+
+    dp.password = QString();
     dp.writeToConfig();
 }
 

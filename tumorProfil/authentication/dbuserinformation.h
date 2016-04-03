@@ -13,12 +13,23 @@ public:
 
     static QPointer<DbUserInformation> internalPtr;
 
+    QString dbUsername();
+
+    QString dbPassword();
+
+    void setUsername(QString username);
+
+    void setPassword(QString password);
+
+    bool loginDbUser();
+
 protected:
     explicit DbUserInformation(QObject *parent = 0);
 
-signals:
 
-public slots:
+private:
+    class Private;
+    Private* const d;
 };
 
 #endif // DBUSERINFORMATION_H

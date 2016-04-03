@@ -9,15 +9,16 @@ class UserData
 public:
     QString username;
     QString password;
+    bool    success;
 };
 
 class AuthenticationWindow : public QDialog
 {
     Q_OBJECT
 public:
-    AuthenticationWindow(QWidget* parent = 0);
+    AuthenticationWindow(QString username = QString(), QWidget* parent = 0);
 
-    static UserData logIn();
+    static UserData logIn(QString username = QString());
 
     QString username();
     QString password();

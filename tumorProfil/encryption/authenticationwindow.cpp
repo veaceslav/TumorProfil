@@ -23,7 +23,7 @@ public:
     bool            login;
     QPushButton*    skipButton;
 };
-AuthenticationWindow::AuthenticationWindow(QWidget *parent)
+AuthenticationWindow::AuthenticationWindow(QString username, QWidget *parent)
     :QDialog(parent), d(new Private())
 {
     setModal(true);
@@ -38,6 +38,8 @@ AuthenticationWindow::AuthenticationWindow(QWidget *parent)
 
     setupUi();
 
+    d->username->setText(username);
+
     connect(d->buttons->button(QDialogButtonBox::Ok), SIGNAL(clicked()),
             this, SLOT(accept()));
 
@@ -48,9 +50,9 @@ AuthenticationWindow::AuthenticationWindow(QWidget *parent)
             this, SLOT(reject()));
 }
 
-UserData AuthenticationWindow::logIn()
+UserData AuthenticationWindow::logIn(QString username)
 {
-    AuthenticationWindow* auth = new AuthenticationWindow();
+    AuthenticationWindow* auth = new AuthenticationWindow(username);
 
     int result = auth->exec();
 
@@ -59,6 +61,7 @@ UserData AuthenticationWindow::logIn()
     {
         data.username = auth->username();
         data.password = auth->password();
+        data.success  = true;
     }
 
     return data;
