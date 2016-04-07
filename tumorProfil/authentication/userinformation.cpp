@@ -9,6 +9,8 @@
 #include "encryption/queryutils.h"
 #include "settings/encryptionsettings.h"
 #include "ui/logininfowidget.h"
+#include "settings/databasesettings.h"
+#include "settings/mainsettings.h"
 
 QPointer<UserInformation> UserInformation::internalPtr = QPointer<UserInformation>();
 
@@ -26,6 +28,7 @@ public:
     bool encryptionEnabled;
     QMutex mutex;
     QString userName;
+    QString password;
     QMap<QString, QString> decryptionKey;
 
     QTimer timer; // set up logout timeout.
@@ -42,14 +45,21 @@ UserInformation *UserInformation::instance()
 bool UserInformation::logIn()
 {
     UserData data = AuthenticationWindow::logIn();
-    UserDetails details = QueryUtils::retrieveUser(data.username, data.password);
-    if(details.id == -1)
-        return false;
+
 
     d->isLoggedIn = true;
-    d->decryptionKey = details.decryptionKeys;
-    d->userName = details.userName;
-    LoginInfoWidget::instance()->logInUpdate(details.userName);
+    d->userName = data.username;
+    d->password = data.password;
+
+    if(d->encryptionEnabled)
+    {
+        UserDetails details = QueryUtils::retrieveUser(data.username, data.password);
+        if(details.id == -1)
+            return false;
+        d->decryptionKey = details.decryptionKeys;
+    }
+
+    LoginInfoWidget::instance()->logInUpdate(data.username);
     emit signalLoginStateChanged();
 
     return true;
@@ -61,7 +71,8 @@ bool UserInformation::logOut()
     {
         return false;
     }
-    d->userName = QString();
+    d->userName.clear();
+    d->password.clear();
     d->decryptionKey.clear();
     d->isLoggedIn = false;
     LoginInfoWidget::instance()->logOutUpdate();
@@ -115,10 +126,52 @@ QString UserInformation::retrieveKey(QString keyName)
     return d->decryptionKey.value(keyName);
 }
 
+void UserInformation::setUsername(QString username)
+{
+    d->userName = username;
+}
+
+void UserInformation::setPassword(QString password)
+{
+    d->password = password;
+}
+
+QString UserInformation::username()
+{
+    return d->userName;
+}
+
+QString UserInformation::password()
+{
+    return d->password;
+}
+
 
 UserInformation::UserInformation()
     :d(new Private())
 {
     QMutexLocker(&d->mutex);
     d->encryptionEnabled = EncryptionSettings::isEncryptionEnabled();
+}
+
+bool UserInformation::checkDbConnection(QString username, QString password)
+{
+    DatabaseParameters params;
+    params.readFromConfig();
+
+    params.userName = username;
+    params.password = password;
+
+    bool result = DatabaseSettings::checkDatabaseConnection(params);
+
+    if(!result)
+    {
+        /** Db Options only **/
+        MainSettings* settingsDialog = new MainSettings(true);
+        settingsDialog->exec();
+    } else {
+        return true;
+    }
+
+    return false;
 }

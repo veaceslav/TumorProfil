@@ -12,7 +12,7 @@
 #include "TumorUsers/aesutils.h"
 #include "databaseaccess.h"
 #include "constants.h"
-#include "authentication/dbuserinformation.h"
+#include "authentication/userinformation.h"
 
 #define SALT_SIZE  10
 
@@ -127,8 +127,8 @@ bool QueryUtils::openConnection(DatabaseParameters params)
         database.setHostName(params.hostName);
         database.setPort(params.port);
         database.setUserName(params.userName);
-        database.setUserName(DbUserInformation::instance()->dbUsername());
-        database.setPassword(DbUserInformation::instance()->dbPassword());
+        database.setUserName(UserInformation::instance()->username());
+        database.setPassword(UserInformation::instance()->password());
 
         qApp->restoreOverrideCursor();
 

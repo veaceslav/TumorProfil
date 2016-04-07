@@ -33,7 +33,20 @@ public:
 
     bool hasKey(QString keyName);
 
+    /**
+     * @brief retrieveKey - retrieve encryption key for database field
+     * @param keyName     - keyname correspond to database field name
+     * @return            - Encrption key, or QString() if use does not have the key
+     */
     QString retrieveKey(QString keyName);
+
+    void setUsername(QString username);
+
+    void setPassword(QString password);
+
+    QString username();
+
+    QString password();
 
 public slots:
     LoginState toggleLogIn();
@@ -46,6 +59,8 @@ protected:
     UserInformation();
 
 private:
+
+    bool checkDbConnection(QString username, QString password);
     class Private;
     Private * d;
 };

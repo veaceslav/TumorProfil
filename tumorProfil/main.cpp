@@ -52,7 +52,6 @@
 #include "settings/mainsettings.h"
 #include "encryption/authenticationwindow.h"
 #include "encryption/userinformation.h"
-#include "authentication/dbuserinformation.h"
 
 /*
 void myMsgHandler(QtMsgType, const char * text)
@@ -63,16 +62,7 @@ void myMsgHandler(QtMsgType, const char * text)
 
 void handleAuthentication()
 {
-    if(EncryptionSettings::isEncryptionEnabled())
-    {
-        UserInformation::instance()->logIn();
-    }
-}
-
-
-void requestDbPassword()
-{
-    DbUserInformation::instance()->loginDbUser();
+    UserInformation::instance()->logIn();
 }
 
 void checkDbConnection()
@@ -81,11 +71,10 @@ void checkDbConnection()
     params.readFromConfig();
 
     if(params.isMySQL()){
-        requestDbPassword();
+        handleAuthentication();
     } else {
         return;
     }
-
 }
 
 int main(int argc, char *argv[])
@@ -109,8 +98,6 @@ int main(int argc, char *argv[])
     params.readFromConfig();
 
     checkDbConnection();
-
-    handleAuthentication();
 
     if (!PatientManager::instance()->initialize(params))
     {

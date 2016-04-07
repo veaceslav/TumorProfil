@@ -50,7 +50,7 @@
 
 #include "schemaupdater.h"
 #include "dbactiontype.h"
-#include "authentication/dbuserinformation.h"
+#include "authentication/userinformation.h"
 
 //namespace Digikam {
 
@@ -206,8 +206,8 @@ bool DatabaseCoreBackendPrivate::open(QSqlDatabase& db)
     db.setConnectOptions(connectOptions);
     db.setHostName(parameters.hostName);
     db.setPort(parameters.port);
-    db.setUserName(DbUserInformation::instance()->dbUsername());
-    db.setPassword(DbUserInformation::instance()->dbPassword());
+    db.setUserName(UserInformation::instance()->username());
+    db.setPassword(UserInformation::instance()->password());
 
     bool success = db.open();
 
