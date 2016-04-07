@@ -12,7 +12,7 @@
 #include "aesutils.h"
 #include "queryutils.h"
 
-#define ADMIN_ID 1
+#include "tumoruserconstants.h"
 
 QPointer<AdminUser> AdminUser::internalPtr = QPointer<AdminUser>();
 
@@ -63,7 +63,7 @@ void AdminUser::loadKeys()
 
 bool AdminUser::logIn()
 {
-    QLatin1String queryString("SELECT * from Users WHERE name = \"admin\"");
+    QString queryString = QString("SELECT * from Users WHERE name = \"%1\"").arg(ADMIN_NAME);
     QMap<QString, QVariant> bindMap;
     QVector<QVector<QVariant> > results;
 

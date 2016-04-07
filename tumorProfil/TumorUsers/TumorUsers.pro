@@ -41,7 +41,8 @@ HEADERS  += mainwindow.h \
     adminuser.h \
     mymessagebox.h \
     masterkeystable.h \
-    addkeywidget.h
+    addkeywidget.h \
+    tumoruserconstants.h
 
 FORMS    +=
 

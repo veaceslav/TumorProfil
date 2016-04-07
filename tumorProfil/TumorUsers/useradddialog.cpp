@@ -159,7 +159,7 @@ void UserAddDialog::setupUi(UserData &data, bool isAdmin, bool login)
 
     if(isAdmin)
     {
-        d->username->setText(tr("admin"));
+        d->username->setText(tr("root"));
         d->username->setEnabled(false);
     }
 
@@ -197,7 +197,7 @@ void UserAddDialog::setupUi(UserData &data, bool isAdmin, bool login)
     d->keyList = new QListWidget();
 
     hbx->addLayout(gLayout);
-    if(!login)
+    if(!login && !isAdmin)
     {
         hbx->addWidget(d->keyList);
     }

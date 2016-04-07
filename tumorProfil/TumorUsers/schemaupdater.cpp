@@ -36,6 +36,7 @@
 #include "databaseaccess.h"
 #include "queryutils.h"
 #include "useradddialog.h"
+#include "tumoruserconstants.h"
 
 int SchemaUpdater::schemaVersion()
 {
@@ -250,7 +251,7 @@ bool SchemaUpdater::writeSettings()
 
 bool SchemaUpdater::checkAndAddAdmin()
 {
-    QLatin1String queryString("SELECT * from Users WHERE name = \"admin\"");
+    QString queryString = QString("SELECT * from Users WHERE name = \"%1\"").arg(ADMIN_NAME);
     QMap<QString, QVariant> bindMap;
     QVector<QVector<QVariant> > results;
 
@@ -264,7 +265,7 @@ bool SchemaUpdater::checkAndAddAdmin()
         UserData data = UserAddDialog::AddUser(true);
         if(data.userName.isEmpty() || data.password.isEmpty())
             return false;
-        QueryUtils::addUser(QLatin1String("admin"), QueryUtils::ADMIN, data.password);
+        QueryUtils::addUser(data.userName, QueryUtils::ADMIN, data.password);
     }
 
     return true;
