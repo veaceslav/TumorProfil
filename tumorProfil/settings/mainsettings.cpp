@@ -11,6 +11,7 @@
 
 #include "databasesettings.h"
 #include "encryptionsettings.h"
+#include "changepassword.h"
 
 class MainSettings::Private
 {
@@ -22,6 +23,7 @@ public:
         buttons         = 0;
         dbSettings      = 0;
         encryptSettings = 0;
+        changePassword  = 0;
     }
     QListWidget* menuItems;
     QStackedWidget* menuContent;
@@ -29,6 +31,7 @@ public:
 
     DatabaseSettings* dbSettings;
     EncryptionSettings* encryptSettings;
+    ChangePassword* changePassword;
 
     bool dbOnly;
 };
@@ -99,11 +102,23 @@ void MainSettings::setContent(bool dbOnly)
 
     if(!dbOnly)
     {
+        /**
+          * Encryption settings
+          */
         d->encryptSettings = new EncryptionSettings(d->menuContent);
         d->menuContent->addWidget(d->encryptSettings);
         QListWidgetItem* encryptionItem = new QListWidgetItem(tr("Encryption"));
         encryptionItem->setTextAlignment(Qt::AlignCenter);
         d->menuItems->addItem(encryptionItem);
+
+        /**
+          * Change Password function
+          */
+        d->changePassword = new ChangePassword();
+        d->menuContent->addWidget(d->changePassword);
+        QListWidgetItem* changePasswordItem = new QListWidgetItem(tr("Change Password"));
+        changePasswordItem->setTextAlignment(Qt::AlignCenter);
+        d->menuItems->addItem(changePasswordItem);
     }
 }
 
