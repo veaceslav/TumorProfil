@@ -53,10 +53,7 @@ bool UserInformation::logIn()
 
     if(d->encryptionEnabled)
     {
-        UserDetails details = QueryUtils::retrieveUser(data.username, data.password);
-        if(details.id == -1)
-            return false;
-        d->decryptionKey = details.decryptionKeys;
+        loadKeys();
     }
 
     LoginInfoWidget::instance()->logInUpdate(data.username);
@@ -96,6 +93,13 @@ void UserInformation::setEncryptionEnabled(bool value)
 {
     QMutexLocker(&d->mutex);
     d->encryptionEnabled = value;
+    if(d->isLoggedIn)
+    {
+        if(value)
+            loadKeys();
+        else
+            d->decryptionKey.clear();
+    }
 }
 
 UserInformation::LoginState UserInformation::toggleLogIn()
@@ -118,6 +122,16 @@ UserInformation::LoginState UserInformation::toggleLogIn()
 bool UserInformation::hasKey(QString keyName)
 {
     return !d->decryptionKey.value(keyName).isEmpty();
+}
+
+bool UserInformation::loadKeys()
+{
+    UserDetails details = QueryUtils::retrieveUser(d->userName, d->password);
+    if(details.id == -1)
+        return false;
+    d->decryptionKey = details.decryptionKeys;
+
+    return true;
 }
 
 

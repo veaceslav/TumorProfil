@@ -33,6 +33,8 @@ public:
 
     bool hasKey(QString keyName);
 
+    bool loadKeys();
+
     /**
      * @brief retrieveKey - retrieve encryption key for database field
      * @param keyName     - keyname correspond to database field name
