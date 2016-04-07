@@ -62,7 +62,7 @@ protected:
 
 private:
 
-    bool checkDbConnection(QString username, QString password);
+    int checkDbConnection(QString username, QString password);
     class Private;
     Private * d;
 };

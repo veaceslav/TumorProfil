@@ -4,6 +4,9 @@
 #include <QMap>
 #include <QDebug>
 #include <QMutex>
+#include <QDialog>
+#include <QMessageBox>
+
 
 #include "encryption/authenticationwindow.h"
 #include "encryption/queryutils.h"
@@ -11,6 +14,8 @@
 #include "ui/logininfowidget.h"
 #include "settings/databasesettings.h"
 #include "settings/mainsettings.h"
+
+
 
 QPointer<UserInformation> UserInformation::internalPtr = QPointer<UserInformation>();
 
@@ -46,20 +51,46 @@ bool UserInformation::logIn()
 {
     UserData data = AuthenticationWindow::logIn();
 
-
-    d->isLoggedIn = true;
     d->userName = data.username;
     d->password = data.password;
 
-    if(d->encryptionEnabled)
-    {
-        loadKeys();
+    int result = checkDbConnection(d->userName, d->password);
+
+    bool login = true;
+
+    while(login)
+    switch(result){
+        case -2: // everything is ok
+            login = false;
+            break;
+    case QDialog::Accepted:
+        result = checkDbConnection(d->userName, d->password);
+        break;
+    case QDialog::Rejected:
+        login = false;
+        break;
     }
 
-    LoginInfoWidget::instance()->logInUpdate(data.username);
-    emit signalLoginStateChanged();
+    if(result == -2)
+    {
 
-    return true;
+        if(d->encryptionEnabled)
+        {
+            loadKeys();
+        }
+
+        LoginInfoWidget::instance()->logInUpdate(d->userName);
+        emit signalLoginStateChanged();
+        d->isLoggedIn = true;
+
+        return true;
+    }
+    else
+    {
+        QMessageBox::critical(0, tr("Chould not connect to database"),
+                              tr("The username, password or connect options are not correct."));
+        return false;
+    }
 }
 
 bool UserInformation::logOut()
@@ -168,7 +199,7 @@ UserInformation::UserInformation()
     d->encryptionEnabled = EncryptionSettings::isEncryptionEnabled();
 }
 
-bool UserInformation::checkDbConnection(QString username, QString password)
+int UserInformation::checkDbConnection(QString username, QString password)
 {
     DatabaseParameters params;
     params.readFromConfig();
@@ -182,9 +213,9 @@ bool UserInformation::checkDbConnection(QString username, QString password)
     {
         /** Db Options only **/
         MainSettings* settingsDialog = new MainSettings(true);
-        settingsDialog->exec();
+        return settingsDialog->exec();
     } else {
-        return true;
+        return -2;
     }
 
     return false;
