@@ -9,9 +9,19 @@ class ChangePassword : public QWidget
 public:
     ChangePassword(QWidget *parent = 0);
 
+
+private slots:
+    void slotChangePassword();
+
 private:
 
     void setupUi();
+
+    void setError(QString message);
+
+    bool changeMySQLPassword();
+
+    bool updateEncryptionKeys();
 
     class Private;
     Private* const d;

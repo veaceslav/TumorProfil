@@ -6,6 +6,9 @@
 #include "databaseparameters.h"
 
 
+class QSqlDatabase;
+
+
 /**
  * @brief The UserDetails class is a container class for storing information
  *        about the use after it is being added to database
@@ -41,6 +44,11 @@ public:
         USER = 1
     };
 
+    enum DatabaseName{
+        TUMORPROFIL = 0,
+        TUMORUSER = 1
+    };
+
     explicit QueryUtils(QObject *parent = 0);
 
 
@@ -54,9 +62,13 @@ public:
 
     static UserDetails retrieveUser(QString name, QString password);
 
-    static bool openConnection(DatabaseParameters params);
+    static bool openConnection(DatabaseParameters params, QString databaseID, DatabaseName databaseName);
 
-    static bool executeDirectSql(QString queryString, QMap<QString, QVariant> bindValues, QVector<QVector<QVariant> >& results);
+    static bool closeConnection(QString databaseID);
+
+    static bool executeDirectSql(QString queryString, QMap<QString,
+                                 QVariant> bindValues, QVector<QVector<QVariant> >& results,
+                                 QString databaseID);
 
     static bool verifyPassword(const QString& password , const QVector<QVector<QVariant> >& result);
 

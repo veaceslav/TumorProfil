@@ -32,7 +32,8 @@ QVector<QVector<QVariant> > QueryUtils::retrieveMasterKeys(qlonglong userId)
 
     QueryUtils::executeDirectSql(QLatin1String("SELECT * from MasterKeys where userid=:userid"),
                                                  bindValues,
-                                                 results);
+                                                 results,
+                                                 QString(DATABASE_CONNECTION_NAME));
     return results;
 }
 
@@ -44,7 +45,8 @@ QVector<QVector<QVariant> > QueryUtils::retrieveUserEntry(const QString &userNam
 
     QueryUtils::executeDirectSql(QLatin1String("SELECT * from Users where name=:username"),
                                                  bindValues,
-                                                 results);
+                                                 results,
+                                                 QString(DATABASE_CONNECTION_NAME));
     return results;
 }
 
@@ -55,7 +57,7 @@ UserDetails QueryUtils::retrieveUser(QString name, QString password)
     DatabaseParameters params;
     params.readFromConfig();
 
-    if(!openConnection(params))
+    if(!openConnection(params, QString(DATABASE_CONNECTION_NAME), QueryUtils::TUMORUSER))
     {
         return details;
     }
@@ -103,17 +105,16 @@ bool QueryUtils::verifyPassword(const QString &password , const QVector<QVector<
     }
 }
 
-bool QueryUtils::openConnection(DatabaseParameters params)
+bool QueryUtils::openConnection(DatabaseParameters params, QString databaseID, DatabaseName databaseName)
 {
     QSqlDatabase database;
 
     qApp->setOverrideCursor(Qt::WaitCursor);
-    QString databaseID(DATABASE_CONNECTION_NAME);
 
     {
 
         database = QSqlDatabase::addDatabase(params.databaseType,
-                                                                  databaseID);
+                                             databaseID);
 
         if(!database.isValid())
         {
@@ -132,7 +133,18 @@ bool QueryUtils::openConnection(DatabaseParameters params)
 
         qApp->restoreOverrideCursor();
 
-        database.setDatabaseName(params.databaseNameThumbnails);
+        switch(databaseName)
+        {
+        case TUMORPROFIL:
+            database.setDatabaseName(params.databaseName);
+            break;
+        case TUMORUSER:
+            database.setDatabaseName(params.databaseNameThumbnails);
+            break;
+        default:
+            qDebug() << "Error: Query utils, unknown database name type";
+            break;
+        }
 
         bool result = database.open();
 
@@ -163,11 +175,18 @@ bool QueryUtils::openConnection(DatabaseParameters params)
     return true;
 }
 
+bool QueryUtils::closeConnection(QString databaseID)
+{
+    QSqlDatabase::removeDatabase(databaseID);
+}
 
-bool QueryUtils::executeDirectSql(QString queryString, QMap<QString, QVariant> bindValues, QVector<QVector<QVariant> >& results)
+
+bool QueryUtils::executeDirectSql(QString queryString, QMap<QString,
+                                  QVariant> bindValues, QVector<QVector<QVariant> >& results,
+                                  QString databaseID)
 {
 
-    QSqlQuery* query = new QSqlQuery(QSqlDatabase::database(DATABASE_CONNECTION_NAME));
+    QSqlQuery* query = new QSqlQuery(QSqlDatabase::database(databaseID));
     query->prepare(queryString);
 
     for(QMap<QString, QVariant>::iterator it = bindValues.begin(); it !=bindValues.end(); ++it)

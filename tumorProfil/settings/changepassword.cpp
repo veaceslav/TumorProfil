@@ -5,6 +5,11 @@
 #include <QPushButton>
 #include <QFormLayout>
 
+#include "encryption/queryutils.h"
+
+#define CHANGE_PASSWORD_TUMORPROFIL "ChangePasswordTumorProfil"
+#define CHANGE_PASSWORD_TUMORUSERS "ChangePasswordTumorUsers"
+
 class ChangePassword::Private
 {
 public:
@@ -18,11 +23,57 @@ public:
     QLineEdit* newPassword;
     QLineEdit* newPassword2;
     QPushButton* changePassword;
+    QLabel*      errorLabel;
 };
 ChangePassword::ChangePassword(QWidget* parent)
     :QWidget(parent), d(new Private())
 {
     setupUi();
+
+    connect(d->changePassword, SIGNAL(clicked(bool)),
+            this, SLOT(slotChangePassword()));
+}
+
+void ChangePassword::slotChangePassword()
+{
+
+    if(d->newPassword->text().compare(d->newPassword2->text()))
+    {
+        setError(tr("Error: New Passwords do not match"));
+        return;
+    }
+    DatabaseParameters params;
+    params.readFromConfig();
+    params.userName = d->username->text();
+    params.password = d->oldPassword->text();
+
+
+    bool result = QueryUtils::openConnection(params, CHANGE_PASSWORD_TUMORPROFIL,
+                                             QueryUtils::TUMORPROFIL);
+
+    if(!result)
+    {
+        setError(tr("Error: Could not open database connection to Tumorprofil.\n"
+                    "Check database connection parameters"));
+        return;
+    }
+
+    result = QueryUtils::openConnection(params, CHANGE_PASSWORD_TUMORUSERS,
+                                        QueryUtils::TUMORUSER);
+
+    if(!result)
+    {
+        setError(tr("Error: Could not open database connection to Tumorusers.\n"
+                    "Check database connection parameters"));
+
+        QueryUtils::closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
+        return;
+    }
+
+    changeMySQLPassword();
+
+    QueryUtils::closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
+    QueryUtils::closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
 }
 
 void ChangePassword::setupUi()
@@ -47,6 +98,15 @@ void ChangePassword::setupUi()
 
     d->changePassword               = new QPushButton(tr("Change Password"));
 
+    d->errorLabel = new QLabel();
+
+    QPalette palette = d->errorLabel->palette();
+    palette.setColor(d->errorLabel->backgroundRole(), Qt::red);
+    palette.setColor(d->errorLabel->foregroundRole(), Qt::red);
+    d->errorLabel->setPalette(palette);
+    d->errorLabel->hide();
+    d->errorLabel->setWordWrap(true);
+
     QFormLayout* const expertSettinglayout           = new QFormLayout();
 
     expertSettinglayout->addRow(usernameLabel, d->username);
@@ -57,5 +117,31 @@ void ChangePassword::setupUi()
 
     mainLayout->addWidget(d->mainLabel);
     mainLayout->addLayout(expertSettinglayout);
+    mainLayout->addWidget(d->errorLabel);
+
+}
+
+void ChangePassword::setError(QString message)
+{
+    d->errorLabel->setText(message);
+    d->errorLabel->show();
+}
+
+bool ChangePassword::changeMySQLPassword()
+{
+    QMap<QString, QVariant> bindValues;
+    QVector<QVector<QVariant> > results;
+    //bindValues[QLatin1String(":password")] = d->newPassword->text();
+
+    QString query = QString("SET PASSWORD = PASSWORD('%1')").arg(d->newPassword->text());
+
+    return QueryUtils::executeDirectSql(query,
+                                 bindValues,
+                                 results,
+                                 QString(CHANGE_PASSWORD_TUMORPROFIL));
+}
+
+bool ChangePassword::updateEncryptionKeys()
+{
 
 }
