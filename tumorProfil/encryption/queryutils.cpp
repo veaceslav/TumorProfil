@@ -178,8 +178,78 @@ bool TumorQueryUtils::openConnection(DatabaseParameters params, QString database
 bool TumorQueryUtils::closeConnection(QString databaseID)
 {
     QSqlDatabase::removeDatabase(databaseID);
+
+    return true;
 }
 
+bool TumorQueryUtils::removeAllMasterKeys(int userid, QString databaseID)
+{
+    QMap<QString, QVariant> bindValues;
+    QVector<QVector<QVariant> > results;
+    bindValues[QLatin1String(":userid")] = userid;
+
+    return TumorQueryUtils::executeDirectSql(QLatin1String("DELETE from MasterKeys where userid=:userid"),
+                                                 bindValues,
+                                                 results,
+                                                 databaseID);
+}
+
+bool TumorQueryUtils::updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
+                                      QMap<QString,QString> userKeys, QString databaseID)
+{
+    removeAllMasterKeys(userId,databaseID);
+
+    QMap<QString, QString>::iterator it;
+    for(it=userKeys.begin(); it != userKeys.end(); ++it)
+    {
+        addMasterKey(it.key(), userId, userPassword, userAesFilling,
+                                 it.value());
+    }
+    return true;
+}
+
+QString generateRandomString(int length)
+{
+    qsrand(time(NULL));
+    QString base("0123456789ABCDEF");
+    QString str;
+    for(int i=0;i<length;i++){
+        str += base.at(qrand() % base.length());
+    }
+
+    return str;
+
+}
+qlonglong TumorQueryUtils::addMasterKey(QString name, qlonglong userid, QString password,
+                                        QString aesFilling,
+                                        QString databaseID, QString masterKey)
+{
+    if(masterKey.isEmpty())
+        masterKey = generateRandomString(AESKEY_LENGTH);
+
+    qDebug() << "Helo";
+    QString encodedKey = AesUtils::encryptMasterKey(password, aesFilling, masterKey);
+
+    QString decoded = AesUtils::decryptMasterKey(password, aesFilling, encodedKey);
+
+    qDebug() << "End";
+    if(decoded.compare(masterKey) != 0)
+        qDebug() << "Wrong encryption. Expected: " << masterKey << " Got: " << decoded;
+
+    QMap<QString, QVariant> bindValues;
+    bindValues[QLatin1String(":keyName")] = name;
+    bindValues[QLatin1String(":userid")] = userid;
+    bindValues[QLatin1String(":encryptedKey")] = encodedKey;
+
+    QVector<QVector<QVariant> > results;
+    executeDirectSql(QLatin1String("INSERT into MasterKeys(keyName, userid, encryptedKey)"
+                                                               "VALUES(:keyName, :userid, :encryptedKey)"),
+                                                 bindValues,
+                                                 results,
+                                                 databaseID);
+
+    return 0;
+}
 
 bool TumorQueryUtils::executeDirectSql(QString queryString, QMap<QString,
                                   QVariant> bindValues, QVector<QVector<QVariant> >& results,

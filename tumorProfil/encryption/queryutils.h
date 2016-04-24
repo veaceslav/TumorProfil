@@ -72,6 +72,14 @@ public:
 
     static bool verifyPassword(const QString& password , const QVector<QVector<QVariant> >& result);
 
+    static bool removeAllMasterKeys(int userid, QString databaseID);
+
+    static bool updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
+                                          QMap<QString,QString> userKeys, QString databaseID);
+    static qlonglong addMasterKey(QString name, qlonglong userid, QString password,
+                                  QString aesFilling,  QString databaseID,QString masterKey = QString());
+
+
 signals:
 
 public slots:
