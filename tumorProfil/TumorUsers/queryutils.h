@@ -47,7 +47,7 @@ public:
 
     static UserDetails addUser(QString name, UserType userType, QString password);
 
-    static UserDetails editUser(QString name, UserType userType, QString password, qlonglong userId);
+
 
     static QString generateRandomString(int length);
 
@@ -60,6 +60,11 @@ public:
     static bool removeMasterKey(QString keyName);
 
     static bool removeAllMasterKeys(int userid);
+
+    static UserDetails editUser(QString name, UserType userType, QString password, qlonglong userId);
+
+    static bool updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
+                                     QMap<QString, QString> userKeys);
 
 signals:
 

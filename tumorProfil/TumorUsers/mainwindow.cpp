@@ -214,11 +214,14 @@ void MainWindow::slotEditUser()
 
     QueryUtils::removeAllMasterKeys(user.id);
 
+    QMap<QString, QString> userKeysUpdated;
+
     foreach(QString keyName, data.keys)
     {
-        QueryUtils::addMasterKey(keyName, user.id, data.password, user.aesFilling,
-                                 AdminUser::instance()->masterKey(keyName));
+        userKeysUpdated.insert(keyName,AdminUser::instance()->masterKey(keyName));
     }
+
+    QueryUtils::updateUserMasterKeys(user.id,data.password,user.aesFilling,userKeysUpdated);
 
     if(user.id == ADMIN_ID)
     {

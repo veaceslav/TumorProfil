@@ -93,7 +93,21 @@ UserDetails QueryUtils::editUser(QString name, QueryUtils::UserType userType, QS
 
 
     qDebug() << "Id of inserted item: " << userId;
+
     return UserDetails(userId,aesFilling);
+}
+
+bool QueryUtils::updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
+                                      QMap<QString,QString> userKeys)
+{
+    QueryUtils::removeAllMasterKeys(userId);
+
+    QMap<QString, QString>::iterator it;
+    for(it=userKeys.begin(); it != userKeys.end(); ++it)
+    {
+        QueryUtils::addMasterKey(it.key(), userId, userPassword, userAesFilling,
+                                 it.value());
+    }
 }
 
 QString QueryUtils::generateRandomString(int length)

@@ -19,67 +19,67 @@
 #define DATABASE_CONNECTION_NAME "TumorUserConnection"
 
 
-QueryUtils::QueryUtils(QObject *parent) : QObject(parent)
+TumorQueryUtils::TumorQueryUtils(QObject *parent) : QObject(parent)
 {
 
 }
 
-QVector<QVector<QVariant> > QueryUtils::retrieveMasterKeys(qlonglong userId)
+QVector<QVector<QVariant> > TumorQueryUtils::retrieveMasterKeys(qlonglong userId, QString databaseID)
 {
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
     bindValues[QLatin1String(":userid")] = userId;
 
-    QueryUtils::executeDirectSql(QLatin1String("SELECT * from MasterKeys where userid=:userid"),
+    TumorQueryUtils::executeDirectSql(QLatin1String("SELECT * from MasterKeys where userid=:userid"),
                                                  bindValues,
                                                  results,
-                                                 QString(DATABASE_CONNECTION_NAME));
+                                                 databaseID);
     return results;
 }
 
-QVector<QVector<QVariant> > QueryUtils::retrieveUserEntry(const QString &userName)
+QVector<QVector<QVariant> > TumorQueryUtils::retrieveUserEntry(const QString &userName, QString databaseID)
 {
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
     bindValues[QLatin1String(":username")] = userName;
 
-    QueryUtils::executeDirectSql(QLatin1String("SELECT * from Users where name=:username"),
+    TumorQueryUtils::executeDirectSql(QLatin1String("SELECT * from Users where name=:username"),
                                                  bindValues,
                                                  results,
-                                                 QString(DATABASE_CONNECTION_NAME));
+                                                 databaseID);
     return results;
 }
 
-UserDetails QueryUtils::retrieveUser(QString name, QString password)
+UserDetails TumorQueryUtils::retrieveUser(QString name, QString password)
 {
 
     UserDetails details;
     DatabaseParameters params;
     params.readFromConfig();
 
-    if(!openConnection(params, QString(DATABASE_CONNECTION_NAME), QueryUtils::TUMORUSER))
+    if(!openConnection(params, QString(DATABASE_CONNECTION_NAME), TumorQueryUtils::TUMORUSER))
     {
         return details;
     }
 
-    QVector<QVector<QVariant> > data = retrieveUserEntry(name);
+    QVector<QVector<QVariant> > data = retrieveUserEntry(name, QString(DATABASE_CONNECTION_NAME));
 
     if(data.isEmpty())
         return details;
 
-    if(QueryUtils::verifyPassword(password, data))
+    if(TumorQueryUtils::verifyPassword(password, data))
     {
         details.userName = data.first().at(NAME_INDEX).toString();
         details.id = data.first().at(USERID_INDEX).toInt();
         QString aesFilling = data.first().at(AESFILLING_INDEX).toString();
         qDebug() << "Aes filling:" << aesFilling;
-        QVector<QVector<QVariant> > keys = retrieveMasterKeys(data.first().at(USERID_INDEX).toInt());
+        QVector<QVector<QVariant> > keys = retrieveMasterKeys(data.first().at(USERID_INDEX).toInt(),
+                                                              DATABASE_CONNECTION_NAME);
 
         foreach(QVector<QVariant> key, keys)
         {
             QString decryptedKey = AesUtils::decryptMasterKey(password, aesFilling, key.at(KEY_CONTENT_INDEX).toString());
             details.decryptionKeys.insert(key.at(KEY_NAME_INDEX).toString(), decryptedKey);
-            //qDebug() << key.at(KEY_CONTENT_INDEX).toString();
             qDebug() << "Added key " << key.at(KEY_NAME_INDEX).toString() << " " << decryptedKey;
         }
     }
@@ -87,7 +87,7 @@ UserDetails QueryUtils::retrieveUser(QString name, QString password)
     return details;
 }
 
-bool QueryUtils::verifyPassword(const QString &password , const QVector<QVector<QVariant> > &result)
+bool TumorQueryUtils::verifyPassword(const QString &password , const QVector<QVector<QVariant> > &result)
 {
     QString saltedPass(password + result.first().at(PASSWORD_SALT_INDEX).toString());
     QByteArray passHash = QCryptographicHash::hash(saltedPass.toLatin1(), QCryptographicHash::Sha256);
@@ -105,7 +105,7 @@ bool QueryUtils::verifyPassword(const QString &password , const QVector<QVector<
     }
 }
 
-bool QueryUtils::openConnection(DatabaseParameters params, QString databaseID, DatabaseName databaseName)
+bool TumorQueryUtils::openConnection(DatabaseParameters params, QString databaseID, DatabaseName databaseName)
 {
     QSqlDatabase database;
 
@@ -175,13 +175,13 @@ bool QueryUtils::openConnection(DatabaseParameters params, QString databaseID, D
     return true;
 }
 
-bool QueryUtils::closeConnection(QString databaseID)
+bool TumorQueryUtils::closeConnection(QString databaseID)
 {
     QSqlDatabase::removeDatabase(databaseID);
 }
 
 
-bool QueryUtils::executeDirectSql(QString queryString, QMap<QString,
+bool TumorQueryUtils::executeDirectSql(QString queryString, QMap<QString,
                                   QVariant> bindValues, QVector<QVector<QVariant> >& results,
                                   QString databaseID)
 {

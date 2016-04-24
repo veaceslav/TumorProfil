@@ -35,7 +35,7 @@ public:
     QMap<QString, QString> decryptionKeys;
 };
 
-class QueryUtils : public QObject
+class TumorQueryUtils : public QObject
 {
     Q_OBJECT
 public:
@@ -49,16 +49,16 @@ public:
         TUMORUSER = 1
     };
 
-    explicit QueryUtils(QObject *parent = 0);
+    explicit TumorQueryUtils(QObject *parent = 0);
 
 
     static QString encpryptMasterKey(QString password, QString filling, QString masterKey);
 
     static QString decryptMasterKey(QString password, QString filling, QString masterHash);
 
-    static QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId);
+    static QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId, QString databaseID);
 
-    static QVector<QVector<QVariant> > retrieveUserEntry(const QString& userName);
+    static QVector<QVector<QVariant> > retrieveUserEntry(const QString& userName, QString databaseID);
 
     static UserDetails retrieveUser(QString name, QString password);
 

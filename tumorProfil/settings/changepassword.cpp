@@ -48,8 +48,8 @@ void ChangePassword::slotChangePassword()
     params.password = d->oldPassword->text();
 
 
-    bool result = QueryUtils::openConnection(params, CHANGE_PASSWORD_TUMORPROFIL,
-                                             QueryUtils::TUMORPROFIL);
+    bool result = TumorQueryUtils::openConnection(params, CHANGE_PASSWORD_TUMORPROFIL,
+                                             TumorQueryUtils::TUMORPROFIL);
 
     if(!result)
     {
@@ -58,22 +58,22 @@ void ChangePassword::slotChangePassword()
         return;
     }
 
-    result = QueryUtils::openConnection(params, CHANGE_PASSWORD_TUMORUSERS,
-                                        QueryUtils::TUMORUSER);
+    result = TumorQueryUtils::openConnection(params, CHANGE_PASSWORD_TUMORUSERS,
+                                        TumorQueryUtils::TUMORUSER);
 
     if(!result)
     {
         setError(tr("Error: Could not open database connection to Tumorusers.\n"
                     "Check database connection parameters"));
 
-        QueryUtils::closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
+        TumorQueryUtils::closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
         return;
     }
 
     changeMySQLPassword();
 
-    QueryUtils::closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
-    QueryUtils::closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
+    TumorQueryUtils::closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
+    TumorQueryUtils::closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
 }
 
 void ChangePassword::setupUi()
@@ -131,11 +131,10 @@ bool ChangePassword::changeMySQLPassword()
 {
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
-    //bindValues[QLatin1String(":password")] = d->newPassword->text();
 
     QString query = QString("SET PASSWORD = PASSWORD('%1')").arg(d->newPassword->text());
 
-    return QueryUtils::executeDirectSql(query,
+    return TumorQueryUtils::executeDirectSql(query,
                                  bindValues,
                                  results,
                                  QString(CHANGE_PASSWORD_TUMORPROFIL));
@@ -143,5 +142,7 @@ bool ChangePassword::changeMySQLPassword()
 
 bool ChangePassword::updateEncryptionKeys()
 {
+    UserDetails userInfo = TumorQueryUtils::retrieveUser(d->username->text(), d->oldPassword->text());
+
 
 }
