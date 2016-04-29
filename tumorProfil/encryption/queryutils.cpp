@@ -20,7 +20,15 @@
 
 QPointer<TumorQueryUtils> TumorQueryUtils::internalPtr = QPointer<TumorQueryUtils>();
 
-TumorQueryUtils::TumorQueryUtils()
+
+class TumorQueryUtils::Private
+{
+public:
+    QString databaseName;
+};
+
+TumorQueryUtils::TumorQueryUtils():
+    d(new Private())
 {
 
 }
@@ -28,13 +36,69 @@ TumorQueryUtils::TumorQueryUtils()
 AbstractQueryUtils::QueryState TumorQueryUtils::executeSql(QString queryString,
                                                            QMap<QString, QVariant> bindValues, QVariant &lastId)
 {
+    QSqlQuery* query = new QSqlQuery(DATABASE_CONNECTION_NAME);
+    query->prepare(queryString);
 
+    for(QMap<QString, QVariant>::iterator it = bindValues.begin(); it !=bindValues.end(); ++it)
+    {
+        query->bindValue(it.key(),it.value());
+    }
+
+    int result = query->exec();
+
+
+    if(result)
+    {
+        lastId = query->lastInsertId();
+        return AbstractQueryUtils::NoErrors;
+    }
+    else
+    {
+//        MyMessageBox::showError(tr("Error Executing Query"),
+//                                tr("Error while executing query [") + queryString + tr("] Error: ") + query->lastError().text().toLatin1());
+        qDebug() << "Error:" << query->lastError().text().toLatin1();
+        return AbstractQueryUtils::SQLError;
+    }
 }
 
 AbstractQueryUtils::QueryState TumorQueryUtils::executeDirectSql(QString queryString,
                                                                  QMap<QString, QVariant> bindValues, QVector<QVector<QVariant> > &results)
 {
 
+    QSqlQuery* query = new QSqlQuery(DATABASE_CONNECTION_NAME);
+    query->prepare(queryString);
+
+    for(QMap<QString, QVariant>::iterator it = bindValues.begin(); it !=bindValues.end(); ++it)
+    {
+        query->bindValue(it.key(),it.value());
+    }
+
+    int result = query->exec();
+
+
+
+    if(result)
+    {
+        while(query->next()){
+            QVector<QVariant> lst;
+            int index = 0;
+            QVariant v = query->value(index);
+            while(v.isValid())
+            {
+                lst << v;
+                v = query->value(++index);
+            }
+            results.append(lst);
+        }
+        return AbstractQueryUtils::NoErrors;
+    }
+    else
+    {
+        qDebug() << "Error:" << query->lastError().text().toLatin1();
+//        MyMessageBox::showError(tr("Error Executing Query"),
+//                                tr("Error while executing query [") + queryString + tr("] Error: ") + query->lastError().text().toLatin1());
+        return AbstractQueryUtils::SQLError;
+    }
 }
 
 TumorQueryUtils* TumorQueryUtils::instance()
@@ -45,18 +109,6 @@ TumorQueryUtils* TumorQueryUtils::instance()
     return TumorQueryUtils::internalPtr;
 }
 
-QVector<QVector<QVariant> > TumorQueryUtils::retrieveMasterKeys(qlonglong userId, QString databaseID)
-{
-    QMap<QString, QVariant> bindValues;
-    QVector<QVector<QVariant> > results;
-    bindValues[QLatin1String(":userid")] = userId;
-
-    TumorQueryUtils::executeDirectSql(QLatin1String("SELECT * from MasterKeys where userid=:userid"),
-                                                 bindValues,
-                                                 results,
-                                                 databaseID);
-    return results;
-}
 
 QVector<QVector<QVariant> > TumorQueryUtils::retrieveUserEntry(const QString &userName, QString databaseID)
 {
@@ -94,8 +146,7 @@ UserDetails TumorQueryUtils::retrieveUser(QString name, QString password)
         details.id = data.first().at(USERID_INDEX).toInt();
         QString aesFilling = data.first().at(AESFILLING_INDEX).toString();
         qDebug() << "Aes filling:" << aesFilling;
-        QVector<QVector<QVariant> > keys = retrieveMasterKeys(data.first().at(USERID_INDEX).toInt(),
-                                                              DATABASE_CONNECTION_NAME);
+        QVector<QVector<QVariant> > keys = retrieveMasterKeys(data.first().at(USERID_INDEX).toInt());
 
         foreach(QVector<QVariant> key, keys)
         {
@@ -203,63 +254,6 @@ bool TumorQueryUtils::closeConnection(QString databaseID)
     return true;
 }
 
-bool TumorQueryUtils::removeAllMasterKeys(int userid, QString databaseID)
-{
-    QMap<QString, QVariant> bindValues;
-    QVector<QVector<QVariant> > results;
-    bindValues[QLatin1String(":userid")] = userid;
-
-    return TumorQueryUtils::executeDirectSql(QLatin1String("DELETE from MasterKeys where userid=:userid"),
-                                                 bindValues,
-                                                 results,
-                                                 databaseID);
-}
-
-bool TumorQueryUtils::updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
-                                      QMap<QString,QString> userKeys, QString databaseID)
-{
-    removeAllMasterKeys(userId,databaseID);
-
-    QMap<QString, QString>::iterator it;
-    for(it=userKeys.begin(); it != userKeys.end(); ++it)
-    {
-        addMasterKey(it.key(), userId, userPassword, userAesFilling,
-                                 it.value());
-    }
-    return true;
-}
-
-
-qlonglong TumorQueryUtils::addMasterKey(QString name, qlonglong userid, QString password,
-                                        QString aesFilling,
-                                        QString databaseID, QString masterKey)
-{
-    if(masterKey.isEmpty())
-        masterKey = AbstractQueryUtils::generateRandomString(AESKEY_LENGTH);
-
-    qDebug() << "Helo";
-    QString encodedKey = AesUtils::encryptMasterKey(password, aesFilling, masterKey);
-
-    QString decoded = AesUtils::decryptMasterKey(password, aesFilling, encodedKey);
-
-    qDebug() << "End";
-    if(decoded.compare(masterKey) != 0)
-        qDebug() << "Wrong encryption. Expected: " << masterKey << " Got: " << decoded;
-
-    QMap<QString, QVariant> bindValues;
-    bindValues[QLatin1String(":keyName")] = name;
-    bindValues[QLatin1String(":userid")] = userid;
-    bindValues[QLatin1String(":encryptedKey")] = encodedKey;
-
-    QVector<QVector<QVariant> > results;
-    executeDirectSql(QLatin1String("INSERT into MasterKeys(keyName, userid, encryptedKey)"
-                                                               "VALUES(:keyName, :userid, :encryptedKey)"),
-                                                 bindValues,
-                                                 results,
-                                                 databaseID);
-
-    return 0;
-}
 
 bool TumorQueryUtils::executeDirectSql(QString queryString, QMap<QString,
                                   QVariant> bindValues, QVector<QVector<QVariant> >& results,

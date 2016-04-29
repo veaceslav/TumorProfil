@@ -31,7 +31,7 @@ public:
 
      QString decryptMasterKey(QString password, QString filling, QString masterHash);
 
-     QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId, QString databaseID);
+     //QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId, QString databaseID);
 
      QVector<QVector<QVariant> > retrieveUserEntry(const QString& userName, QString databaseID);
 
@@ -47,12 +47,6 @@ public:
 
      bool verifyPassword(const QString& password , const QVector<QVector<QVariant> >& result);
 
-     bool removeAllMasterKeys(int userid, QString databaseID);
-
-     bool updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
-                                          QMap<QString,QString> userKeys, QString databaseID);
-     qlonglong addMasterKey(QString name, qlonglong userid, QString password,
-                                  QString aesFilling,  QString databaseID,QString masterKey = QString());
 
 
 protected:
@@ -64,9 +58,10 @@ protected:
                                    QVariant> bindValues, QVariant& lastId);
      virtual QueryState executeDirectSql(QString queryString, QMap<QString,
                                          QVariant> bindValues, QVector<QVector<QVariant> >& results);
-signals:
 
-public slots:
+private:
+     class Private;
+     Private* const d;
 };
 
 #endif // QUERYUTILS_H
