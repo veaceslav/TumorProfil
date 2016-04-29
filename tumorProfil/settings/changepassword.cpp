@@ -134,10 +134,14 @@ bool ChangePassword::changeMySQLPassword()
 
     QString query = QString("SET PASSWORD = PASSWORD('%1')").arg(d->newPassword->text());
 
-    return TumorQueryUtils::instance()->executeDirectSql(query,
+    AbstractQueryUtils::QueryState state = TumorQueryUtils::instance()->executeDirectSql(query,
                                  bindValues,
                                  results,
                                  QString(CHANGE_PASSWORD_TUMORPROFIL));
+    if(state == AbstractQueryUtils::NoErrors)
+        return true;
+    else
+        return false;
 }
 
 bool ChangePassword::updateEncryptionKeys()

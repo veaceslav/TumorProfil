@@ -41,23 +41,17 @@ public:
 
      bool closeConnection(QString databaseID);
 
-     bool executeDirectSql(QString queryString, QMap<QString,
-                                 QVariant> bindValues, QVector<QVector<QVariant> >& results,
-                                 QString databaseID);
-
      bool verifyPassword(const QString& password , const QVector<QVector<QVariant> >& result);
 
-
-
+     virtual QueryState executeSql(QString queryString, QMap<QString,
+                                   QVariant> bindValues, QVariant& lastId, QString databaseID = QString());
+     virtual QueryState executeDirectSql(QString queryString, QMap<QString,
+                                         QVariant> bindValues, QVector<QVector<QVariant> >& results,
+                                         QString databaseID = QString());
 protected:
      explicit TumorQueryUtils();
 
      static QPointer<TumorQueryUtils> internalPtr;
-
-     virtual QueryState executeSql(QString queryString, QMap<QString,
-                                   QVariant> bindValues, QVariant& lastId);
-     virtual QueryState executeDirectSql(QString queryString, QMap<QString,
-                                         QVariant> bindValues, QVector<QVector<QVariant> >& results);
 
 private:
      class Private;

@@ -97,13 +97,14 @@ public:
     bool updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
                               QMap<QString, QString> userKeys);
 
+    virtual QueryState executeSql(QString queryString, QMap<QString,
+                                  QVariant> bindValues, QVariant& lastId, QString databaseID = QString()) = 0;
+
+    virtual QueryState executeDirectSql(QString queryString, QMap<QString,
+                                        QVariant> bindValues, QVector<QVector<QVariant> >& results,
+                                        QString databaseID = QString()) = 0;
 protected:
     explicit AbstractQueryUtils(QObject *parent = 0);
-
-    virtual QueryState executeSql(QString queryString, QMap<QString,
-                                  QVariant> bindValues, QVariant& lastId) = 0;
-    virtual QueryState executeDirectSql(QString queryString, QMap<QString,
-                                        QVariant> bindValues, QVector<QVector<QVariant> >& results) = 0;
 
 
 };

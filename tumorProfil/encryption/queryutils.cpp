@@ -24,19 +24,38 @@ QPointer<TumorQueryUtils> TumorQueryUtils::internalPtr = QPointer<TumorQueryUtil
 class TumorQueryUtils::Private
 {
 public:
+    Private()
+    {
+        connectionOpen = false;
+    }
     QString databaseName;
+    bool connectionOpen;
 };
 
 TumorQueryUtils::TumorQueryUtils():
     d(new Private())
 {
 
+    DatabaseParameters params;
+    params.readFromConfig();
+
+    if(!openConnection(params, QString(DATABASE_CONNECTION_NAME), TumorQueryUtils::TUMORUSER))
+    {
+        d->connectionOpen = false;
+    }
+    else
+    {
+        d->connectionOpen = true;
+    }
 }
 
 AbstractQueryUtils::QueryState TumorQueryUtils::executeSql(QString queryString,
-                                                           QMap<QString, QVariant> bindValues, QVariant &lastId)
+                                                           QMap<QString, QVariant> bindValues, QVariant &lastId, QString databaseID)
 {
-    QSqlQuery* query = new QSqlQuery(DATABASE_CONNECTION_NAME);
+    if(databaseID.isEmpty())
+        databaseID = DATABASE_CONNECTION_NAME;
+
+    QSqlQuery* query = new QSqlQuery(databaseID);
     query->prepare(queryString);
 
     for(QMap<QString, QVariant>::iterator it = bindValues.begin(); it !=bindValues.end(); ++it)
@@ -54,18 +73,23 @@ AbstractQueryUtils::QueryState TumorQueryUtils::executeSql(QString queryString,
     }
     else
     {
-//        MyMessageBox::showError(tr("Error Executing Query"),
-//                                tr("Error while executing query [") + queryString + tr("] Error: ") + query->lastError().text().toLatin1());
+        QMessageBox::critical(qApp->activeWindow(),tr("Error Executing Query"),
+                              tr("Error while executing query [") + queryString + tr("] Error: ")
+                              + query->lastError().text().toLatin1());
         qDebug() << "Error:" << query->lastError().text().toLatin1();
         return AbstractQueryUtils::SQLError;
     }
 }
 
 AbstractQueryUtils::QueryState TumorQueryUtils::executeDirectSql(QString queryString,
-                                                                 QMap<QString, QVariant> bindValues, QVector<QVector<QVariant> > &results)
+                                                                 QMap<QString, QVariant> bindValues,
+                                                                 QVector<QVector<QVariant> > &results, QString databaseID)
 {
 
-    QSqlQuery* query = new QSqlQuery(DATABASE_CONNECTION_NAME);
+    if(databaseID.isEmpty())
+        databaseID = DATABASE_CONNECTION_NAME;
+
+    QSqlQuery* query = new QSqlQuery(databaseID);
     query->prepare(queryString);
 
     for(QMap<QString, QVariant>::iterator it = bindValues.begin(); it !=bindValues.end(); ++it)
@@ -95,8 +119,10 @@ AbstractQueryUtils::QueryState TumorQueryUtils::executeDirectSql(QString querySt
     else
     {
         qDebug() << "Error:" << query->lastError().text().toLatin1();
-//        MyMessageBox::showError(tr("Error Executing Query"),
-//                                tr("Error while executing query [") + queryString + tr("] Error: ") + query->lastError().text().toLatin1());
+        QMessageBox::critical(qApp->activeWindow(),tr("Error Executing Query"),
+                              tr("Error while executing query [") + queryString + tr("] Error: ")
+                              + query->lastError().text().toLatin1()
+                              );
         return AbstractQueryUtils::SQLError;
     }
 }
@@ -127,10 +153,8 @@ UserDetails TumorQueryUtils::retrieveUser(QString name, QString password)
 {
 
     UserDetails details;
-    DatabaseParameters params;
-    params.readFromConfig();
 
-    if(!openConnection(params, QString(DATABASE_CONNECTION_NAME), TumorQueryUtils::TUMORUSER))
+    if(!d->connectionOpen)
     {
         return details;
     }
@@ -254,45 +278,4 @@ bool TumorQueryUtils::closeConnection(QString databaseID)
     return true;
 }
 
-
-bool TumorQueryUtils::executeDirectSql(QString queryString, QMap<QString,
-                                  QVariant> bindValues, QVector<QVector<QVariant> >& results,
-                                  QString databaseID)
-{
-
-    QSqlQuery* query = new QSqlQuery(QSqlDatabase::database(databaseID));
-    query->prepare(queryString);
-
-    for(QMap<QString, QVariant>::iterator it = bindValues.begin(); it !=bindValues.end(); ++it)
-    {
-        query->bindValue(it.key(),it.value());
-    }
-
-    int result = query->exec();
-
-
-
-    if(result)
-    {
-        while(query->next()){
-            QVector<QVariant> lst;
-            int index = 0;
-            QVariant v = query->value(index);
-            while(v.isValid())
-            {
-                lst << v;
-                v = query->value(++index);
-            }
-            results.append(lst);
-        }
-        return true;
-    }
-    else
-    {
-        qDebug() << "Error:" << query->lastError().text().toLatin1();
-        QMessageBox::critical(qApp->activeWindow(),tr("Error Executing Query"),
-                                tr("Error while executing query [") + queryString + tr("] Error: ") + query->lastError().text().toLatin1());
-        return false;
-    }
-}
 
