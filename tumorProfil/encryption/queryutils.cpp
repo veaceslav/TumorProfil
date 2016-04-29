@@ -39,13 +39,13 @@ TumorQueryUtils::TumorQueryUtils():
     DatabaseParameters params;
     params.readFromConfig();
 
-    if(!openConnection(params, QString(DATABASE_CONNECTION_NAME), TumorQueryUtils::TUMORUSER))
+    if(openConnection(params, QString(DATABASE_CONNECTION_NAME), TumorQueryUtils::TUMORUSER))
     {
-        d->connectionOpen = false;
+        d->connectionOpen = true;
     }
     else
     {
-        d->connectionOpen = true;
+        d->connectionOpen = false;
     }
 }
 
@@ -55,7 +55,7 @@ AbstractQueryUtils::QueryState TumorQueryUtils::executeSql(QString queryString,
     if(databaseID.isEmpty())
         databaseID = DATABASE_CONNECTION_NAME;
 
-    QSqlQuery* query = new QSqlQuery(databaseID);
+    QSqlQuery* query = new QSqlQuery(QSqlDatabase::database(databaseID));
     query->prepare(queryString);
 
     for(QMap<QString, QVariant>::iterator it = bindValues.begin(); it !=bindValues.end(); ++it)
@@ -69,6 +69,7 @@ AbstractQueryUtils::QueryState TumorQueryUtils::executeSql(QString queryString,
     if(result)
     {
         lastId = query->lastInsertId();
+        delete query;
         return AbstractQueryUtils::NoErrors;
     }
     else
@@ -77,6 +78,7 @@ AbstractQueryUtils::QueryState TumorQueryUtils::executeSql(QString queryString,
                               tr("Error while executing query [") + queryString + tr("] Error: ")
                               + query->lastError().text().toLatin1());
         qDebug() << "Error:" << query->lastError().text().toLatin1();
+        delete query;
         return AbstractQueryUtils::SQLError;
     }
 }
@@ -89,7 +91,7 @@ AbstractQueryUtils::QueryState TumorQueryUtils::executeDirectSql(QString querySt
     if(databaseID.isEmpty())
         databaseID = DATABASE_CONNECTION_NAME;
 
-    QSqlQuery* query = new QSqlQuery(databaseID);
+    QSqlQuery* query = new QSqlQuery(QSqlDatabase::database(databaseID));
     query->prepare(queryString);
 
     for(QMap<QString, QVariant>::iterator it = bindValues.begin(); it !=bindValues.end(); ++it)
@@ -159,6 +161,7 @@ UserDetails TumorQueryUtils::retrieveUser(QString name, QString password)
         return details;
     }
 
+
     QVector<QVector<QVariant> > data = retrieveUserEntry(name, QString(DATABASE_CONNECTION_NAME));
 
     if(data.isEmpty())
@@ -170,6 +173,7 @@ UserDetails TumorQueryUtils::retrieveUser(QString name, QString password)
         details.id = data.first().at(USERID_INDEX).toInt();
         QString aesFilling = data.first().at(AESFILLING_INDEX).toString();
         qDebug() << "Aes filling:" << aesFilling;
+        details.aesFilling = aesFilling;
         QVector<QVector<QVariant> > keys = retrieveMasterKeys(data.first().at(USERID_INDEX).toInt());
 
         foreach(QVector<QVariant> key, keys)

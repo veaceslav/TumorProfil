@@ -71,6 +71,7 @@ void ChangePassword::slotChangePassword()
     }
 
     changeMySQLPassword();
+    updateEncryptionKeys();
 
     TumorQueryUtils::instance()->closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
     TumorQueryUtils::instance()->closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
@@ -146,6 +147,14 @@ bool ChangePassword::changeMySQLPassword()
 
 bool ChangePassword::updateEncryptionKeys()
 {
-    UserDetails userInfo = TumorQueryUtils::instance()->retrieveUser(d->username->text(), d->oldPassword->text());
+    UserDetails userInfo = TumorQueryUtils::instance()->retrieveUser(d->username->text(),
+                                                                     d->oldPassword->text());
+
+
+    UserDetails newUserInfo = TumorQueryUtils::instance()->editUser(userInfo.userName, AbstractQueryUtils::USER,
+                                                                    d->newPassword->text(),userInfo.id);
+
+    return TumorQueryUtils::instance()->updateUserMasterKeys(userInfo.id,d->newPassword->text(),
+                                                             newUserInfo.aesFilling,userInfo.decryptionKeys);
 
 }
