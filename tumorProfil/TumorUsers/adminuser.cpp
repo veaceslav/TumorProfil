@@ -28,6 +28,9 @@ public:
     QMap<QString, MasterKey> masterKeys;
     QString aesFilling;
     bool    isLoggedIn;
+
+    QString userDatabaseName;
+    QString tumorProfilDatabaseName;
 };
 
 AdminUser* AdminUser::instance()

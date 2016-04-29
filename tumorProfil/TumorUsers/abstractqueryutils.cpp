@@ -12,6 +12,7 @@
 #define SALT_SIZE  10
 
 
+
 AbstractQueryUtils::AbstractQueryUtils(QObject *parent) : QObject(parent)
 {
 
@@ -110,6 +111,54 @@ bool AbstractQueryUtils::updateUserMasterKeys(int userId, QString userPassword, 
                                  it.value());
     }
 
+    return true;
+}
+
+bool AbstractQueryUtils::addMySqlUser(QString user, QString password, QString host)
+{
+    QMap<QString, QVariant> bindValues;
+    QVector<QVector<QVariant> > results;
+
+    QString query = QString("CREATE USER '%1'@'%2' IDENTIFIED BY '%3'").arg(user, host, password);
+    executeDirectSql(query,
+                     bindValues,
+                     results);
+    return true;
+}
+
+bool AbstractQueryUtils::deleteMySqlUser(QString user, QString host)
+{
+    QMap<QString, QVariant> bindValues;
+    QVector<QVector<QVariant> > results;
+
+    QString query = QString("DROP USER IF EXISTS'%1'@'%2'").arg(user, host);
+    executeDirectSql(query,
+                     bindValues,
+                     results);
+    return true;
+}
+
+bool AbstractQueryUtils::setMySqlPassword(QString user, QString password, QString host)
+{
+    QMap<QString, QVariant> bindValues;
+    QVector<QVector<QVariant> > results;
+
+    QString query = QString("SET PASSWORD FOR %1'@'%2' = PASSWORD('%3')").arg(user, host, password);
+    executeDirectSql(query,
+                     bindValues,
+                     results);
+    return true;
+}
+
+bool AbstractQueryUtils::grantMySqlPermissions(QString user, QString databaseName, QString userHost)
+{
+    QMap<QString, QVariant> bindValues;
+    QVector<QVector<QVariant> > results;
+
+    QString query = QString("GRANT ALL ON %1.* TO '%2'@'%3'").arg(databaseName, user, userHost);
+    executeDirectSql(query,
+                     bindValues,
+                     results);
     return true;
 }
 

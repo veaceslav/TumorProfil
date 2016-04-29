@@ -97,6 +97,14 @@ public:
     bool updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
                               QMap<QString, QString> userKeys);
 
+    bool addMySqlUser(QString user, QString password, QString host = QString("%"));
+
+    bool deleteMySqlUser(QString user, QString host = QString("%"));
+
+    bool setMySqlPassword(QString user, QString password, QString host = QString("%"));
+
+    bool grantMySqlPermissions(QString user,  QString databaseName, QString userHost = QString("%"));
+
     virtual QueryState executeSql(QString queryString, QMap<QString,
                                   QVariant> bindValues, QVariant& lastId, QString databaseID = QString()) = 0;
 
