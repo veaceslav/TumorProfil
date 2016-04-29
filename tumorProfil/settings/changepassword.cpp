@@ -70,8 +70,30 @@ void ChangePassword::slotChangePassword()
         return;
     }
 
-    changeMySQLPassword();
-    updateEncryptionKeys();
+
+    result = changeMySQLPassword();
+
+    if(!result)
+    {
+        setError(tr("Error: Could not change MySQL password.\n"
+                    "Contact the administrator"));
+    }
+
+    result = updateEncryptionKeys();
+
+    if(!result)
+    {
+        setError(tr("Error: Could not update Encryption Keys and Login Info.\n"
+                    "Contact the administrator"));
+    }
+    else
+    {
+        setMessage(tr("Password changed successfully"));
+        d->username->clear();
+        d->oldPassword->clear();
+        d->newPassword->clear();
+        d->newPassword2->clear();
+    }
 
     TumorQueryUtils::instance()->closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
     TumorQueryUtils::instance()->closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
@@ -101,10 +123,6 @@ void ChangePassword::setupUi()
 
     d->errorLabel = new QLabel();
 
-    QPalette palette = d->errorLabel->palette();
-    palette.setColor(d->errorLabel->backgroundRole(), Qt::red);
-    palette.setColor(d->errorLabel->foregroundRole(), Qt::red);
-    d->errorLabel->setPalette(palette);
     d->errorLabel->hide();
     d->errorLabel->setWordWrap(true);
 
@@ -124,6 +142,22 @@ void ChangePassword::setupUi()
 
 void ChangePassword::setError(QString message)
 {
+    QPalette palette = d->errorLabel->palette();
+    palette.setColor(d->errorLabel->backgroundRole(), Qt::red);
+    palette.setColor(d->errorLabel->foregroundRole(), Qt::red);
+    d->errorLabel->setPalette(palette);
+
+    d->errorLabel->setText(message);
+    d->errorLabel->show();
+}
+
+void ChangePassword::setMessage(QString message)
+{
+    QPalette palette = d->errorLabel->palette();
+    palette.setColor(d->errorLabel->backgroundRole(), Qt::blue);
+    palette.setColor(d->errorLabel->foregroundRole(), Qt::blue);
+    d->errorLabel->setPalette(palette);
+
     d->errorLabel->setText(message);
     d->errorLabel->show();
 }

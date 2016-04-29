@@ -19,6 +19,8 @@ private:
 
     void setError(QString message);
 
+    void setMessage(QString message);
+
     bool changeMySQLPassword();
 
     bool updateEncryptionKeys();
