@@ -7,17 +7,18 @@
 #include <QCryptographicHash>
 
 #include "aesutils.h"
-#include "databaseaccess.h"
 #include "time.h"
 
 #define SALT_SIZE  10
 
-QueryUtils::QueryUtils(QObject *parent) : QObject(parent)
+
+AbstractQueryUtils::AbstractQueryUtils(QObject *parent) : QObject(parent)
 {
 
 }
 
-UserDetails QueryUtils::addUser(QString name, QueryUtils::UserType userType, QString password)
+
+UserDetails AbstractQueryUtils::addUser(QString name, AbstractQueryUtils::UserType userType, QString password)
 {
    QMap<QString, QVariant> bindValues;
 
@@ -34,7 +35,7 @@ UserDetails QueryUtils::addUser(QString name, QueryUtils::UserType userType, QSt
 
    bindValues[QLatin1String(":name")] = name;
 
-   if(userType == QueryUtils::ADMIN)
+   if(userType == AbstractQueryUtils::ADMIN)
        bindValues[QLatin1String(":usergroup")] = "ADMIN";
    else
        bindValues[QLatin1String(":usergroup")] = "USER";
@@ -44,19 +45,19 @@ UserDetails QueryUtils::addUser(QString name, QueryUtils::UserType userType, QSt
    bindValues[QLatin1String(":aesPrivateKeyFilling")] = aesFilling;
 
    QVariant id;
-   DatabaseAccess::instance()->executeSql(QLatin1String("INSERT into Users(name, usergroup, passwordSalt,"
-                                                              " passwordHash, aesPrivateKeyFilling)"
-                                                              "VALUES(:name, :usergroup, :passwordSalt, :passwordHash,"
-                                                              ":aesPrivateKeyFilling)"),
-                                                bindValues,
-                                                id);
+   executeSql(QLatin1String("INSERT into Users(name, usergroup, passwordSalt,"
+                            " passwordHash, aesPrivateKeyFilling)"
+                            "VALUES(:name, :usergroup, :passwordSalt, :passwordHash,"
+                            ":aesPrivateKeyFilling)"),
+              bindValues,
+              id);
 
 
    qDebug() << "Id of inserted item: " << id;
    return UserDetails(id.toLongLong(),aesFilling);
 }
 
-UserDetails QueryUtils::editUser(QString name, QueryUtils::UserType userType, QString password, qlonglong userId)
+UserDetails AbstractQueryUtils::editUser(QString name, AbstractQueryUtils::UserType userType, QString password, qlonglong userId)
 {
     QMap<QString, QVariant> bindValues;
 
@@ -73,7 +74,7 @@ UserDetails QueryUtils::editUser(QString name, QueryUtils::UserType userType, QS
 
     bindValues[QLatin1String(":name")] = name;
 
-    if(userType == QueryUtils::ADMIN)
+    if(userType == AbstractQueryUtils::ADMIN)
         bindValues[QLatin1String(":usergroup")] = "ADMIN";
     else
         bindValues[QLatin1String(":usergroup")] = "USER";
@@ -84,12 +85,12 @@ UserDetails QueryUtils::editUser(QString name, QueryUtils::UserType userType, QS
     bindValues[QLatin1String(":userid")] = userId;
 
     QVariant id;
-    DatabaseAccess::instance()->executeSql(QLatin1String("UPDATE Users"
-                                                         " SET name= :name, usergroup= :usergroup, passwordSalt= :passwordSalt, "
-                                                         " passwordHash= :passwordHash, aesPrivateKeyFilling= :aesPrivateKeyFilling"
-                                                         " WHERE id = :userid"),
-                                                 bindValues,
-                                                 id);
+    executeSql(QLatin1String("UPDATE Users"
+                             " SET name= :name, usergroup= :usergroup, passwordSalt= :passwordSalt, "
+                             " passwordHash= :passwordHash, aesPrivateKeyFilling= :aesPrivateKeyFilling"
+                             " WHERE id = :userid"),
+               bindValues,
+               id);
 
 
     qDebug() << "Id of inserted item: " << userId;
@@ -97,20 +98,22 @@ UserDetails QueryUtils::editUser(QString name, QueryUtils::UserType userType, QS
     return UserDetails(userId,aesFilling);
 }
 
-bool QueryUtils::updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
+bool AbstractQueryUtils::updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
                                       QMap<QString,QString> userKeys)
 {
-    QueryUtils::removeAllMasterKeys(userId);
+    AbstractQueryUtils::removeAllMasterKeys(userId);
 
     QMap<QString, QString>::iterator it;
     for(it=userKeys.begin(); it != userKeys.end(); ++it)
     {
-        QueryUtils::addMasterKey(it.key(), userId, userPassword, userAesFilling,
+        AbstractQueryUtils::addMasterKey(it.key(), userId, userPassword, userAesFilling,
                                  it.value());
     }
+
+    return true;
 }
 
-QString QueryUtils::generateRandomString(int length)
+QString AbstractQueryUtils::generateRandomString(int length)
 {
     qsrand(time(NULL));
     QString base("0123456789ABCDEF");
@@ -124,7 +127,7 @@ QString QueryUtils::generateRandomString(int length)
 }
 
 
-qlonglong QueryUtils::addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling, QString masterKey)
+qlonglong AbstractQueryUtils::addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling, QString masterKey)
 {
 
     if(masterKey.isEmpty())
@@ -145,69 +148,69 @@ qlonglong QueryUtils::addMasterKey(QString name, qlonglong userid, QString passw
     bindValues[QLatin1String(":encryptedKey")] = encodedKey;
 
     QVariant id;
-    DatabaseAccess::instance()->executeSql(QLatin1String("INSERT into MasterKeys(keyName, userid, encryptedKey)"
-                                                               "VALUES(:keyName, :userid, :encryptedKey)"),
-                                                 bindValues,
-                                                 id);
+    executeSql(QLatin1String("INSERT into MasterKeys(keyName, userid, encryptedKey)"
+                             "VALUES(:keyName, :userid, :encryptedKey)"),
+               bindValues,
+               id);
 
     return id.toLongLong();
 }
 
-QVector<QVector<QVariant> > QueryUtils::retrieveMasterKeys(qlonglong userId)
+QVector<QVector<QVariant> > AbstractQueryUtils::retrieveMasterKeys(qlonglong userId)
 {
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
     bindValues[QLatin1String(":userid")] = userId;
 
-    DatabaseAccess::instance()->executeDirectSql(QLatin1String("SELECT * from MasterKeys where userid=:userid"),
-                                                 bindValues,
-                                                 results);
+    executeDirectSql(QLatin1String("SELECT * from MasterKeys where userid=:userid"),
+                     bindValues,
+                     results);
     return results;
 }
 
-bool QueryUtils::removeUser(int userId)
+bool AbstractQueryUtils::removeUser(int userId)
 {
     QMap<QString, QVariant> bindValues;
     QVariant id;
     bindValues[QLatin1String(":userid")] = userId;
 
-    DatabaseAccess::QueryStateEnum rez = DatabaseAccess::instance()->executeSql(QLatin1String("DELETE from Users where id=:userid"),
-                                                 bindValues,
-                                                 id);
+    AbstractQueryUtils::QueryState rez = executeSql(QLatin1String("DELETE from Users where id=:userid"),
+                                                    bindValues,
+                                                    id);
 
-    if(rez == DatabaseAccess::NoErrors)
+    if(rez == AbstractQueryUtils::NoErrors)
         return true;
     else
         return false;
 }
 
-bool QueryUtils::removeMasterKey(QString keyName)
+bool AbstractQueryUtils::removeMasterKey(QString keyName)
 {
     QMap<QString, QVariant> bindValues;
     QVariant id;
     bindValues[QLatin1String(":keyName")] = keyName;
 
-    DatabaseAccess::QueryStateEnum rez = DatabaseAccess::instance()->executeSql(QLatin1String("DELETE from MasterKeys where keyName=:keyName"),
+    AbstractQueryUtils::QueryState rez = executeSql(QLatin1String("DELETE from MasterKeys where keyName=:keyName"),
                                                  bindValues,
                                                  id);
 
-    if(rez == DatabaseAccess::NoErrors)
+    if(rez == AbstractQueryUtils::NoErrors)
         return true;
     else
         return false;
 }
 
-bool QueryUtils::removeAllMasterKeys(int userid)
+bool AbstractQueryUtils::removeAllMasterKeys(int userid)
 {
     QMap<QString, QVariant> bindValues;
     QVariant id;
     bindValues[QLatin1String(":userid")] = userid;
 
-    DatabaseAccess::QueryStateEnum rez = DatabaseAccess::instance()->executeSql(QLatin1String("DELETE from MasterKeys where userid=:userid"),
+    AbstractQueryUtils::QueryState rez = executeSql(QLatin1String("DELETE from MasterKeys where userid=:userid"),
                                                  bindValues,
                                                  id);
 
-    if(rez == DatabaseAccess::NoErrors)
+    if(rez == AbstractQueryUtils::NoErrors)
         return true;
     else
         return false;

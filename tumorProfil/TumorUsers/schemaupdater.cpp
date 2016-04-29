@@ -34,7 +34,7 @@
 
 #include "databaseconfigelement.h"
 #include "databaseaccess.h"
-#include "queryutils.h"
+#include "userqueryutils.h"
 #include "useradddialog.h"
 #include "tumoruserconstants.h"
 
@@ -265,7 +265,7 @@ bool SchemaUpdater::checkAndAddAdmin()
         UserData data = UserAddDialog::AddUser(true);
         if(data.userName.isEmpty() || data.password.isEmpty())
             return false;
-        QueryUtils::addUser(data.userName, QueryUtils::ADMIN, data.password);
+        UserQueryUtils::instance()->addUser(data.userName, AbstractQueryUtils::ADMIN, data.password);
     }
 
     return true;

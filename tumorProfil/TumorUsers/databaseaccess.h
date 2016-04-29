@@ -16,17 +16,17 @@ public:
         /**
          * No errors occurred while executing the query.
          */
-        NoErrors,
+        NoErrors = 0,
 
         /**
          * An SQLError has occurred while executing the query.
          */
-        SQLError,
+        SQLError = 1,
 
         /**
          * An connection error has occurred while executing the query.
          */
-        ConnectionError
+        ConnectionError = 2
     };
 
     static DatabaseAccess* instance();

@@ -21,7 +21,7 @@
 #include "databaseguioptions.h"
 #include "userwidget.h"
 #include "useradddialog.h"
-#include "queryutils.h"
+#include "userqueryutils.h"
 #include "adminuser.h"
 #include "mymessagebox.h"
 #include "masterkeystable.h"
@@ -147,7 +147,7 @@ bool MainWindow::slotAddUser()
     if(data.userName.isEmpty() || data.password.isEmpty())
         return false;
 
-    UserDetails user = QueryUtils::addUser(data.userName, QueryUtils::USER, data.password);
+    UserDetails user = UserQueryUtils::instance()->addUser(data.userName, AbstractQueryUtils::USER, data.password);
 
     if(user.id == -1)
         return false;
@@ -159,7 +159,7 @@ bool MainWindow::slotAddUser()
 
     foreach(QString keyName, data.keys)
     {
-        QueryUtils::addMasterKey(keyName, user.id, data.password, user.aesFilling,
+        UserQueryUtils::instance()->addMasterKey(keyName, user.id, data.password, user.aesFilling,
                                  AdminUser::instance()->masterKey(keyName));
     }
 
@@ -170,10 +170,10 @@ void MainWindow::slotAddEncryptionKey()
 {
     KeyInfo info = AddKeyWidget::addKey();
 
-    QueryUtils::addMasterKey(info.name,
-                             ADMIN_ID,
-                             AdminUser::instance()->adminPassword(),
-                             AdminUser::instance()->aesFilling());
+    UserQueryUtils::instance()->addMasterKey(info.name,
+                                    ADMIN_ID,
+                                    AdminUser::instance()->adminPassword(),
+                                    AdminUser::instance()->aesFilling());
 
     d->keysTables->populateTable();
 
@@ -190,7 +190,7 @@ void MainWindow::slotEditUser()
     UserData oldData;
     oldData.userName = userData.at(1).toString();
 
-    QVector<QVector<QVariant> > userKeys = QueryUtils::retrieveMasterKeys(userData.first().toInt());
+    QVector<QVector<QVariant> > userKeys = UserQueryUtils::instance()->retrieveMasterKeys(userData.first().toInt());
 
     foreach (QVector<QVariant> key, userKeys)
     {
@@ -202,7 +202,7 @@ void MainWindow::slotEditUser()
     if(data.userName.isEmpty() || data.password.isEmpty())
         return;
 
-    UserDetails user = QueryUtils::editUser(data.userName, QueryUtils::USER,
+    UserDetails user = UserQueryUtils::instance()->editUser(data.userName, AbstractQueryUtils::USER,
                                             data.password, userData.at(UserWidget::USERID_COLUMN).toInt());
 
     if(user.id == -1)
@@ -212,7 +212,7 @@ void MainWindow::slotEditUser()
         d->userWidget->populateTable();
     }
 
-    QueryUtils::removeAllMasterKeys(user.id);
+    UserQueryUtils::instance()->removeAllMasterKeys(user.id);
 
     QMap<QString, QString> userKeysUpdated;
 
@@ -221,7 +221,7 @@ void MainWindow::slotEditUser()
         userKeysUpdated.insert(keyName,AdminUser::instance()->masterKey(keyName));
     }
 
-    QueryUtils::updateUserMasterKeys(user.id,data.password,user.aesFilling,userKeysUpdated);
+    UserQueryUtils::instance()->updateUserMasterKeys(user.id,data.password,user.aesFilling,userKeysUpdated);
 
     if(user.id == ADMIN_ID)
     {
@@ -249,7 +249,7 @@ void MainWindow::slotDeleteUser()
         return;
     }
 
-    QueryUtils::removeUser(index);
+    UserQueryUtils::instance()->removeUser(index);
 
     d->userWidget->populateTable();
 }
@@ -266,7 +266,7 @@ void MainWindow::slotDeleteMasterKey()
     }
 
 
-    QueryUtils::removeMasterKey(keyName);
+    UserQueryUtils::instance()->removeMasterKey(keyName);
 
     d->keysTables->populateTable();
 }

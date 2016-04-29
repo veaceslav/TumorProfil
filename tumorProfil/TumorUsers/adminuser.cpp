@@ -10,7 +10,7 @@
 #include "useradddialog.h"
 #include "databaseaccess.h"
 #include "aesutils.h"
-#include "queryutils.h"
+#include "userqueryutils.h"
 
 #include "tumoruserconstants.h"
 
@@ -46,7 +46,7 @@ AdminUser::AdminUser() : d(new Private())
 void AdminUser::loadKeys()
 {
     d->masterKeys.clear();
-    QVector<QVector<QVariant> > result = QueryUtils::retrieveMasterKeys(ADMIN_ID);
+    QVector<QVector<QVariant> > result = UserQueryUtils::instance()->retrieveMasterKeys(ADMIN_ID);
 
     foreach (QVector<QVariant> key, result)
     {

@@ -1,8 +1,9 @@
 #ifndef QUERYUTILS_H
 #define QUERYUTILS_H
 #include <QObject>
-
 #include <QMap>
+#include <QPointer>
+#include <QVariant>
 
 
 /**
@@ -34,7 +35,7 @@ public:
     QString aesFilling;
 };
 
-class QueryUtils : public QObject
+class AbstractQueryUtils : public QObject
 {
     Q_OBJECT
 public:
@@ -43,32 +44,55 @@ public:
         USER = 1
     };
 
-    explicit QueryUtils(QObject *parent = 0);
+    enum QueryState
+    {
+        /**
+         * No errors occurred while executing the query.
+         */
+        NoErrors = 0,
 
-    static UserDetails addUser(QString name, UserType userType, QString password);
+        /**
+         * An SQLError has occurred while executing the query.
+         */
+        SQLError = 1,
+
+        /**
+         * An connection error has occurred while executing the query.
+         */
+        ConnectionError = 2
+    };
 
 
 
-    static QString generateRandomString(int length);
+    UserDetails addUser(QString name, UserType userType, QString password);
 
-    static qlonglong addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling, QString masterKey = QString());
 
-    static QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId);
+    QString generateRandomString(int length);
 
-    static bool removeUser(int userId);
+    qlonglong addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling, QString masterKey = QString());
 
-    static bool removeMasterKey(QString keyName);
+    QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId);
 
-    static bool removeAllMasterKeys(int userid);
+    bool removeUser(int userId);
 
-    static UserDetails editUser(QString name, UserType userType, QString password, qlonglong userId);
+    bool removeMasterKey(QString keyName);
 
-    static bool updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
-                                     QMap<QString, QString> userKeys);
+    bool removeAllMasterKeys(int userid);
 
-signals:
+    UserDetails editUser(QString name, UserType userType, QString password, qlonglong userId);
 
-public slots:
+    bool updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
+                              QMap<QString, QString> userKeys);
+
+protected:
+    explicit AbstractQueryUtils(QObject *parent = 0);
+
+    virtual QueryState executeSql(QString queryString, QMap<QString,
+                                  QVariant> bindValues, QVariant& lastId) = 0;
+    virtual QueryState executeDirectSql(QString queryString, QMap<QString,
+                                        QVariant> bindValues, QVector<QVector<QVariant> >& results) = 0;
+
+
 };
 
 #endif // QUERYUTILS_H

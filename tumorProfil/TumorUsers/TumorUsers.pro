@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     adminuser.cpp \
     mymessagebox.cpp \
     masterkeystable.cpp \
-    addkeywidget.cpp
+    addkeywidget.cpp \
+    userqueryutils.cpp
 
 HEADERS  += mainwindow.h \
     databaseconfigelement.h \
@@ -42,7 +43,8 @@ HEADERS  += mainwindow.h \
     mymessagebox.h \
     masterkeystable.h \
     addkeywidget.h \
-    tumoruserconstants.h
+    tumoruserconstants.h \
+    userqueryutils.h
 
 FORMS    +=
 
