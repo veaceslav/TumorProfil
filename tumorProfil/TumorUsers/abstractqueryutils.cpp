@@ -1,4 +1,4 @@
-#include "queryutils.h"
+#include "abstractqueryutils.h"
 
 #include <QTime>
 #include <QMap>

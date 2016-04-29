@@ -48,7 +48,7 @@ void ChangePassword::slotChangePassword()
     params.password = d->oldPassword->text();
 
 
-    bool result = TumorQueryUtils::openConnection(params, CHANGE_PASSWORD_TUMORPROFIL,
+    bool result = TumorQueryUtils::instance()->openConnection(params, CHANGE_PASSWORD_TUMORPROFIL,
                                              TumorQueryUtils::TUMORPROFIL);
 
     if(!result)
@@ -58,7 +58,7 @@ void ChangePassword::slotChangePassword()
         return;
     }
 
-    result = TumorQueryUtils::openConnection(params, CHANGE_PASSWORD_TUMORUSERS,
+    result = TumorQueryUtils::instance()->openConnection(params, CHANGE_PASSWORD_TUMORUSERS,
                                         TumorQueryUtils::TUMORUSER);
 
     if(!result)
@@ -66,14 +66,14 @@ void ChangePassword::slotChangePassword()
         setError(tr("Error: Could not open database connection to Tumorusers.\n"
                     "Check database connection parameters"));
 
-        TumorQueryUtils::closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
+        TumorQueryUtils::instance()->closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
         return;
     }
 
     changeMySQLPassword();
 
-    TumorQueryUtils::closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
-    TumorQueryUtils::closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
+    TumorQueryUtils::instance()->closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
+    TumorQueryUtils::instance()->closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
 }
 
 void ChangePassword::setupUi()
@@ -134,7 +134,7 @@ bool ChangePassword::changeMySQLPassword()
 
     QString query = QString("SET PASSWORD = PASSWORD('%1')").arg(d->newPassword->text());
 
-    return TumorQueryUtils::executeDirectSql(query,
+    return TumorQueryUtils::instance()->executeDirectSql(query,
                                  bindValues,
                                  results,
                                  QString(CHANGE_PASSWORD_TUMORPROFIL));
@@ -142,7 +142,6 @@ bool ChangePassword::changeMySQLPassword()
 
 bool ChangePassword::updateEncryptionKeys()
 {
-    UserDetails userInfo = TumorQueryUtils::retrieveUser(d->username->text(), d->oldPassword->text());
-
+    UserDetails userInfo = TumorQueryUtils::instance()->retrieveUser(d->username->text(), d->oldPassword->text());
 
 }

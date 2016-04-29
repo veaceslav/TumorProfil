@@ -18,10 +18,31 @@
 
 #define DATABASE_CONNECTION_NAME "TumorUserConnection"
 
+QPointer<TumorQueryUtils> TumorQueryUtils::internalPtr = QPointer<TumorQueryUtils>();
 
-TumorQueryUtils::TumorQueryUtils(QObject *parent) : QObject(parent)
+TumorQueryUtils::TumorQueryUtils()
 {
 
+}
+
+AbstractQueryUtils::QueryState TumorQueryUtils::executeSql(QString queryString,
+                                                           QMap<QString, QVariant> bindValues, QVariant &lastId)
+{
+
+}
+
+AbstractQueryUtils::QueryState TumorQueryUtils::executeDirectSql(QString queryString,
+                                                                 QMap<QString, QVariant> bindValues, QVector<QVector<QVariant> > &results)
+{
+
+}
+
+TumorQueryUtils* TumorQueryUtils::instance()
+{
+    if(TumorQueryUtils::internalPtr.isNull())
+        TumorQueryUtils::internalPtr = new TumorQueryUtils();
+
+    return TumorQueryUtils::internalPtr;
 }
 
 QVector<QVector<QVariant> > TumorQueryUtils::retrieveMasterKeys(qlonglong userId, QString databaseID)
@@ -208,24 +229,13 @@ bool TumorQueryUtils::updateUserMasterKeys(int userId, QString userPassword, QSt
     return true;
 }
 
-QString generateRandomString(int length)
-{
-    qsrand(time(NULL));
-    QString base("0123456789ABCDEF");
-    QString str;
-    for(int i=0;i<length;i++){
-        str += base.at(qrand() % base.length());
-    }
 
-    return str;
-
-}
 qlonglong TumorQueryUtils::addMasterKey(QString name, qlonglong userid, QString password,
                                         QString aesFilling,
                                         QString databaseID, QString masterKey)
 {
     if(masterKey.isEmpty())
-        masterKey = generateRandomString(AESKEY_LENGTH);
+        masterKey = AbstractQueryUtils::generateRandomString(AESKEY_LENGTH);
 
     qDebug() << "Helo";
     QString encodedKey = AesUtils::encryptMasterKey(password, aesFilling, masterKey);

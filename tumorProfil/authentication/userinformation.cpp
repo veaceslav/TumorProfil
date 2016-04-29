@@ -157,7 +157,7 @@ bool UserInformation::hasKey(QString keyName)
 
 bool UserInformation::loadKeys()
 {
-    UserDetails details = TumorQueryUtils::retrieveUser(d->userName, d->password);
+    UserDetails details = TumorQueryUtils::instance()->retrieveUser(d->userName, d->password);
     if(details.id == -1)
         return false;
     d->decryptionKey = details.decryptionKeys;

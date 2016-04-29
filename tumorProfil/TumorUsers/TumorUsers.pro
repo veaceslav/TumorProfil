@@ -20,14 +20,14 @@ SOURCES += main.cpp\
     schemaupdater.cpp \
     databaseaccess.cpp \
     databaseparameters.cpp \
-    queryutils.cpp \
     aesutils.cpp \
     useradddialog.cpp \
     adminuser.cpp \
     mymessagebox.cpp \
     masterkeystable.cpp \
     addkeywidget.cpp \
-    userqueryutils.cpp
+    userqueryutils.cpp \
+    abstractqueryutils.cpp
 
 HEADERS  += mainwindow.h \
     databaseconfigelement.h \
@@ -36,7 +36,6 @@ HEADERS  += mainwindow.h \
     schemaupdater.h \
     databaseaccess.h \
     databaseparameters.h \
-    queryutils.h \
     aesutils.h \
     useradddialog.h \
     adminuser.h \
@@ -44,7 +43,8 @@ HEADERS  += mainwindow.h \
     masterkeystable.h \
     addkeywidget.h \
     tumoruserconstants.h \
-    userqueryutils.h
+    userqueryutils.h \
+    abstractqueryutils.h
 
 FORMS    +=
 

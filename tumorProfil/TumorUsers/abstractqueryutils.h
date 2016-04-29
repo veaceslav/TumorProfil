@@ -1,5 +1,5 @@
-#ifndef QUERYUTILS_H
-#define QUERYUTILS_H
+#ifndef ABSTRACTQUERYUTILS_H
+#define ABSTRACTQUERYUTILS_H
 #include <QObject>
 #include <QMap>
 #include <QPointer>
@@ -29,12 +29,25 @@ public:
     {
         this->id = copy.id;
         this->aesFilling = copy.aesFilling;
+        this->userName = copy.userName;
+        this->decryptionKeys = copy.decryptionKeys;
     }
 
     qlonglong id;
     QString aesFilling;
+    QString userName;
+    QMap<QString, QString> decryptionKeys;
+
 };
 
+
+/**
+ * @brief The AbstractQueryUtils class provides implementation for addding, removing editing users and master keys
+ *        The class is abstract because it is used in two different applications:
+ *          - TumorUsers - for management
+ *          - TumorProfil - to change user password
+ *        Each program should implement the executeSql() and executeDirectSql() to match their database backends implementation
+ */
 class AbstractQueryUtils : public QObject
 {
     Q_OBJECT

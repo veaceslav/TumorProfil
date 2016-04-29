@@ -1,7 +1,7 @@
 #ifndef USERQUERYUTILS_H
 #define USERQUERYUTILS_H
 
-#include "queryutils.h"
+#include "abstractqueryutils.h"
 
 #include <QPointer>
 
