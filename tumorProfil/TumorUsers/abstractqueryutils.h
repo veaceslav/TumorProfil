@@ -86,7 +86,7 @@ public:
 
     QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId);
 
-    bool removeUser(int userId);
+    bool removeUser(int userId, QString userName);
 
     bool removeMasterKey(QString keyName);
 

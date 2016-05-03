@@ -249,7 +249,8 @@ void MainWindow::slotDeleteUser()
         return;
     }
 
-    UserQueryUtils::instance()->removeUser(index);
+    QList<QVariant> data = d->userWidget->selectedRowData();
+    UserQueryUtils::instance()->removeUser(index,data.at(1).toString());
 
     d->userWidget->populateTable();
 }

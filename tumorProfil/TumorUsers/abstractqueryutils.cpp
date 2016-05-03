@@ -55,6 +55,17 @@ UserDetails AbstractQueryUtils::addUser(QString name, AbstractQueryUtils::UserTy
 
 
    qDebug() << "Id of inserted item: " << id;
+
+    // According to MySql documentation, we add a user with wildcard "%", but we also need to add the same user
+    // with localhost
+   addMySqlUser(name,password);
+   addMySqlUser(name,password, QLatin1String("localhost"));
+
+   grantMySqlPermissions(name, QLatin1String("tumorprofil"));
+   grantMySqlPermissions(name, QLatin1String("tumorprofil"), QLatin1String("localhost"));
+
+   grantMySqlPermissions(name, QLatin1String("tumorusers") );
+   grantMySqlPermissions(name, QLatin1String("tumorusers"), QLatin1String("localhost"));
    return UserDetails(id.toLongLong(),aesFilling);
 }
 
@@ -94,6 +105,7 @@ UserDetails AbstractQueryUtils::editUser(QString name, AbstractQueryUtils::UserT
                id);
 
 
+    setMySqlPassword(name, password);
     qDebug() << "Id of inserted item: " << userId;
 
     return UserDetails(userId,aesFilling);
@@ -131,10 +143,11 @@ bool AbstractQueryUtils::deleteMySqlUser(QString user, QString host)
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
 
-    QString query = QString("DROP USER IF EXISTS'%1'@'%2'").arg(user, host);
+    QString query = QString("DROP USER IF EXISTS '%1'@'%2'").arg(user, host);
     executeDirectSql(query,
                      bindValues,
                      results);
+
     return true;
 }
 
@@ -217,7 +230,7 @@ QVector<QVector<QVariant> > AbstractQueryUtils::retrieveMasterKeys(qlonglong use
     return results;
 }
 
-bool AbstractQueryUtils::removeUser(int userId)
+bool AbstractQueryUtils::removeUser(int userId, QString userName)
 {
     QMap<QString, QVariant> bindValues;
     QVariant id;
@@ -227,6 +240,8 @@ bool AbstractQueryUtils::removeUser(int userId)
                                                     bindValues,
                                                     id);
 
+    deleteMySqlUser(userName);
+    deleteMySqlUser(userName,QLatin1String("localhost"));
     if(rez == AbstractQueryUtils::NoErrors)
         return true;
     else
