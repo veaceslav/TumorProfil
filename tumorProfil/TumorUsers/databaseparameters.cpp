@@ -56,7 +56,7 @@ DatabaseParameters::DatabaseParameters(const QString& type,
     : databaseType(type), databaseName(databaseName),
       connectOptions(connectOptions), hostName(hostName),
       port(port), userName(userName),
-      password(password), databaseNameThumbnails(databaseNameThumbnails)
+      password(password), databaseNameUsers(databaseNameThumbnails)
 {
 }
 
@@ -66,7 +66,7 @@ DatabaseParameters::DatabaseParameters(const QUrl& url)
     QUrlQuery urlQuery(url.query());
     databaseType   = urlQuery.queryItemValue("databaseType");
     databaseName   = urlQuery.queryItemValue("databaseName");
-    databaseNameThumbnails   = urlQuery.queryItemValue("databaseNameThumbnails");
+    databaseNameUsers   = urlQuery.queryItemValue("databaseNameThumbnails");
     connectOptions = urlQuery.queryItemValue("connectOptions");
     hostName       = urlQuery.queryItemValue("hostName");
     QString queryPort = urlQuery.queryItemValue("port");
@@ -84,7 +84,7 @@ bool DatabaseParameters::operator==(const DatabaseParameters& other) const
 {
     return databaseType   == other.databaseType &&
            databaseName   == other.databaseName &&
-           databaseNameThumbnails == other.databaseNameThumbnails &&
+           databaseNameUsers == other.databaseNameUsers &&
            connectOptions == other.connectOptions &&
            hostName       == other.hostName &&
            port           == other.port &&
@@ -245,7 +245,7 @@ void DatabaseParameters::setThumbsDatabasePath(const QString& folderOrFileOrName
     }
     else
     {
-        databaseNameThumbnails = folderOrFileOrName;
+        databaseNameUsers = folderOrFileOrName;
     }
 }
 
@@ -290,7 +290,7 @@ QString DatabaseParameters::getUsersDatabaseNameOrDir() const
         return sqliteUserDatabaseName;
     }
 
-    return databaseNameThumbnails;
+    return databaseNameUsers;
 }
 
 QString DatabaseParameters::databaseDirectorySQLite(const QString& path)
@@ -326,6 +326,7 @@ DatabaseParameters DatabaseParameters::defaultParameters(const QString databaseT
 
     parameters.databaseType     = databaseType;
     parameters.databaseName     = config.databaseName;
+    parameters.databaseNameUsers = config.userDatabaseName;
     parameters.hostName         = config.hostName;
     parameters.userName         = config.userName;
     parameters.password         = config.password;
@@ -339,7 +340,7 @@ DatabaseParameters DatabaseParameters::defaultParameters(const QString databaseT
 DatabaseParameters DatabaseParameters::thumbnailParameters() const
 {
     DatabaseParameters params = *this;
-    params.databaseName = databaseNameThumbnails;
+    params.databaseName = databaseNameUsers;
     return params;
 }
 
@@ -411,7 +412,7 @@ QDebug operator<<(QDebug dbg, const DatabaseParameters& p)
     dbg.nospace() << "Name "
                   << p.databaseName << " ";
     dbg.nospace() << "(Thumbnails Name "
-                  << p.databaseNameThumbnails << "); ";
+                  << p.databaseNameUsers << "); ";
 
     if (!p.connectOptions.isEmpty())
         dbg.nospace() << "ConnectOptions: "

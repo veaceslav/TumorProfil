@@ -61,11 +61,6 @@ UserDetails AbstractQueryUtils::addUser(QString name, AbstractQueryUtils::UserTy
    addMySqlUser(name,password);
    addMySqlUser(name,password, QLatin1String("localhost"));
 
-   grantMySqlPermissions(name, QLatin1String("tumorprofil"));
-   grantMySqlPermissions(name, QLatin1String("tumorprofil"), QLatin1String("localhost"));
-
-   grantMySqlPermissions(name, QLatin1String("tumorusers") );
-   grantMySqlPermissions(name, QLatin1String("tumorusers"), QLatin1String("localhost"));
    return UserDetails(id.toLongLong(),aesFilling);
 }
 

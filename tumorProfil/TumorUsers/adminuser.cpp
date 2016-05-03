@@ -104,6 +104,9 @@ bool AdminUser::logIn()
             d->isLoggedIn = true;
             d->password = data.password;
             d->aesFilling = results.first().at(AdminUser::AES_FILLING).toString();
+            DatabaseParameters params = DatabaseAccess::instance()->databaseParams();
+            d->tumorProfilDatabaseName = params.databaseName;
+            d->userDatabaseName = params.databaseNameUsers;
             loadKeys();
             return true;
         }
@@ -137,4 +140,14 @@ QString AdminUser::adminPassword()
 QList<QString> AdminUser::masterKeyNames()
 {
     return d->masterKeys.keys();
+}
+
+QString AdminUser::userDatabaseName()
+{
+    return d->userDatabaseName;
+}
+
+QString AdminUser::tumorProfilDatabaseName()
+{
+    return d->tumorProfilDatabaseName;
 }

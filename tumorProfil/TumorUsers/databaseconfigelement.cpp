@@ -97,6 +97,15 @@ DatabaseConfigElement DatabaseConfigElementLoader::readDatabase(QDomElement& dat
 
     configElement.databaseName = element.text();
 
+    element =  databaseElement.namedItem("userDatabaseName").toElement();
+
+    if (element.isNull())
+    {
+        qDebug() << "Missing element <userDatabaseName>.";
+    }
+
+    configElement.userDatabaseName = element.text();
+
     element =  databaseElement.namedItem("userName").toElement();
 
     if (element.isNull())

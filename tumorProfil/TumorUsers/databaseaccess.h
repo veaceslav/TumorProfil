@@ -46,6 +46,8 @@ public:
     QueryStateEnum executeDirectSql(QString queryString, QMap<QString,
                                     QVariant> bindValues, QVector<QVector<QVariant> > &results);
 
+    DatabaseParameters databaseParams();
+
 protected:
     DatabaseAccess();
     static QPointer<DatabaseAccess> internalPtr;

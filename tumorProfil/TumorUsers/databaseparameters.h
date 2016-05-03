@@ -53,7 +53,7 @@ public:
                        int   port = -1,
                        const QString& userName = QString(),
                        const QString& password = QString(),
-                       const QString& databaseNameThumbnails = QString());
+                       const QString& databaseNameUsers = QString());
 
     DatabaseParameters(const QUrl& url);
     DatabaseParameters();
@@ -67,7 +67,7 @@ public:
     QString userName;
     QString password;
 
-    QString databaseNameThumbnails;
+    QString databaseNameUsers;
 
     // SQLITE parameters
     QString sqliteUserDatabaseName;

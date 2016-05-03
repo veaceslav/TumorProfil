@@ -66,6 +66,7 @@ public:
     QString                       port;
     QString                       connectOptions;
     QString                       databaseName;
+    QString                       userDatabaseName;
     QString                       userName;
     QString                       password;
     QString                       dbServerCmd;

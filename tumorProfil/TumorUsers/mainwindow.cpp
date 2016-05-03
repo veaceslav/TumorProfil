@@ -149,6 +149,16 @@ bool MainWindow::slotAddUser()
 
     UserDetails user = UserQueryUtils::instance()->addUser(data.userName, AbstractQueryUtils::USER, data.password);
 
+    UserQueryUtils::instance()->grantMySqlPermissions(data.userName,
+                                                      AdminUser::instance()->tumorProfilDatabaseName());
+    UserQueryUtils::instance()->grantMySqlPermissions(data.userName,
+                                                      AdminUser::instance()->tumorProfilDatabaseName(),
+                                                      QLatin1String("localhost"));
+
+    UserQueryUtils::instance()->grantMySqlPermissions(data.userName, AdminUser::instance()->userDatabaseName());
+    UserQueryUtils::instance()->grantMySqlPermissions(data.userName,
+                                                      AdminUser::instance()->userDatabaseName(),
+                                                      QLatin1String("localhost"));
     if(user.id == -1)
         return false;
     else

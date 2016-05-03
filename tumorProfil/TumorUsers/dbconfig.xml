@@ -106,9 +106,10 @@
 
     <database name="QMYSQL">
         <hostName>127.0.0.1</hostName>
-        <databaseName>tumorusers</databaseName>
-        <userName>tumoradmin</userName>
-        <password>2222</password>
+        <databaseName>tumorprofil</databaseName>
+        <userDatabaseName>tumorusers</userDatabaseName>
+        <userName>root</userName>
+        <password></password>
         <port>3306</port>
         <connectoptions>ConnectOptions</connectoptions>
         <dbservercmd></dbservercmd>

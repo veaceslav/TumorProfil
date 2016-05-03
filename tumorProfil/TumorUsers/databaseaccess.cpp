@@ -25,6 +25,7 @@ public:
         isActive = false;
     }
     DatabaseConfigElement conf;
+    DatabaseParameters params;
     QSqlDatabase database;
     bool isActive;
 };
@@ -65,7 +66,7 @@ bool DatabaseAccess::openDb(DatabaseParameters params)
 
         qApp->restoreOverrideCursor();
 
-        d->database.setDatabaseName(params.databaseName);
+        d->database.setDatabaseName(params.databaseNameUsers);
 
         bool result = d->database.open();
 
@@ -100,6 +101,10 @@ bool DatabaseAccess::openDb(DatabaseParameters params)
             d->database.close();
             QSqlDatabase::removeDatabase(databaseID);
         }
+    }
+    if(d->isActive)
+    {
+        d->params = params;
     }
     return d->isActive;
 }
@@ -289,6 +294,11 @@ DatabaseAccess::QueryStateEnum DatabaseAccess::executeDirectSql(QString queryStr
                                 tr("Error while executing query [") + queryString + tr("] Error: ") + query->lastError().text().toLatin1());
         return DatabaseAccess::SQLError;
     }
+}
+
+DatabaseParameters DatabaseAccess::databaseParams()
+{
+    return d->params;
 }
 
 DatabaseAccess::DatabaseAccess()

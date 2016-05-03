@@ -37,7 +37,7 @@ public:
     QString        originalDbPath;
     QString        originalDbType;
 
-    QLineEdit*     adminPassword;
+    QLineEdit*     tumorSchema;
     QLineEdit*     databaseNameUsers;
     QLineEdit*     hostName;
     QLineEdit*     connectionOptions;
@@ -96,13 +96,14 @@ void DatabaseGuiOptions::slotCheckDatabaseConnection()
 
     DatabaseParameters params;
 
-    params.databaseType = d->databaseType->currentData().toString();
-    params.databaseName = d->databaseNameUsers->text();
-    params.hostName = d->hostName->text();
-    params.port     = d->hostPort->value();
-    params.userName = d->userName->text();
-    params.password = d->password->text();
-    params.connectOptions = d->connectionOptions->text();
+    params.databaseType         = d->databaseType->currentData().toString();
+    params.databaseNameUsers    = d->databaseNameUsers->text();
+    params.databaseName         = d->tumorSchema->text();
+    params.hostName             = d->hostName->text();
+    params.port                 = d->hostPort->value();
+    params.userName             = d->userName->text();
+    params.password             = d->password->text();
+    params.connectOptions       = d->connectionOptions->text();
 
     if(!params.isValid())
     {
@@ -145,8 +146,8 @@ void DatabaseGuiOptions::setupUi()
     QLabel* const databaseTypeLabel     = new QLabel(tr("Type"));
     d->databaseType                     = new QComboBox();
 
-    QLabel* const adminPasswordLabel     = new QLabel(tr("Admin Password"));
-    d->adminPassword                     = new QLineEdit();
+    QLabel* const tumorSchemaLabel     = new QLabel(tr("TumorProfil<br>Schema Name"));
+    d->tumorSchema                     = new QLineEdit();
     QLabel* const databaseNameUsersLabel= new QLabel(tr("Username<br>Schema Name"));
     d->databaseNameUsers                = new QLineEdit();
     QLabel* const hostNameLabel         = new QLabel(tr("Host Name"));
@@ -175,7 +176,7 @@ void DatabaseGuiOptions::setupUi()
 
     expertSettinglayout->addRow(hostNameLabel, d->hostName);
     expertSettinglayout->addRow(hostPortLabel, d->hostPort);
-    expertSettinglayout->addRow(adminPasswordLabel, d->adminPassword);
+    expertSettinglayout->addRow(tumorSchemaLabel, d->tumorSchema);
     expertSettinglayout->addRow(databaseNameUsersLabel, d->databaseNameUsers);
     expertSettinglayout->addRow(userNameLabel, d->userName);
     expertSettinglayout->addRow(passwordLabel, d->password);
@@ -187,8 +188,9 @@ void DatabaseGuiOptions::setupUi()
     vlay->addWidget(d->databaseType);
     vlay->addLayout(pathLayout);
     vlay->addWidget(d->expertSettings);
-//    vlay->setSpacing(0);
-//    vlay->setMargin(QApplication::style()->pixelMetric(QStyle::PM_DefaultLayoutSpacing));
+    vlay->addWidget(checkDatabaseConnectionButton);
+    vlay->setSpacing(0);
+    vlay->setMargin(QApplication::style()->pixelMetric(QStyle::PM_DefaultLayoutSpacing));
     dbPathBox->setLayout(vlay);
 
     // --------------------------------------------------------
@@ -232,7 +234,8 @@ void DatabaseGuiOptions::setupParameters()
 {
     d->conf = d->conf.defaultParameters(QLatin1String("QMYSQL"));
 
-    d->databaseNameUsers->setText(d->conf.databaseName);
+    d->databaseNameUsers->setText(d->conf.databaseNameUsers);
+    d->tumorSchema->setText(d->conf.databaseName);
     d->hostName->setText(d->conf.hostName);
     d->hostPort->setValue(d->conf.port);
     d->userName->setText(d->conf.userName);

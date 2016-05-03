@@ -57,6 +57,9 @@ public:
     QString aesFilling();
     QString adminPassword();
     QList<QString> masterKeyNames();
+
+    QString userDatabaseName();
+    QString tumorProfilDatabaseName();
     void loadKeys();
 
 protected:
