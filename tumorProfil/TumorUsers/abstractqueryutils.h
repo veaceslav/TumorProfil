@@ -105,12 +105,16 @@ public:
 
     bool grantMySqlPermissions(QString user,  QString databaseName, QString userHost = QString("%"));
 
+    QVector<QString> getTumorProfilTables(QString tumorProfilDbName);
+
     virtual QueryState executeSql(QString queryString, QMap<QString,
                                   QVariant> bindValues, QVariant& lastId, QString databaseID = QString()) = 0;
 
     virtual QueryState executeDirectSql(QString queryString, QMap<QString,
                                         QVariant> bindValues, QVector<QVector<QVariant> >& results,
                                         QString databaseID = QString()) = 0;
+
+
 protected:
     explicit AbstractQueryUtils(QObject *parent = 0);
 

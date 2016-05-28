@@ -3,6 +3,7 @@
 
 #include <QDialog>
 
+class QVBoxLayout;
 class UserData{
 public:
     QString userName;
@@ -30,6 +31,7 @@ private:
 
     void setupUi(UserData& data, bool isAdmin, bool login);
     void populateKeyList(UserData& data);
+    QVBoxLayout* makePermissionLayout();
     class Private;
     Private* d;
 };

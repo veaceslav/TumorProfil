@@ -6,6 +6,11 @@
 #include <QGridLayout>
 #include <QListWidget>
 #include <QDebug>
+#include <QRadioButton>
+#include <QButtonGroup>
+
+#include "userqueryutils.h"
+
 
 #include "adminuser.h"
 
@@ -23,7 +28,9 @@ public:
     QLabel*         errMsg;
     QLabel*         mainLabel;
     QListWidget*    keyList;
+    QMap<QString, QButtonGroup*> permissions;
     bool            login;
+
 };
 
 UserAddDialog::UserAddDialog(UserData &data, bool isAdmin, bool login) : QDialog(), d(new Private)
@@ -178,6 +185,7 @@ void UserAddDialog::setupUi(UserData &data, bool isAdmin, bool login)
     gLayout->addWidget(d->username, 2, 3, 1, 2);
     gLayout->addWidget(passwordLabel, 3, 1, 1, 2);
     gLayout->addWidget(d->password, 3, 3, 1, 2);
+
     if(!login)
     {
         gLayout->addWidget(password2Label, 4, 1, 1, 2);
@@ -196,14 +204,53 @@ void UserAddDialog::setupUi(UserData &data, bool isAdmin, bool login)
     // List widget with keys
     d->keyList = new QListWidget();
 
+
     hbx->addLayout(gLayout);
+
     if(!login && !isAdmin)
     {
         hbx->addWidget(d->keyList);
     }
 
     vbx->addLayout(hbx);
+    if(!login && !isAdmin)
+    {
+        vbx->addLayout(makePermissionLayout());
+    }
+
     vbx->addWidget(d->buttons);
+}
+
+
+QVBoxLayout* UserAddDialog::makePermissionLayout(){
+    QVBoxLayout* lay = new QVBoxLayout();
+
+    QVector<QString> tableNames = UserQueryUtils::instance()->getTumorProfilTables(
+                                    AdminUser::instance()->tumorProfilDatabaseName());
+
+    for(QString tableName : tableNames)
+    {
+        QHBoxLayout* tmpLay = new QHBoxLayout();
+        tmpLay->addWidget(new QLabel(tableName));
+        QRadioButton* none = new QRadioButton("None");
+        QRadioButton* read = new QRadioButton("Read");
+        QRadioButton* readWrite = new QRadioButton("Read+Write");
+        readWrite->setChecked(true);
+        QButtonGroup* buttonGroup = new QButtonGroup(this);
+        buttonGroup->addButton(none, 0);
+        buttonGroup->addButton(read, 1);
+        buttonGroup->addButton(readWrite, 2);
+        tmpLay->addWidget(none);
+        tmpLay->addWidget(read);
+        tmpLay->addWidget(readWrite);
+
+        d->permissions.insert(tableName,buttonGroup);
+
+
+        lay->addLayout(tmpLay);
+    }
+
+    return lay;
 }
 
 void UserAddDialog::populateKeyList(UserData &data)

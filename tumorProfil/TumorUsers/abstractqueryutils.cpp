@@ -170,6 +170,25 @@ bool AbstractQueryUtils::grantMySqlPermissions(QString user, QString databaseNam
     return true;
 }
 
+QVector<QString> AbstractQueryUtils::getTumorProfilTables(QString tumorProfilDbName)
+{
+    QMap<QString, QVariant> bindValues;
+    QVector<QVector<QVariant> > results;
+    QVector<QString> result;
+
+    QString query = QString("show tables from %1").arg(tumorProfilDbName);
+    executeDirectSql(query,
+                     bindValues,
+                     results);
+
+    for(QVector<QVariant> val : results)
+    {
+        result.append(val.first().toString());
+    }
+
+    return result;
+}
+
 QString AbstractQueryUtils::generateRandomString(int length)
 {
     qsrand(time(NULL));
@@ -274,6 +293,8 @@ bool AbstractQueryUtils::removeAllMasterKeys(int userid)
     else
         return false;
 }
+
+
 
 
 

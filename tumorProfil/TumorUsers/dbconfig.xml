@@ -80,6 +80,7 @@
                 CREATE INDEX pathologyPropertiesIndex ON PathologyProperties (property);
                 </statement>
             </dbaction>
+
             <dbaction name="CreateDBTrigger">
                 <statement mode="plain">
                 CREATE TRIGGER delete_patient DELETE ON Patients
@@ -140,6 +141,14 @@
                   userid INTEGER,
                   encryptedKey  TEXT);
                 </statement>
+
+                <statement mode="plain">
+                CREATE TABLE UserAccess
+                (id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                 userid INTEGER,
+                 tableName  TEXT);
+                </statement>
+
             </dbaction>
 
             <dbaction name="CreateDBIndices">
