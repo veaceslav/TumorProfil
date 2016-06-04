@@ -7,3 +7,4 @@
 #define ADMIN_NAME "root"
 
 #define TUMORPROFIL_TABLES {"DiseaseProperties", "Diseases", "Pathologies",  "PathologyProperties",  "PatientProperties",  "Patients", "Settings"}
+#define TUMORPROFIL_TABLES_SIZE 7

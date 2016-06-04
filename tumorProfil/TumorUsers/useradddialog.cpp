@@ -8,9 +8,11 @@
 #include <QDebug>
 #include <QRadioButton>
 #include <QButtonGroup>
+#include <QMessageBox>
+#include <string.h>
 
 #include "userqueryutils.h"
-
+#include "tumoruserconstants.h"
 
 #include "adminuser.h"
 
@@ -228,8 +230,19 @@ QVBoxLayout* UserAddDialog::makePermissionLayout(){
     QVector<QString> tableNames = UserQueryUtils::instance()->getTumorProfilTables(
                                     AdminUser::instance()->tumorProfilDatabaseName());
 
-    for(QString tableName : tableNames)
+    if(tableNames.size() != TUMORPROFIL_TABLES_SIZE){
+        QMessageBox::critical(this, "Table name size mismatch",
+                                    "It seems that you have more tables in database than declared in tumoruserconstants.\n"
+                                    "If you added new tables, then add them to tumoruserconstants also\n"
+                                    "Please set TUMORPROFIL_TABLES and TUMORPROFIL_TABLES_SIZE with the correct data\n"
+                                    "The new tables will not appear in the layout");
+    }
+
+    std::string data[] = TUMORPROFIL_TABLES;
+
+    for(int iter = 0; iter < TUMORPROFIL_TABLES_SIZE; iter++)
     {
+        QLatin1String tableName(data[iter].data());
         QHBoxLayout* tmpLay = new QHBoxLayout();
         tmpLay->addWidget(new QLabel(tableName));
         QRadioButton* none = new QRadioButton("None");
