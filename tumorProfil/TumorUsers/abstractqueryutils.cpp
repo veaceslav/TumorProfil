@@ -206,6 +206,61 @@ bool AbstractQueryUtils::revokeAllPrivileges(QString user)
     return true;
 }
 
+QMap<QString, int> AbstractQueryUtils::getPermissions(QString databaseName, QString user)
+{
+    QMap<QString, QVariant> bindValues;
+    QVector<QVector<QVariant> > results;
+    QMap<QString, int> permissionMap;
+
+    // Initializing all permissions to none
+    for(QString tableName : getTumorProfilTables(databaseName))
+    {
+        permissionMap.insert(tableName, 0);
+    }
+
+    //
+    QString query = QString("SHOW GRANTS FOR %1").arg(user);
+    executeDirectSql(query,
+                     bindValues,
+                     results);
+
+    for(QVector<QVariant> rezVector : results)
+    {
+        for(QVariant data : rezVector)
+        {
+            qDebug() << data.toString() ;
+            QString stringData = data.toString().remove("`");
+            QStringList splitData = stringData.split(" ");
+
+            QString permission = splitData.at(1); // ALL or SELECT
+
+            QStringList tokens;
+            if(permission == QLatin1String("ALL"))
+                tokens =  splitData.at(4).split(".");
+            else
+                tokens = splitData.at(3).split(".");
+
+            if(tokens.size() == 2) // other permissions
+            {
+                if(tokens.first() == databaseName){
+                    if(permission == QLatin1String("ALL"))
+                    {
+                        qDebug() << tokens.at(1);
+                        permissionMap.insert(tokens.at(1),2);
+                    }
+                    else if (permission == QLatin1String("SELECT"))
+                    {
+                        qDebug() << tokens.at(1);
+                        permissionMap.insert(tokens.at(1),1);
+                    }
+                }
+            }
+        }
+    }
+
+    return permissionMap;
+}
+
 QString AbstractQueryUtils::generateRandomString(int length)
 {
     qsrand(time(NULL));

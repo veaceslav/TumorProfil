@@ -193,8 +193,6 @@ void UserAddDialog::setupUi(UserData &data, bool isAdmin, bool login)
     QLabel* userLabel = new QLabel(this);
     userLabel->setText(tr("Username:"));
     d->username = new QLineEdit(this);
-    if(!data.userName.isEmpty())
-        d->username->setText(data.userName);
 
     if(isAdmin)
     {
@@ -247,14 +245,26 @@ void UserAddDialog::setupUi(UserData &data, bool isAdmin, bool login)
     vbx->addLayout(hbx);
     if(!login && !isAdmin)
     {
-        vbx->addLayout(makePermissionLayout());
+        vbx->addLayout(makePermissionLayout(data.userName));
+    }
+
+    if(!data.userName.isEmpty())
+    {
+        d->username->setText(data.userName);
     }
 
     vbx->addWidget(d->buttons);
 }
 
+void UserAddDialog::setPermissions(QString userName)
+{
 
-QVBoxLayout* UserAddDialog::makePermissionLayout(){
+
+
+}
+
+
+QVBoxLayout* UserAddDialog::makePermissionLayout(QString userName){
     QVBoxLayout* lay = new QVBoxLayout();
 
     QVector<QString> tableNames = UserQueryUtils::instance()->getTumorProfilTables(
@@ -269,6 +279,15 @@ QVBoxLayout* UserAddDialog::makePermissionLayout(){
     }
 
     std::string data[] = TUMORPROFIL_TABLES;
+
+    bool haveDefaults = !(userName.isEmpty());
+
+    QMap<QString, int> perm;
+    if(!userName.isEmpty()){
+        QString permString = QString("'%1'@'localhost'").arg(userName);
+        perm = UserQueryUtils::instance()->getPermissions(AdminUser::instance()->tumorProfilDatabaseName(),
+                                                          permString);
+    }
 
     for(int iter = 0; iter < TUMORPROFIL_TABLES_SIZE; iter++)
     {
@@ -286,6 +305,22 @@ QVBoxLayout* UserAddDialog::makePermissionLayout(){
         tmpLay->addWidget(none);
         tmpLay->addWidget(read);
         tmpLay->addWidget(readWrite);
+
+        if(haveDefaults){
+            switch(perm[tableName]){
+            case 0:
+                none->setChecked(true);
+                break;
+            case 1:
+                read->setChecked(true);
+                break;
+            case 2:
+                readWrite->setChecked(true);
+                break;
+            default:
+                break;
+            }
+        }
 
         d->permissions.insert(tableName,buttonGroup);
 

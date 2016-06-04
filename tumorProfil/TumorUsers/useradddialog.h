@@ -35,8 +35,9 @@ private:
 
 
     void setupUi(UserData& data, bool isAdmin, bool login);
+    void setPermissions(QString userName);
     void populateKeyList(UserData& data);
-    QVBoxLayout* makePermissionLayout();
+    QVBoxLayout* makePermissionLayout(QString userName);
     class Private;
     Private* d;
 };

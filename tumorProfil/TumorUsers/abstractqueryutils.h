@@ -110,6 +110,8 @@ public:
 
     bool revokeAllPrivileges(QString user);
 
+    QMap<QString, int> getPermissions(QString databaseName, QString user = QString("CURRENT_USER"));
+
     virtual QueryState executeSql(QString queryString, QMap<QString,
                                   QVariant> bindValues, QVariant& lastId, QString databaseID = QString()) = 0;
 
