@@ -158,12 +158,16 @@ bool AbstractQueryUtils::setMySqlPassword(QString user, QString password, QStrin
     return true;
 }
 
-bool AbstractQueryUtils::grantMySqlPermissions(QString user, QString databaseName, QString userHost)
+bool AbstractQueryUtils::grantMySqlPermissions(QString user, QString databaseName, QString userHost, QString tableName, QString type)
 {
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
 
-    QString query = QString("GRANT ALL ON %1.* TO '%2'@'%3'").arg(databaseName, user, userHost);
+    QString query = QString("GRANT %1 ON %2.%3 TO '%4'@'%5'").arg(type,
+                                                                  databaseName,
+                                                                  tableName,
+                                                                  user,
+                                                                  userHost);
     executeDirectSql(query,
                      bindValues,
                      results);
@@ -187,6 +191,19 @@ QVector<QString> AbstractQueryUtils::getTumorProfilTables(QString tumorProfilDbN
     }
 
     return result;
+}
+
+bool AbstractQueryUtils::revokeAllPrivileges(QString user)
+{
+    QMap<QString, QVariant> bindValues;
+    QVector<QVector<QVariant> > results;
+
+    QString query = QString("REVOKE ALL PRIVILEGES, GRANT OPTION FROM %1").arg(user);
+    executeDirectSql(query,
+                     bindValues,
+                     results);
+
+    return true;
 }
 
 QString AbstractQueryUtils::generateRandomString(int length)
@@ -254,8 +271,10 @@ bool AbstractQueryUtils::removeUser(int userId, QString userName)
                                                     bindValues,
                                                     id);
 
+    revokeAllPrivileges(userName);
     deleteMySqlUser(userName);
     deleteMySqlUser(userName,QLatin1String("localhost"));
+
     if(rez == AbstractQueryUtils::NoErrors)
         return true;
     else
@@ -293,6 +312,7 @@ bool AbstractQueryUtils::removeAllMasterKeys(int userid)
     else
         return false;
 }
+
 
 
 

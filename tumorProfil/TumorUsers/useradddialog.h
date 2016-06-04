@@ -2,6 +2,7 @@
 #define USERADDDIALOG_H
 
 #include <QDialog>
+#include <QMap>
 
 class QVBoxLayout;
 class UserData{
@@ -10,6 +11,7 @@ public:
     QString password;
 
     QList<QString> keys;
+    QMap<QString, QString> privileges;
 };
 
 class UserAddDialog : public QDialog
@@ -25,9 +27,12 @@ public:
     QString password();
     QList<QString> selectedKeys();
 
+    QMap<QString, QString> getUserPermissions();
+
 public slots:
     void accept();
 private:
+
 
     void setupUi(UserData& data, bool isAdmin, bool login);
     void populateKeyList(UserData& data);

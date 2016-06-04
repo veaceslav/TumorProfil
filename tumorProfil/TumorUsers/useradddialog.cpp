@@ -71,6 +71,8 @@ UserData UserAddDialog::AddUser(bool isAdmin)
         data.userName = dlg->username();
         data.password = dlg->password();
         data.keys     = dlg->selectedKeys();
+
+        data.privileges = dlg->getUserPermissions();
     }
 
     delete dlg;
@@ -90,6 +92,9 @@ UserData UserAddDialog::editUser(bool isAdmin, UserData& data)
         returnData.userName = dlg->username();
         returnData.password = dlg->password();
         returnData.keys     = dlg->selectedKeys();
+
+        returnData.privileges = dlg->getUserPermissions();
+
     }
     delete dlg;
     return returnData;
@@ -147,6 +152,31 @@ void UserAddDialog::accept()
         }
     }
     QDialog::accept();
+}
+
+QMap<QString, QString> UserAddDialog::getUserPermissions()
+{
+    QMap<QString, QString> privileges;
+    QMap<QString, QButtonGroup*>::iterator it;
+    for(it=d->permissions.begin(); it != d->permissions.end(); ++it)
+    {
+        switch(it.value()->checkedId())
+        {
+        case 0: // none, do not have any privileges for that table
+            break;
+        case 1:
+            privileges.insert(it.key(), QLatin1String("SELECT"));
+            break;
+        case 2:
+            privileges.insert(it.key(), QLatin1String("ALL"));
+            break;
+        default:
+            qDebug() << "Error, we should not have anything except 0,1,2";
+            break;
+        }
+    }
+
+    return privileges;
 }
 
 void UserAddDialog::setupUi(UserData &data, bool isAdmin, bool login)

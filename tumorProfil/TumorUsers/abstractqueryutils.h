@@ -103,9 +103,12 @@ public:
 
     bool setMySqlPassword(QString user, QString password, QString host = QString("%"));
 
-    bool grantMySqlPermissions(QString user,  QString databaseName, QString userHost = QString("%"));
+    bool grantMySqlPermissions(QString user,  QString databaseName, QString userHost = QString("%"), QString tableName = QString("*"),
+                               QString type=QString("ALL"));
 
     QVector<QString> getTumorProfilTables(QString tumorProfilDbName);
+
+    bool revokeAllPrivileges(QString user);
 
     virtual QueryState executeSql(QString queryString, QMap<QString,
                                   QVariant> bindValues, QVariant& lastId, QString databaseID = QString()) = 0;
