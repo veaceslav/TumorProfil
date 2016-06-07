@@ -204,7 +204,7 @@ void DatabaseParameters::readFromConfig(const QString& programName, const QStrin
 
     qs.beginGroup(QLatin1String(configGroupDatabase));
 
-    databaseType = qs.value(configDatabaseType,DatabaseParameters::SQLiteDatabaseType()).toString();
+    databaseType = qs.value(configDatabaseType,DatabaseParameters::MySQLDatabaseType()).toString();
 
     // only the database name is needed
     DatabaseConfigElement config = DatabaseConfigElement::element(databaseType);
