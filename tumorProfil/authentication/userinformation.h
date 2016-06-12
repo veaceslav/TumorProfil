@@ -19,6 +19,10 @@ public:
         NOT_LOGGEDIN = 0,
         LOGGEDIN = 1
     };
+
+    enum OperationStatus{
+        ALL_OK = -2
+    };
     static UserInformation* instance();
 
     bool logIn();

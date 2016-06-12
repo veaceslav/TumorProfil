@@ -35,6 +35,7 @@ public:
     QString userName;
     QString password;
     QMap<QString, QString> decryptionKey;
+    QMap<QString, int> permissions;
 
     QTimer timer; // set up logout timeout.
 };
@@ -60,7 +61,7 @@ bool UserInformation::logIn()
 
     while(login)
     switch(result){
-        case -2: // everything is ok
+        case UserInformation::ALL_OK: // everything is ok
             login = false;
             break;
     case QDialog::Accepted:
@@ -71,13 +72,17 @@ bool UserInformation::logIn()
         break;
     }
 
-    if(result == -2)
+    if(result == UserInformation::ALL_OK)
     {
 
         if(d->encryptionEnabled)
         {
             loadKeys();
         }
+
+        DatabaseParameters params;
+        params.readFromConfig();
+        d->permissions = TumorQueryUtils::instance()->getPermissions(params.databaseName);
 
         LoginInfoWidget::instance()->logInUpdate(d->userName);
         emit signalLoginStateChanged();
@@ -102,6 +107,7 @@ bool UserInformation::logOut()
     d->userName.clear();
     d->password.clear();
     d->decryptionKey.clear();
+    d->permissions.clear();
     d->isLoggedIn = false;
     LoginInfoWidget::instance()->logOutUpdate();
     emit signalLoginStateChanged();
@@ -215,8 +221,6 @@ int UserInformation::checkDbConnection(QString username, QString password)
         MainSettings* settingsDialog = new MainSettings(true);
         return settingsDialog->exec();
     } else {
-        return -2;
+        return UserInformation::ALL_OK;
     }
-
-    return false;
 }
