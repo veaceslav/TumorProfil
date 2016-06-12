@@ -151,7 +151,7 @@ bool AbstractQueryUtils::setMySqlPassword(QString user, QString password, QStrin
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
 
-    QString query = QString("SET PASSWORD FOR %1'@'%2' = PASSWORD('%3')").arg(user, host, password);
+    QString query = QString("SET PASSWORD FOR '%1'@'%2' = PASSWORD('%3')").arg(user, host, password);
     executeDirectSql(query,
                      bindValues,
                      results);
@@ -195,15 +195,43 @@ QVector<QString> AbstractQueryUtils::getTumorProfilTables(QString tumorProfilDbN
 
 bool AbstractQueryUtils::revokeAllPrivileges(QString user)
 {
+    qDebug() << "Revoking privileges for " << user;
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
 
-    QString query = QString("REVOKE ALL PRIVILEGES, GRANT OPTION FROM %1").arg(user);
+    QString query = QString("REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%1'@'localhost',"
+                            "'%2'@'%'").arg(user, user);
     executeDirectSql(query,
                      bindValues,
                      results);
 
     return true;
+}
+
+void AbstractQueryUtils::updatePermissionMap(QMap<QString, int> &permissionMap, QString grantOption, QString tableName)
+{
+
+    int permission;
+    if(grantOption == QLatin1String("SELECT"))
+    {
+        permission = (int)AbstractQueryUtils::PERMISSION_READ;
+    }
+    else if(grantOption == QLatin1String("ALL"))
+    {
+        permission = (int)AbstractQueryUtils::PERMISSION_READWRITE;
+    }
+
+    if(tableName == QLatin1String("*")){
+        for(QString key : permissionMap.keys()) // we need a temporary copy of keys because we modify the map here
+        {
+            if(permissionMap[key] < permission) // We set maximum of available permissions
+            {
+                permissionMap[key] = permission;
+            }
+        }
+    } else {
+        permissionMap[tableName] = permission;
+    }
 }
 
 QMap<QString, int> AbstractQueryUtils::getPermissions(QString databaseName, QString user)
@@ -215,7 +243,7 @@ QMap<QString, int> AbstractQueryUtils::getPermissions(QString databaseName, QStr
     // Initializing all permissions to none
     for(QString tableName : getTumorProfilTables(databaseName))
     {
-        permissionMap.insert(tableName, 0);
+        permissionMap.insert(tableName, AbstractQueryUtils::PERMISSION_NONE);
     }
 
     //
@@ -242,24 +270,16 @@ QMap<QString, int> AbstractQueryUtils::getPermissions(QString databaseName, QStr
 
             if(tokens.size() == 2) // other permissions
             {
-                if(tokens.first() == databaseName){
-                    if(permission == QLatin1String("ALL"))
-                    {
-                        qDebug() << tokens.at(1);
-                        permissionMap.insert(tokens.at(1),2);
-                    }
-                    else if (permission == QLatin1String("SELECT"))
-                    {
-                        qDebug() << tokens.at(1);
-                        permissionMap.insert(tokens.at(1),1);
-                    }
+                if(tokens.first() == databaseName || tokens.first() == QLatin1String("*")){
+                    updatePermissionMap(permissionMap, permission, tokens.at(1));
                 }
             }
         }
     }
-
     return permissionMap;
 }
+
+
 
 QString AbstractQueryUtils::generateRandomString(int length)
 {

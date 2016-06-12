@@ -220,19 +220,49 @@ void MainWindow::slotEditUser()
 
     UserData data = UserAddDialog::editUser(false, oldData);
 
-    if(data.userName.isEmpty() || data.password.isEmpty())
+    if(data.userName.isEmpty() || data.password.isEmpty()){
         return;
+    }
 
     UserDetails user = UserQueryUtils::instance()->editUser(data.userName, AbstractQueryUtils::USER,
                                             data.password, userData.at(UserWidget::USERID_COLUMN).toInt());
 
     if(user.id == -1)
+    {
+        qDebug() << "Returning....";
         return;
+    }
     else
     {
         d->userWidget->populateTable();
     }
 
+    // Update Permissions---------------------------------------------------------------
+
+    UserQueryUtils::instance()->revokeAllPrivileges(data.userName);
+
+    QMap<QString, QString>::iterator iter;
+    for(iter=data.privileges.begin(); iter != data.privileges.end(); ++iter)
+    {
+        UserQueryUtils::instance()->grantMySqlPermissions(data.userName,
+                                                          AdminUser::instance()->tumorProfilDatabaseName(),
+                                                          QLatin1String("%"),
+                                                          iter.key(),
+                                                          iter.value());
+
+        UserQueryUtils::instance()->grantMySqlPermissions(data.userName,
+                                                          AdminUser::instance()->tumorProfilDatabaseName(),
+                                                          QLatin1String("localhost"),
+                                                          iter.key(),
+                                                          iter.value());
+    }
+
+    UserQueryUtils::instance()->grantMySqlPermissions(data.userName, AdminUser::instance()->userDatabaseName());
+    UserQueryUtils::instance()->grantMySqlPermissions(data.userName,
+                                                      AdminUser::instance()->userDatabaseName(),
+                                                      QLatin1String("localhost"));
+
+    // Update Master Keys-------------------------------------------------------------------
     UserQueryUtils::instance()->removeAllMasterKeys(user.id);
 
     QMap<QString, QString> userKeysUpdated;

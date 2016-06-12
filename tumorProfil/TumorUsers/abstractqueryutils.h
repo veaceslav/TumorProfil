@@ -14,6 +14,7 @@ class UserDetails
 {
 public:
 
+
     UserDetails()
     {
         id = -1;
@@ -55,6 +56,12 @@ public:
     enum UserType{
         ADMIN  = 0,
         USER = 1
+    };
+
+    enum UserPermissions{
+        PERMISSION_NONE = 0,
+        PERMISSION_READ = 1,
+        PERMISSION_READWRITE = 2
     };
 
     enum QueryState
@@ -122,6 +129,15 @@ public:
 
 protected:
     explicit AbstractQueryUtils(QObject *parent = 0);
+
+private:
+    /**
+     * @brief updatePermissionMap - utility for getting user permissions
+     * @param permissionMap
+     * @param grantOption
+     * @param tableName
+     */
+    void updatePermissionMap(QMap<QString, int>& permissionMap, QString grantOption, QString tableName);
 
 
 };
