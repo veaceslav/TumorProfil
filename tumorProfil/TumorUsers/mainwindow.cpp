@@ -180,7 +180,7 @@ bool MainWindow::slotAddUser()
 
     foreach(QString keyName, data.keys)
     {
-        UserQueryUtils::instance()->addMasterKey(keyName, user.id, data.password, user.aesFilling,
+        UserQueryUtils::instance()->addMasterKey(keyName, user.id, data.password, user.userSalt,
                                  AdminUser::instance()->masterKey(keyName));
     }
 
@@ -194,7 +194,7 @@ void MainWindow::slotAddEncryptionKey()
     UserQueryUtils::instance()->addMasterKey(info.name,
                                     ADMIN_ID,
                                     AdminUser::instance()->adminPassword(),
-                                    AdminUser::instance()->aesFilling());
+                                    AdminUser::instance()->adminSalt());
 
     d->keysTables->populateTable();
 
@@ -272,7 +272,7 @@ void MainWindow::slotEditUser()
         userKeysUpdated.insert(keyName,AdminUser::instance()->masterKey(keyName));
     }
 
-    UserQueryUtils::instance()->updateUserMasterKeys(user.id,data.password,user.aesFilling,userKeysUpdated);
+    UserQueryUtils::instance()->updateUserMasterKeys(user.id,data.password,user.userSalt,userKeysUpdated);
 
     if(user.id == ADMIN_ID)
     {

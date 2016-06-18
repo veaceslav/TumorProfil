@@ -171,14 +171,14 @@ UserDetails TumorQueryUtils::retrieveUser(QString name, QString password)
     {
         details.userName = data.first().at(NAME_INDEX).toString();
         details.id = data.first().at(USERID_INDEX).toInt();
-        QString aesFilling = data.first().at(AESFILLING_INDEX).toString();
-        qDebug() << "Aes filling:" << aesFilling;
-        details.aesFilling = aesFilling;
+        QString salt = data.first().at(PASSWORD_SALT_INDEX).toString();
+        qDebug() << "Salt:" << salt;
+        details.userSalt = salt;
         QVector<QVector<QVariant> > keys = retrieveMasterKeys(data.first().at(USERID_INDEX).toInt());
 
         foreach(QVector<QVariant> key, keys)
         {
-            QString decryptedKey = AesUtils::decryptMasterKey(password, aesFilling, key.at(KEY_CONTENT_INDEX).toString());
+            QString decryptedKey = AesUtils::decryptMasterKey(password, salt, key.at(KEY_CONTENT_INDEX).toString());
             details.decryptionKeys.insert(key.at(KEY_NAME_INDEX).toString(), decryptedKey);
             qDebug() << "Added key " << key.at(KEY_NAME_INDEX).toString() << " " << decryptedKey;
         }

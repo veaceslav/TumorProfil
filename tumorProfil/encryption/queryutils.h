@@ -27,9 +27,9 @@ public:
 
     static TumorQueryUtils* instance();
 
-     QString encpryptMasterKey(QString password, QString filling, QString masterKey);
+     QString encpryptMasterKey(QString password, QString salt, QString masterKey);
 
-     QString decryptMasterKey(QString password, QString filling, QString masterHash);
+     QString decryptMasterKey(QString password, QString salt, QString masterHash);
 
      //QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId, QString databaseID);
 

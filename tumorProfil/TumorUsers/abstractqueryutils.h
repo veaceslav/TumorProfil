@@ -91,7 +91,7 @@ public:
 
     QString generateRandomString(int length);
 
-    qlonglong addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling, QString masterKey = QString());
+    qlonglong addMasterKey(QString name, qlonglong userid, QString password, QString salt, QString masterKey = QString());
 
     QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId);
 
@@ -103,7 +103,7 @@ public:
 
     UserDetails editUser(QString name, UserType userType, QString password, qlonglong userId);
 
-    bool updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
+    bool updateUserMasterKeys(int userId, QString userPassword, QString salt,
                               QMap<QString, QString> userKeys);
 
     bool addMySqlUser(QString user, QString password, QString host = QString("%"));

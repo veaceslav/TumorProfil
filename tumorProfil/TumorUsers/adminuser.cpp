@@ -27,6 +27,7 @@ public:
     QString password;
     QMap<QString, MasterKey> masterKeys;
     QString aesFilling;
+    QString adminSalt;
     bool    isLoggedIn;
 
     QString userDatabaseName;
@@ -54,7 +55,7 @@ void AdminUser::loadKeys()
     foreach (QVector<QVariant> key, result)
     {
         QString decryptedKey = AesUtils::decryptMasterKey(d->password,
-                                                            d->aesFilling,
+                                                            d->adminSalt,
                                                             key.at(MasterKey::VALUE_FIELD).toString());
 
         MasterKey mKey(key.at(MasterKey::NAME_FIELD).toString(),
@@ -104,6 +105,7 @@ bool AdminUser::logIn()
             d->isLoggedIn = true;
             d->password = data.password;
             d->aesFilling = results.first().at(AdminUser::AES_FILLING).toString();
+            d->adminSalt  = results.first().at(AdminUser::PASSWORD_SALT).toString();
             DatabaseParameters params = DatabaseAccess::instance()->databaseParams();
             d->tumorProfilDatabaseName = params.databaseName;
             d->userDatabaseName = params.databaseNameUsers;
@@ -127,9 +129,9 @@ bool AdminUser::isLoggedIn()
     return d->isLoggedIn;
 }
 
-QString AdminUser::aesFilling()
+QString AdminUser::adminSalt()
 {
-    return d->aesFilling;
+    return d->adminSalt;
 }
 
 QString AdminUser::adminPassword()

@@ -110,7 +110,7 @@ UserDetails AbstractQueryUtils::editUser(QString name, AbstractQueryUtils::UserT
     return UserDetails(userId,aesFilling, salt);
 }
 
-bool AbstractQueryUtils::updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
+bool AbstractQueryUtils::updateUserMasterKeys(int userId, QString userPassword, QString salt,
                                       QMap<QString,QString> userKeys)
 {
     AbstractQueryUtils::removeAllMasterKeys(userId);
@@ -118,7 +118,7 @@ bool AbstractQueryUtils::updateUserMasterKeys(int userId, QString userPassword, 
     QMap<QString, QString>::iterator it;
     for(it=userKeys.begin(); it != userKeys.end(); ++it)
     {
-        AbstractQueryUtils::addMasterKey(it.key(), userId, userPassword, userAesFilling,
+        AbstractQueryUtils::addMasterKey(it.key(), userId, userPassword, salt,
                                  it.value());
     }
 
@@ -299,16 +299,16 @@ QString AbstractQueryUtils::generateRandomString(int length)
 }
 
 
-qlonglong AbstractQueryUtils::addMasterKey(QString name, qlonglong userid, QString password, QString aesFilling, QString masterKey)
+qlonglong AbstractQueryUtils::addMasterKey(QString name, qlonglong userid, QString password, QString salt, QString masterKey)
 {
 
     if(masterKey.isEmpty())
         masterKey = generateRandomString(AESKEY_LENGTH);
 
     qDebug() << "Helo";
-    QString encodedKey = AesUtils::encryptMasterKey(password, aesFilling, masterKey);
+    QString encodedKey = AesUtils::encryptMasterKey(password, salt, masterKey);
 
-    QString decoded = AesUtils::decryptMasterKey(password, aesFilling, encodedKey);
+    QString decoded = AesUtils::decryptMasterKey(password, salt, encodedKey);
 
     qDebug() << "End";
     if(decoded.compare(masterKey) != 0)

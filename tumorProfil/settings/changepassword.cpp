@@ -189,6 +189,6 @@ bool ChangePassword::updateEncryptionKeys()
                                                                     d->newPassword->text(),userInfo.id);
 
     return TumorQueryUtils::instance()->updateUserMasterKeys(userInfo.id,d->newPassword->text(),
-                                                             newUserInfo.aesFilling,userInfo.decryptionKeys);
+                                                             newUserInfo.userSalt,userInfo.decryptionKeys);
 
 }

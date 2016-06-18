@@ -112,8 +112,8 @@ QString AesUtils::deriveKey(QString password, QString salt)
 
 QString AesUtils::encryptMasterKey(QString password, QString filling, QString masterKey)
 {
-    QString myAesKey = password + filling;
-    myAesKey.truncate(AESKEY_LENGTH);
+
+    QString myAesKey = deriveKey(password, filling);
 
     qDebug() << "MyAESkey for encryption: " << myAesKey << " " << myAesKey.size();
     return AesUtils::encrypt(masterKey, myAesKey);
@@ -121,8 +121,8 @@ QString AesUtils::encryptMasterKey(QString password, QString filling, QString ma
 
 QString AesUtils::decryptMasterKey(QString password, QString filling, QString masterHash)
 {
-    QString myAesKey = password + filling;
-    myAesKey.truncate(AESKEY_LENGTH);
+
+    QString myAesKey = deriveKey(password, filling);
 
     qDebug() << "MyAESkey for decryption: " << myAesKey << " " << myAesKey.size();
     return AesUtils::decrypt(masterHash, myAesKey);

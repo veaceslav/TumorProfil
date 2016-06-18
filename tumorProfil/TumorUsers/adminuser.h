@@ -54,7 +54,7 @@ public:
     bool logIn();
     QString masterKey(QString name);
     bool isLoggedIn();
-    QString aesFilling();
+    QString adminSalt();
     QString adminPassword();
     QList<QString> masterKeyNames();
 
