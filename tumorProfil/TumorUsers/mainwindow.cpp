@@ -191,6 +191,9 @@ void MainWindow::slotAddEncryptionKey()
 {
     KeyInfo info = AddKeyWidget::addKey();
 
+    if(info.name.isEmpty())
+        return;
+
     UserQueryUtils::instance()->addMasterKey(info.name,
                                     ADMIN_ID,
                                     AdminUser::instance()->adminPassword(),
