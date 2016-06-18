@@ -31,8 +31,6 @@ UserDetails AbstractQueryUtils::addUser(QString name, AbstractQueryUtils::UserTy
    QString saltedPass(password + salt);
    QByteArray passHash = QCryptographicHash::hash(saltedPass.toLatin1(), QCryptographicHash::Sha256);
 
-   // add aes private key filling
-   QString aesFilling = generateRandomString(AESKEY_LENGTH);
 
 
    bindValues[QLatin1String(":name")] = name;
@@ -44,13 +42,11 @@ UserDetails AbstractQueryUtils::addUser(QString name, AbstractQueryUtils::UserTy
 
    bindValues[QLatin1String(":passwordSalt")] = salt;
    bindValues[QLatin1String(":passwordHash")] = QVariant(passHash);
-   bindValues[QLatin1String(":aesPrivateKeyFilling")] = aesFilling;
 
    QVariant id;
    executeSql(QLatin1String("INSERT into Users(name, usergroup, passwordSalt,"
-                            " passwordHash, aesPrivateKeyFilling)"
-                            "VALUES(:name, :usergroup, :passwordSalt, :passwordHash,"
-                            ":aesPrivateKeyFilling)"),
+                            " passwordHash)"
+                            "VALUES(:name, :usergroup, :passwordSalt, :passwordHash)"),
               bindValues,
               id);
 
@@ -65,7 +61,7 @@ UserDetails AbstractQueryUtils::addUser(QString name, AbstractQueryUtils::UserTy
        addMySqlUser(name,password, QLatin1String("localhost"));
    }
 
-   return UserDetails(id.toLongLong(),aesFilling, salt);
+   return UserDetails(id.toLongLong(), salt);
 }
 
 UserDetails AbstractQueryUtils::editUser(QString name, AbstractQueryUtils::UserType userType, QString password, qlonglong userId)
@@ -79,8 +75,6 @@ UserDetails AbstractQueryUtils::editUser(QString name, AbstractQueryUtils::UserT
     QString saltedPass(password + salt);
     QByteArray passHash = QCryptographicHash::hash(saltedPass.toLatin1(), QCryptographicHash::Sha256);
 
-    // add aes private key filling
-    QString aesFilling = generateRandomString(AESKEY_LENGTH);
 
 
     bindValues[QLatin1String(":name")] = name;
@@ -92,13 +86,12 @@ UserDetails AbstractQueryUtils::editUser(QString name, AbstractQueryUtils::UserT
 
     bindValues[QLatin1String(":passwordSalt")] = salt;
     bindValues[QLatin1String(":passwordHash")] = QVariant(passHash);
-    bindValues[QLatin1String(":aesPrivateKeyFilling")] = aesFilling;
     bindValues[QLatin1String(":userid")] = userId;
 
     QVariant id;
     executeSql(QLatin1String("UPDATE Users"
                              " SET name= :name, usergroup= :usergroup, passwordSalt= :passwordSalt, "
-                             " passwordHash= :passwordHash, aesPrivateKeyFilling= :aesPrivateKeyFilling"
+                             " passwordHash= :passwordHash"
                              " WHERE id = :userid"),
                bindValues,
                id);
@@ -107,7 +100,7 @@ UserDetails AbstractQueryUtils::editUser(QString name, AbstractQueryUtils::UserT
     setMySqlPassword(name, password);
     qDebug() << "Id of inserted item: " << userId;
 
-    return UserDetails(userId,aesFilling, salt);
+    return UserDetails(userId, salt);
 }
 
 bool AbstractQueryUtils::updateUserMasterKeys(int userId, QString userPassword, QString salt,

@@ -179,8 +179,7 @@ void UserWidget::setTableHeader()
                             << tr("Name")
                             << tr("Group")
                             << tr("Salt")
-                            << tr("Password Hash")
-                            << tr("Private key filling");
+                            << tr("Password Hash");
     }
     d->tableView->setColumnCount(d->headerLabelsList.size());
     d->tableView->setHorizontalHeaderLabels(d->headerLabelsList);

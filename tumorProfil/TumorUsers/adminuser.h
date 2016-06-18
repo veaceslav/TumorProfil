@@ -46,7 +46,6 @@ class AdminUser  : public QObject
         USERGROUP  = 2,
         PASSWORD_SALT = 3,
         PASS_HASH     = 4,
-        AES_FILLING   = 5,
         ENCRYPTED_KEY = 6
     };
 public:

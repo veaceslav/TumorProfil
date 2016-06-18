@@ -124,8 +124,7 @@
                   name TEXT,
                   userGroup TEXT,
                   passwordSalt TEXT,
-                  passwordHash BLOB,
-                  aesPrivateKeyFilling TEXT);
+                  passwordHash BLOB);
                 </statement>
 
                 <statement mode="plain">

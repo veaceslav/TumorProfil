@@ -104,7 +104,6 @@ bool AdminUser::logIn()
         {
             d->isLoggedIn = true;
             d->password = data.password;
-            d->aesFilling = results.first().at(AdminUser::AES_FILLING).toString();
             d->adminSalt  = results.first().at(AdminUser::PASSWORD_SALT).toString();
             DatabaseParameters params = DatabaseAccess::instance()->databaseParams();
             d->tumorProfilDatabaseName = params.databaseName;
