@@ -270,7 +270,7 @@ QVBoxLayout* UserAddDialog::makePermissionLayout(QString userName){
     QVector<QString> tableNames = UserQueryUtils::instance()->getTumorProfilTables(
                                     AdminUser::instance()->tumorProfilDatabaseName());
 
-    if(tableNames.size() != TUMORPROFIL_TABLES_SIZE){
+    if((tableNames.size() != TUMORPROFIL_TABLES_SIZE) && !tableNames.empty()){
         QMessageBox::critical(this, "Table name size mismatch",
                                     "It seems that you have more tables in database than declared in tumoruserconstants.\n"
                                     "If you added new tables, then add them to tumoruserconstants also\n"
