@@ -8,6 +8,7 @@
 
 #include "aesutils.h"
 #include "time.h"
+#include "tumoruserconstants.h"
 
 #define SALT_SIZE  10
 
@@ -58,8 +59,11 @@ UserDetails AbstractQueryUtils::addUser(QString name, AbstractQueryUtils::UserTy
 
     // According to MySql documentation, we add a user with wildcard "%", but we also need to add the same user
     // with localhost
-   addMySqlUser(name,password);
-   addMySqlUser(name,password, QLatin1String("localhost"));
+   if(name != QLatin1String(ADMIN_NAME))
+   {
+       addMySqlUser(name,password);
+       addMySqlUser(name,password, QLatin1String("localhost"));
+   }
 
    return UserDetails(id.toLongLong(),aesFilling);
 }
