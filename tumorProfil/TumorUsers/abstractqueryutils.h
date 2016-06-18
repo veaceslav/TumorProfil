@@ -20,10 +20,11 @@ public:
         id = -1;
     }
 
-    UserDetails(qlonglong id, QString aesFilling)
+    UserDetails(qlonglong id, QString aesFilling, QString salt)
     {
         this->id = id;
         this->aesFilling = aesFilling;
+        this->userSalt = salt;
     }
 
     UserDetails(const UserDetails& copy)
@@ -37,6 +38,7 @@ public:
     qlonglong id;
     QString aesFilling;
     QString userName;
+    QString userSalt;
     QMap<QString, QString> decryptionKeys;
 
 };

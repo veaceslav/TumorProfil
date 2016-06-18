@@ -8,3 +8,7 @@
 
 #define TUMORPROFIL_TABLES {"DiseaseProperties", "Diseases", "Pathologies",  "PathologyProperties",  "PatientProperties",  "Patients", "Settings"}
 #define TUMORPROFIL_TABLES_SIZE 7
+#define PBKDF_ITERATIONS 1000000
+
+// Time in seconds for PBKDF algorithm to run
+#define PBKDF_TIME 2

@@ -4,9 +4,12 @@
 #include <filters.h>
 #include <hex.h>
 #include <sha.h>
+#include <pwdbased.h>
 
 #include <QString>
 #include <QDebug>
+
+#include "tumoruserconstants.h"
 
 using namespace std;
 using namespace CryptoPP;
@@ -82,6 +85,31 @@ QString AesUtils::decrypt(QString message, QString aesKey)
     return QString::fromStdString(plain);
 }
 
+QString AesUtils::deriveKey(QString password, QString salt)
+{
+
+    byte derived_key[AESKEY_LENGTH];
+
+    memset(derived_key,0, AESKEY_LENGTH);
+    byte purpose = 2;
+    const byte* passwordData = (byte*)password.toLocal8Bit().constData();
+
+    const byte* saltData = (byte*)salt.toLocal8Bit().constData();
+    PKCS5_PBKDF2_HMAC<SHA256> pbkdf;
+
+    pbkdf.DeriveKey (derived_key,AESKEY_LENGTH,
+            purpose,
+            passwordData,
+            strlen((char*)passwordData),
+            saltData,
+            strlen((char*)saltData),
+            PBKDF_ITERATIONS,
+            PBKDF_TIME
+        );
+
+    return QString(QByteArray((const char*)derived_key, AESKEY_LENGTH));
+}
+
 QString AesUtils::encryptMasterKey(QString password, QString filling, QString masterKey)
 {
     QString myAesKey = password + filling;
@@ -99,3 +127,4 @@ QString AesUtils::decryptMasterKey(QString password, QString filling, QString ma
     qDebug() << "MyAESkey for decryption: " << myAesKey << " " << myAesKey.size();
     return AesUtils::decrypt(masterHash, myAesKey);
 }
+

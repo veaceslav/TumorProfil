@@ -17,6 +17,9 @@ public:
     static QString encrypt(QString message, QString aesKey);
 
     static QString decrypt(QString message, QString aesKey);
+
+private:
+    static QString deriveKey(QString password, QString salt);
 };
 
 #endif // AESUTILS_H

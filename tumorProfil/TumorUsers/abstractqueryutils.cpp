@@ -65,7 +65,7 @@ UserDetails AbstractQueryUtils::addUser(QString name, AbstractQueryUtils::UserTy
        addMySqlUser(name,password, QLatin1String("localhost"));
    }
 
-   return UserDetails(id.toLongLong(),aesFilling);
+   return UserDetails(id.toLongLong(),aesFilling, salt);
 }
 
 UserDetails AbstractQueryUtils::editUser(QString name, AbstractQueryUtils::UserType userType, QString password, qlonglong userId)
@@ -107,7 +107,7 @@ UserDetails AbstractQueryUtils::editUser(QString name, AbstractQueryUtils::UserT
     setMySqlPassword(name, password);
     qDebug() << "Id of inserted item: " << userId;
 
-    return UserDetails(userId,aesFilling);
+    return UserDetails(userId,aesFilling, salt);
 }
 
 bool AbstractQueryUtils::updateUserMasterKeys(int userId, QString userPassword, QString userAesFilling,
