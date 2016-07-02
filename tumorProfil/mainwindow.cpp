@@ -62,6 +62,7 @@
 #include "tnmwidget.h"
 #include "menubar.h"
 #include "ui/logininfowidget.h"
+#include "authentication/accessmanagement.h"
 
 
 class MainWindow::MainWindowPriv
@@ -159,9 +160,14 @@ void MainWindow::setupToolbar()
 
     if (d->historyEnabled)
     {
-        d->toolBar->addAction(QIcon::fromTheme("calendar"),
+        QAction* action = d->toolBar->addAction(QIcon::fromTheme("calendar"),
                               tr("Krankheitsverlauf"),
                               this, SLOT(showHistory()));
+
+        if(AccessManagement::accessToDiseaseHistory() == AccessManagement::NONE)
+        {
+            action->setEnabled(false);
+        }
     }
 
     d->toolBar->addSeparator();

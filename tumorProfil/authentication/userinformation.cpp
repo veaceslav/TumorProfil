@@ -14,6 +14,7 @@
 #include "ui/logininfowidget.h"
 #include "settings/databasesettings.h"
 #include "settings/mainsettings.h"
+#include "authentication/accessmanagement.h"
 
 
 
@@ -175,6 +176,11 @@ bool UserInformation::loadKeys()
 QString UserInformation::retrieveKey(QString keyName)
 {
     return d->decryptionKey.value(keyName);
+}
+
+int UserInformation::retrievePermission(QString tableName)
+{
+    return d->permissions.value(tableName,(int)AccessManagement::NONE);
 }
 
 void UserInformation::setUsername(QString username)

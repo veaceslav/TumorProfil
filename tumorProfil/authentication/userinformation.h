@@ -46,6 +46,8 @@ public:
      */
     QString retrieveKey(QString keyName);
 
+    int retrievePermission(QString tableName);
+
     void setUsername(QString username);
 
     void setPassword(QString password);

@@ -54,6 +54,7 @@ bool Patient::hasDisease() const
 {
     return !diseases.isEmpty();
 }
+
 Disease& Patient::firstDisease()
 {
     if (diseases.isEmpty())

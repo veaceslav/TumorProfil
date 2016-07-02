@@ -98,7 +98,8 @@ SOURCES += main.cpp\
     ui/logininfowidget.cpp \
     authentication/userinformation.cpp \
     settings/changepassword.cpp \
-    TumorUsers/abstractqueryutils.cpp
+    TumorUsers/abstractqueryutils.cpp \
+    authentication/accessmanagement.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -191,7 +192,8 @@ HEADERS  += mainwindow.h \
     ui/logininfowidget.h \
     authentication/userinformation.h \
     settings/changepassword.h \
-    TumorUsers/abstractqueryutils.h
+    TumorUsers/abstractqueryutils.h \
+    authentication/accessmanagement.h
 
 
 INCLUDEPATH += datamodel/ \
