@@ -256,23 +256,7 @@ OSIterator::OSIterator(const Disease& disease)
 
 int OSIterator::days(Definition definition) const
 {
-    QDate begin = initialDiagnosis;
-    switch (definition)
-    {
-    case FromInitialDiagnosis:
-        break;
-    case FromFirstTherapy:
-        if (firstTherapy)
-        {
-            begin = firstTherapy->begin();
-        }
-        else
-        {
-            reportProblem(0, "OSIterator: no therapy recorded, using initial diagnosis");
-        }
-        break;
-    }
-    return days(begin);
+    return days(beginDate(definition));
 }
 
 int OSIterator::days(HistoryElement* from) const
@@ -294,6 +278,27 @@ int OSIterator::days(const QDate& begin) const
         reportProblem(0, "The given begin date is beyond the endpoint");
     }
     return begin.daysTo(end);
+}
+
+QDate OSIterator::beginDate(Definition definition) const
+{
+    QDate begin = initialDiagnosis;
+    switch (definition)
+    {
+    case FromInitialDiagnosis:
+        break;
+    case FromFirstTherapy:
+        if (firstTherapy)
+        {
+            begin = firstTherapy->begin();
+        }
+        else
+        {
+            reportProblem(0, "OSIterator: no therapy recorded, using initial diagnosis");
+        }
+        break;
+    }
+    return begin;
 }
 
 QDate OSIterator::endDate() const
