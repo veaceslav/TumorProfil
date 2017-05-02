@@ -131,6 +131,7 @@ public:
     int days(Definition definition = FromInitialDiagnosis) const;
     int days(HistoryElement* from) const;
     bool endpointReached() const;
+    QDate beginDate(Definition definition) const;
     QDate endDate() const;
     float months(Definition definition = FromInitialDiagnosis) const;
 
