@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__author__ = "Klemen Tušar"
+__author__ = "Klemen Tusar"
 __email__ = "techouse@gmail.com"
 __copyright__ = "GPL"
 __version__ = "1.0.1"
