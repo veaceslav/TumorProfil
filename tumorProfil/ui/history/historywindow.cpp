@@ -157,6 +157,10 @@ public:
         {
             return it.value();
         }
+        if (!p->hasDisease())
+        {
+            return QVariant();
+        }
         const Disease& disease = p->firstDisease();
         CurrentStateIterator cs(disease.history());
         QColor c = VisualHistoryWidget::colorForState(cs.effectiveState());
