@@ -20,7 +20,7 @@ AbstractQueryUtils::AbstractQueryUtils(QObject *parent) : QObject(parent)
 }
 
 
-UserDetails AbstractQueryUtils::addUser(QString name, AbstractQueryUtils::UserType userType, QString password)
+UserDetails AbstractQueryUtils::addUser(const QString& name, AbstractQueryUtils::UserType userType, const QString& password)
 {
    QMap<QString, QVariant> bindValues;
 
@@ -50,9 +50,6 @@ UserDetails AbstractQueryUtils::addUser(QString name, AbstractQueryUtils::UserTy
               bindValues,
               id);
 
-
-   qDebug() << "Id of inserted item: " << id;
-
     // According to MySql documentation, we add a user with wildcard "%", but we also need to add the same user
     // with localhost
    if(name != QLatin1String(ADMIN_NAME))
@@ -64,18 +61,38 @@ UserDetails AbstractQueryUtils::addUser(QString name, AbstractQueryUtils::UserTy
    return UserDetails(id.toLongLong(), salt);
 }
 
-UserDetails AbstractQueryUtils::editUser(QString name, AbstractQueryUtils::UserType userType, QString password, qlonglong userId)
+UserDetails AbstractQueryUtils::editUser(const QString& name, AbstractQueryUtils::UserType userType, const QString& password, qlonglong userId)
 {
     QMap<QString, QVariant> bindValues;
+    QVector<QVector<QVariant> > results;
 
+    bindValues[QLatin1String(":id")] = userId;
+    executeDirectSql(QLatin1String("SELECT name from Users where id=:id"),
+                     bindValues,
+                     results);
+
+    if (results.isEmpty())
+    {
+        qWarning() << "Did not identify user" << name << "when editing user details";
+        return UserDetails();
+    }
+    QString oldName = results.first().first().toString();
+    bindValues.clear();
+    results.clear();
+
+    if (name != oldName)
+    {
+        if (!executeDirectSql(QString("RENAME USER %1 TO %2").arg(oldName).arg(name), bindValues, results))
+        {
+            qWarning() <<"Failed to change username" << oldName << "to" << name;
+        }
+    }
 
     QString salt = generateRandomString(SALT_SIZE);
 
     // Compute password
     QString saltedPass(password + salt);
     QByteArray passHash = QCryptographicHash::hash(saltedPass.toLatin1(), QCryptographicHash::Sha256);
-
-
 
     bindValues[QLatin1String(":name")] = name;
 
@@ -98,12 +115,11 @@ UserDetails AbstractQueryUtils::editUser(QString name, AbstractQueryUtils::UserT
 
 
     setMySqlPassword(name, password);
-    qDebug() << "Id of inserted item: " << userId;
 
     return UserDetails(userId, salt);
 }
 
-bool AbstractQueryUtils::updateUserMasterKeys(int userId, QString userPassword, QString salt,
+bool AbstractQueryUtils::updateUserMasterKeys(int userId, const QString& userPassword, const QString& salt,
                                       QMap<QString,QString> userKeys)
 {
     AbstractQueryUtils::removeAllMasterKeys(userId);
@@ -118,7 +134,7 @@ bool AbstractQueryUtils::updateUserMasterKeys(int userId, QString userPassword, 
     return true;
 }
 
-bool AbstractQueryUtils::addMySqlUser(QString user, QString password, QString host)
+bool AbstractQueryUtils::addMySqlUser(const QString& user, const QString& password, const QString& host)
 {
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
@@ -130,7 +146,7 @@ bool AbstractQueryUtils::addMySqlUser(QString user, QString password, QString ho
     return true;
 }
 
-bool AbstractQueryUtils::deleteMySqlUser(QString user, QString host)
+bool AbstractQueryUtils::deleteMySqlUser(const QString& user, const QString& host)
 {
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
@@ -143,7 +159,7 @@ bool AbstractQueryUtils::deleteMySqlUser(QString user, QString host)
     return true;
 }
 
-bool AbstractQueryUtils::setMySqlPassword(QString user, QString password, QString host)
+bool AbstractQueryUtils::setMySqlPassword(const QString& user, const QString& password, const QString& host)
 {
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
@@ -155,7 +171,7 @@ bool AbstractQueryUtils::setMySqlPassword(QString user, QString password, QStrin
     return true;
 }
 
-bool AbstractQueryUtils::grantMySqlPermissions(QString user, QString databaseName, QString userHost, QString tableName, QString type)
+bool AbstractQueryUtils::grantMySqlPermissions(const QString& user, const QString& databaseName, const QString& userHost, const QString& tableName, const QString& type)
 {
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
@@ -168,16 +184,17 @@ bool AbstractQueryUtils::grantMySqlPermissions(QString user, QString databaseNam
     executeDirectSql(query,
                      bindValues,
                      results);
+    qDebug() << query;
     return true;
 }
 
-QVector<QString> AbstractQueryUtils::getTumorProfilTables(QString tumorProfilDbName)
+QVector<QString> AbstractQueryUtils::getTumorProfilTables(const QString& tumorProfilDbName)
 {
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
     QVector<QString> result;
 
-    QString query = QString("show tables from %1").arg(tumorProfilDbName);
+    QString query = QString("SHOW TABLES FROM %1").arg(tumorProfilDbName);
     executeDirectSql(query,
                      bindValues,
                      results);
@@ -190,7 +207,7 @@ QVector<QString> AbstractQueryUtils::getTumorProfilTables(QString tumorProfilDbN
     return result;
 }
 
-bool AbstractQueryUtils::revokeAllPrivileges(QString user)
+bool AbstractQueryUtils::revokeAllPrivileges(const QString& user)
 {
     qDebug() << "Revoking privileges for " << user;
     QMap<QString, QVariant> bindValues;
@@ -205,49 +222,65 @@ bool AbstractQueryUtils::revokeAllPrivileges(QString user)
     return true;
 }
 
-void AbstractQueryUtils::updatePermissionMap(QMap<QString, int> &permissionMap, QString grantOption, QString tableName)
+void AbstractQueryUtils::updatePermissionMap(QMap<QString, int> &permissionMap, const QString& tableName, const QString& grantOption)
 {
 
     int permission;
-    if(grantOption == QLatin1String("SELECT"))
+    if (grantOption == "SELECT")
     {
         permission = (int)AbstractQueryUtils::PERMISSION_READ;
     }
-    else if(grantOption == QLatin1String("ALL"))
+    else if (grantOption == "ALL")
     {
         permission = (int)AbstractQueryUtils::PERMISSION_READWRITE;
     }
 
-    if(tableName == QLatin1String("*")){
-        for(QString key : permissionMap.keys()) // we need a temporary copy of keys because we modify the map here
+    if (tableName == "*")
+    {
+        for(const QString& key : permissionMap.keys()) // we need a temporary copy of keys because we modify the map here
         {
             if(permissionMap[key] < permission) // We set maximum of available permissions
             {
                 permissionMap[key] = permission;
             }
         }
-    } else {
+    }
+    else
+    {
         permissionMap[tableName] = permission;
     }
 }
 
-QMap<QString, int> AbstractQueryUtils::getPermissions(QString databaseName, QString user)
+QMap<QString, int> AbstractQueryUtils::getPermissions(const QString& tumorProfilDatabaseName, const QString& userName)
 {
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
     QMap<QString, int> permissionMap;
 
     // Initializing all permissions to none
-    for(QString tableName : getTumorProfilTables(databaseName))
+    for(const QString& tableName : getTumorProfilTables(tumorProfilDatabaseName))
     {
         permissionMap.insert(tableName, AbstractQueryUtils::PERMISSION_NONE);
     }
 
-    //
+    bindValues[":userName"] = userName;
+    QString query("SELECT tableName, type FROM UserAccess JOIN Users on Users.id=UserAccess.userid WHERE Users.name=:userName");
+    executeDirectSql(query, bindValues, results);
+
+    for(QVector<QVariant> rezVector : results)
+    {
+        updatePermissionMap(permissionMap, rezVector.first().toString(), rezVector.last().toString());
+    }
+
+    // Does not work because mysql_stmt_result_metadata returns null for the statement, so isSelect() is false and no values are returned
+    /*
     QString query = QString("SHOW GRANTS FOR %1").arg(user);
+    qDebug() << "Grants query:" << query;
     executeDirectSql(query,
                      bindValues,
                      results);
+
+    qDebug() << "Grants:" << query << results;
 
     for(QVector<QVariant> rezVector : results)
     {
@@ -273,6 +306,7 @@ QMap<QString, int> AbstractQueryUtils::getPermissions(QString databaseName, QStr
             }
         }
     }
+    */
     return permissionMap;
 }
 
@@ -292,18 +326,16 @@ QString AbstractQueryUtils::generateRandomString(int length)
 }
 
 
-qlonglong AbstractQueryUtils::addMasterKey(QString name, qlonglong userid, QString password, QString salt, QString masterKey)
+qlonglong AbstractQueryUtils::addMasterKey(const QString& name, qlonglong userid, const QString& password, const QString& salt, const QString& givenMasterKey)
 {
-
+    QString masterKey(givenMasterKey);
     if(masterKey.isEmpty())
         masterKey = generateRandomString(AESKEY_LENGTH);
 
-    qDebug() << "Helo";
     QString encodedKey = AesUtils::encryptMasterKey(password, salt, masterKey);
 
     QString decoded = AesUtils::decryptMasterKey(password, salt, encodedKey);
 
-    qDebug() << "End";
     if(decoded.compare(masterKey) != 0)
         qDebug() << "Wrong encryption. Expected: " << masterKey << " Got: " << decoded;
 
@@ -333,7 +365,7 @@ QVector<QVector<QVariant> > AbstractQueryUtils::retrieveMasterKeys(qlonglong use
     return results;
 }
 
-bool AbstractQueryUtils::removeUser(int userId, QString userName)
+bool AbstractQueryUtils::removeUser(int userId, const QString& userName)
 {
     QMap<QString, QVariant> bindValues;
     QVariant id;
@@ -353,7 +385,7 @@ bool AbstractQueryUtils::removeUser(int userId, QString userName)
         return false;
 }
 
-bool AbstractQueryUtils::removeMasterKey(QString keyName)
+bool AbstractQueryUtils::removeMasterKey(const QString& keyName)
 {
     QMap<QString, QVariant> bindValues;
     QVariant id;
@@ -385,7 +417,36 @@ bool AbstractQueryUtils::removeAllMasterKeys(int userid)
         return false;
 }
 
+bool AbstractQueryUtils::clearRecordedPermissions(qlonglong userid)
+{
+    QMap<QString, QVariant> bindValues;
+    QVariant id;
+    bindValues[QLatin1String(":userid")] = userid;
 
+    AbstractQueryUtils::QueryState rez = executeSql(QLatin1String("DELETE from UserAccess where userid=:userid"),
+                                                 bindValues,
+                                                 id);
+
+    if(rez == AbstractQueryUtils::NoErrors)
+        return true;
+    else
+        return false;
+}
+
+bool AbstractQueryUtils::recordPermission(qlonglong userId, const QString &tableName, const QString &type)
+{
+    QMap<QString, QVariant> bindValues;
+    bindValues[":userid"] = userId;
+    bindValues[":tableName"] = tableName;
+    bindValues[":type"] = type;
+    QVariant id;
+    AbstractQueryUtils::QueryState rez = executeSql("INSERT INTO UserAccess(userid, tableName, type) VALUES (:userid, :tableName, :type)", bindValues, id);
+
+    if(rez == AbstractQueryUtils::NoErrors)
+        return true;
+    else
+        return false;
+}
 
 
 

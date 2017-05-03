@@ -16,22 +16,14 @@ public:
 
 
     UserDetails()
+        :id(-1)
     {
         id = -1;
     }
 
-    UserDetails(qlonglong id, QString salt)
+    UserDetails(qlonglong id, const QString& salt)
+        : id(id), userSalt(salt)
     {
-        this->id = id;
-        this->userSalt = salt;
-    }
-
-    UserDetails(const UserDetails& copy)
-    {
-        this->id = copy.id;
-        this->userSalt = copy.userSalt;
-        this->userName = copy.userName;
-        this->decryptionKeys = copy.decryptionKeys;
     }
 
     qlonglong id;
@@ -84,47 +76,50 @@ public:
 
 
 
-    UserDetails addUser(QString name, UserType userType, QString password);
+    UserDetails addUser(const QString& name, UserType userType, const QString& password);
 
 
     QString generateRandomString(int length);
 
-    qlonglong addMasterKey(QString name, qlonglong userid, QString password, QString salt, QString masterKey = QString());
+    qlonglong addMasterKey(const QString& name, qlonglong userid, const QString& password, const QString& salt, const QString& masterKey = QString());
 
     QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId);
 
-    bool removeUser(int userId, QString userName);
+    bool removeUser(int userId, const QString& userName);
 
-    bool removeMasterKey(QString keyName);
+    bool removeMasterKey(const QString& keyName);
 
     bool removeAllMasterKeys(int userid);
 
-    UserDetails editUser(QString name, UserType userType, QString password, qlonglong userId);
+    UserDetails editUser(const QString& name, UserType userType, const QString& password, qlonglong userId);
 
-    bool updateUserMasterKeys(int userId, QString userPassword, QString salt,
+    bool updateUserMasterKeys(int userId, const QString& userPassword, const QString& salt,
                               QMap<QString, QString> userKeys);
 
-    bool addMySqlUser(QString user, QString password, QString host = QString("%"));
+    bool addMySqlUser(const QString& user, const QString& password, const QString& host = QString("%"));
 
-    bool deleteMySqlUser(QString user, QString host = QString("%"));
+    bool deleteMySqlUser(const QString& user, const QString& host = QString("%"));
 
-    bool setMySqlPassword(QString user, QString password, QString host = QString("%"));
+    bool setMySqlPassword(const QString& user, const QString& password, const QString& host = QString("%"));
 
-    bool grantMySqlPermissions(QString user,  QString databaseName, QString userHost = QString("%"), QString tableName = QString("*"),
-                               QString type=QString("ALL"));
+    bool grantMySqlPermissions(const QString& user,  const QString& databaseName, const QString& userHost = QString("%"), const QString& tableName = QString("*"),
+                               const QString& type=QString("ALL"));
 
-    QVector<QString> getTumorProfilTables(QString tumorProfilDbName);
+    bool clearRecordedPermissions(qlonglong userid);
+    bool recordPermission(qlonglong userid, const QString& tableName, const QString& type);
 
-    bool revokeAllPrivileges(QString user);
+    QVector<QString> getTumorProfilTables(const QString& tumorProfilDbName);
 
-    QMap<QString, int> getPermissions(QString databaseName, QString user = QString("CURRENT_USER"));
+    bool revokeAllPrivileges(const QString& user);
 
-    virtual QueryState executeSql(QString queryString, QMap<QString,
-                                  QVariant> bindValues, QVariant& lastId, QString databaseID = QString()) = 0;
+    QMap<QString, int> getPermissions(const QString& databaseName, const QString& userName);
 
-    virtual QueryState executeDirectSql(QString queryString, QMap<QString,
+    virtual QueryState executeSql(const QString& queryString, QMap<QString,
+                                  QVariant> bindValues, QVariant& lastId, const QString& databaseID = QString()) = 0;
+
+    virtual QueryState executeDirectSql(const QString& queryString, QMap<QString,
                                         QVariant> bindValues, QVector<QVector<QVariant> >& results,
-                                        QString databaseID = QString()) = 0;
+                                        const QString& databaseID = QString()) = 0;
 
 
 protected:
@@ -137,7 +132,7 @@ private:
      * @param grantOption
      * @param tableName
      */
-    void updatePermissionMap(QMap<QString, int>& permissionMap, QString grantOption, QString tableName);
+    void updatePermissionMap(QMap<QString, int>& permissionMap, const QString& tableName, const QString& grantOption);
 
 
 };
