@@ -15,9 +15,9 @@ public:
     ~UserQueryUtils();
 
     virtual QueryState executeSql(const QString& queryString, QMap<QString,
-                                  QVariant> bindValues, QVariant& lastId, const QString& databaseID = QString());
+                                  QVariant> bindValues, QVariant& lastId);
     virtual QueryState executeDirectSql(const QString& queryString, QMap<QString,
-                                        QVariant> bindValues, QVector<QVector<QVariant> >& results, const QString& databaseID = QString());
+                                        QVariant> bindValues, QVector<QVector<QVariant> >& results);
 
 protected:
     explicit UserQueryUtils();

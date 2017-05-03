@@ -115,11 +115,10 @@ public:
     QMap<QString, int> getPermissions(const QString& databaseName, const QString& userName);
 
     virtual QueryState executeSql(const QString& queryString, QMap<QString,
-                                  QVariant> bindValues, QVariant& lastId, const QString& databaseID = QString()) = 0;
+                                  QVariant> bindValues, QVariant& lastId) = 0;
 
     virtual QueryState executeDirectSql(const QString& queryString, QMap<QString,
-                                        QVariant> bindValues, QVector<QVector<QVariant> >& results,
-                                        const QString& databaseID = QString()) = 0;
+                                        QVariant> bindValues, QVector<QVector<QVariant> >& results) = 0;
 
 
 protected:

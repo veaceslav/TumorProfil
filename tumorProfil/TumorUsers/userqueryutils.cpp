@@ -10,17 +10,15 @@ UserQueryUtils::UserQueryUtils()
 }
 
 AbstractQueryUtils::QueryState UserQueryUtils::executeSql(const QString& queryString, QMap<QString,
-                                                          QVariant> bindValues, QVariant &lastId, const QString& databaseID)
+                                                          QVariant> bindValues, QVariant &lastId)
 {
-    Q_UNUSED(databaseID);
     return (AbstractQueryUtils::QueryState)DatabaseAccess::instance()->executeSql(queryString,bindValues,lastId);
 }
 
 AbstractQueryUtils::QueryState UserQueryUtils::executeDirectSql(const QString& queryString,
                                                                 QMap<QString, QVariant> bindValues,
-                                                                QVector<QVector<QVariant> > &results, const QString& databaseID)
+                                                                QVector<QVector<QVariant> > &results)
 {
-    Q_UNUSED(databaseID);
     return (AbstractQueryUtils::QueryState)DatabaseAccess::instance()->executeDirectSql(queryString,bindValues,results );
 }
 

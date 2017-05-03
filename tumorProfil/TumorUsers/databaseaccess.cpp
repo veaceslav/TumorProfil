@@ -29,6 +29,7 @@ public:
     QSqlDatabase database;
     bool isActive;
 };
+
 DatabaseAccess* DatabaseAccess::instance()
 {
     if(DatabaseAccess::internalPtr.isNull())
