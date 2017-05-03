@@ -47,31 +47,7 @@ void ChangePassword::slotChangePassword()
     params.userName = d->username->text();
     params.password = d->oldPassword->text();
 
-
-    bool result = TumorQueryUtils::instance()->openConnection(params, CHANGE_PASSWORD_TUMORPROFIL,
-                                             TumorQueryUtils::TUMORPROFIL);
-
-    if(!result)
-    {
-        setError(tr("Error: Could not open database connection to Tumorprofil.\n"
-                    "Check database connection parameters"));
-        return;
-    }
-
-    result = TumorQueryUtils::instance()->openConnection(params, CHANGE_PASSWORD_TUMORUSERS,
-                                        TumorQueryUtils::TUMORUSER);
-
-    if(!result)
-    {
-        setError(tr("Error: Could not open database connection to Tumorusers.\n"
-                    "Check database connection parameters"));
-
-        TumorQueryUtils::instance()->closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
-        return;
-    }
-
-
-    result = changeMySQLPassword();
+    bool result = changeMySQLPassword();
 
     if(!result)
     {
@@ -94,9 +70,6 @@ void ChangePassword::slotChangePassword()
         d->newPassword->clear();
         d->newPassword2->clear();
     }
-
-    TumorQueryUtils::instance()->closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
-    TumorQueryUtils::instance()->closeConnection(CHANGE_PASSWORD_TUMORPROFIL);
 }
 
 void ChangePassword::setupUi()
@@ -171,8 +144,7 @@ bool ChangePassword::changeMySQLPassword()
 
     AbstractQueryUtils::QueryState state = TumorQueryUtils::instance()->executeDirectSql(query,
                                  bindValues,
-                                 results,
-                                 QString(CHANGE_PASSWORD_TUMORPROFIL));
+                                 results);
     if(state == AbstractQueryUtils::NoErrors)
         return true;
     else
