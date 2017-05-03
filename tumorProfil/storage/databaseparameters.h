@@ -69,10 +69,10 @@ public:
     QString userName;
     QString password;
 
-    QString databaseNameThumbnails;
+    QString databaseNameUsers;
 
     // SQLITE parameters
-    QString sqliteUserDatabaseName;
+    //QString sqliteUserDatabaseName;
     QString sqliteDatabaseName;
     QString sqliteDatabasePath;
 
@@ -129,15 +129,12 @@ public:
      * For non-SQLite, this simply sets the database name.
      */
     void setDatabasePath(const QString& folderOrFileOrName);
-    void setThumbsDatabasePath(const QString& folderOrFileOrName);
 
     static QString databaseFileSQLite(const QString& folderOrFile);
-    static QString thumbnailDatabaseFileSQLite(const QString& folderOrFile);
     static QString databaseDirectorySQLite(const QString& path);
-    static QString thumbnailDatabaseDirectorySQLite(const QString& path);
 
-    /** Replaces databaseName with databaseNameThumbnails. */
-    DatabaseParameters thumbnailParameters() const;
+    /** Replaces databaseName with databaseNameUsers. */
+    DatabaseParameters userParameters() const;
 
     /**
      * Convenience method to create a DatabaseParameters object for an

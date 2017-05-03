@@ -47,18 +47,18 @@ namespace
 static const char* configGroupDatabase = "Database Settings";
 static const char* configDatabaseType = "Database Type";
 static const char* configDatabaseName = "Database Name";
-static const char* configDatabaseNameThumbnails = "Database Name Thumbnails";
+static const char* configDatabaseNameUsers = "Database Name Users";
 static const char* configDatabaseHostName = "Database Hostname";
 static const char* configDatabasePort = "Database Port";
 static const char* configDatabaseUsername = "Database Username";
 static const char* configDatabasePassword = "Database Password";
 static const char* configDatabaseConnectOptions = "Database Connectoptions";
 static const char* tumorprofildb = "tumorprofil.db";
-static const char* tumorprofilusersdb = "tumorprofilusers.db";
+//static const char* tumorprofilusersdb = "tumorprofilusers.db";
 
 static const char* configDatabaseFilePathEntry = "Database File Path";
 static const char* configSqliteDatabaseName = "Sqlite Database Name";
-static const char* configSqliteUserDatabaseName = "Sqlite User Database Name";
+//static const char* configSqliteUserDatabaseName = "Sqlite User Database Name";
 }
 
 
@@ -75,11 +75,11 @@ DatabaseParameters::DatabaseParameters(const QString& type,
                                        bool internalServer,
                                        const QString& userName,
                                        const QString& password,
-                                       const QString& databaseNameThumbnails)
+                                       const QString& databaseNameUsers)
     : databaseType(type), databaseName(databaseName),
       connectOptions(connectOptions), hostName(hostName),
       port(port), internalServer(internalServer), userName(userName),
-      password(password), databaseNameThumbnails(databaseNameThumbnails)
+      password(password), databaseNameUsers(databaseNameUsers)
 {
 }
 
@@ -89,7 +89,7 @@ DatabaseParameters::DatabaseParameters(const QUrl& url)
     QUrlQuery urlQuery(url.query());
     databaseType   = urlQuery.queryItemValue("databaseType");
     databaseName   = urlQuery.queryItemValue("databaseName");
-    databaseNameThumbnails   = urlQuery.queryItemValue("databaseNameThumbnails");
+    databaseNameUsers   = urlQuery.queryItemValue("databaseNameUsers");
     connectOptions = urlQuery.queryItemValue("connectOptions");
     hostName       = urlQuery.queryItemValue("hostName");
     QString queryPort = urlQuery.queryItemValue("port");
@@ -108,7 +108,7 @@ bool DatabaseParameters::operator==(const DatabaseParameters& other) const
 {
     return databaseType   == other.databaseType &&
            databaseName   == other.databaseName &&
-           databaseNameThumbnails == other.databaseNameThumbnails &&
+           databaseNameUsers == other.databaseNameUsers &&
            connectOptions == other.connectOptions &&
            hostName       == other.hostName &&
            port           == other.port &&
@@ -134,7 +134,7 @@ bool DatabaseParameters::isValid() const
         bool check = true;
 
         check &= !databaseName.isEmpty();
-        check &= !databaseNameThumbnails.isEmpty();
+        check &= !databaseNameUsers.isEmpty();
         check &= (port != 0);
         check &= !hostName.isEmpty();
         check &= !userName.isEmpty();
@@ -210,7 +210,7 @@ void DatabaseParameters::readFromConfig(const QString& programName, const QStrin
     DatabaseConfigElement config = DatabaseConfigElement::element(databaseType);
 
     databaseName            = qs.value(configDatabaseName, config.databaseName).toString();
-    databaseNameThumbnails  = qs.value(configDatabaseNameThumbnails, config.userDatabaseName).toString();
+    databaseNameUsers       = qs.value(configDatabaseNameUsers, config.userDatabaseName).toString();
     hostName                = qs.value(configDatabaseHostName, config.hostName).toString();
     userName                = qs.value(configDatabaseUsername, config.userName).toString();
     password                = qs.value(configDatabasePassword, config.password).toString();
@@ -219,16 +219,16 @@ void DatabaseParameters::readFromConfig(const QString& programName, const QStrin
 
     sqliteDatabasePath      = qs.value(configDatabaseFilePathEntry, config.sqlitePath).toString();
     sqliteDatabaseName      = qs.value(configSqliteDatabaseName, QString()).toString();
-    sqliteUserDatabaseName  = qs.value(configSqliteUserDatabaseName, QString()).toString();
+    //sqliteUserDatabaseName  = qs.value(configSqliteUserDatabaseName, QString()).toString();
 
-    if (isSQLite() && sqliteDatabaseName.isEmpty() && sqliteUserDatabaseName.isEmpty())
+    if (isSQLite() && sqliteDatabaseName.isEmpty() /*&& sqliteUserDatabaseName.isEmpty()*/)
     {
         if(sqliteDatabasePath.isEmpty() || !QDir(sqliteDatabasePath).exists())
             sqliteDatabasePath = QDir::current().absolutePath();
 
         QString orgName = sqliteDatabasePath;
         setDatabasePath(orgName);
-        setThumbsDatabasePath(orgName);
+        //setThumbsDatabasePath(orgName);
     }
 }
 
@@ -240,7 +240,7 @@ void DatabaseParameters::writeToConfig(const QString &programName, const QString
 
     qs.setValue(configDatabaseType, databaseType);
     qs.setValue(configDatabaseName, databaseName);
-    qs.setValue(configDatabaseNameThumbnails, databaseNameThumbnails);
+    qs.setValue(configDatabaseNameUsers, databaseNameUsers);
     qs.setValue(configDatabaseHostName, hostName);
     qs.setValue(configDatabaseUsername, userName);
     qs.setValue(configDatabasePassword, password);
@@ -250,7 +250,7 @@ void DatabaseParameters::writeToConfig(const QString &programName, const QString
     // SQLITE values
     qs.setValue(configDatabaseFilePathEntry, sqliteDatabasePath);
     qs.setValue(configSqliteDatabaseName, sqliteDatabaseName);
-    qs.setValue(configSqliteUserDatabaseName,sqliteUserDatabaseName);
+    //qs.setValue(configSqliteUserDatabaseName,sqliteUserDatabaseName);
 
 }
 
@@ -267,18 +267,6 @@ void DatabaseParameters::setDatabasePath(const QString& folderOrFileOrName)
     }
 }
 
-void DatabaseParameters::setThumbsDatabasePath(const QString& folderOrFileOrName)
-{
-    if (isSQLite())
-    {
-        sqliteUserDatabaseName = thumbnailDatabaseFileSQLite(folderOrFileOrName);
-    }
-    else
-    {
-        databaseNameThumbnails = folderOrFileOrName;
-    }
-}
-
 QString DatabaseParameters::databaseFileSQLite(const QString& folderOrFile)
 {
     QFileInfo fileInfo(folderOrFile);
@@ -286,18 +274,6 @@ QString DatabaseParameters::databaseFileSQLite(const QString& folderOrFile)
     if (fileInfo.isDir())
     {
         return QDir::cleanPath(fileInfo.filePath() + QDir::separator() + tumorprofildb);
-    }
-
-    return QDir::cleanPath(folderOrFile);
-}
-
-QString DatabaseParameters::thumbnailDatabaseFileSQLite(const QString& folderOrFile)
-{
-    QFileInfo fileInfo(folderOrFile);
-
-    if (fileInfo.isDir())
-    {
-        return QDir::cleanPath(fileInfo.filePath() + QDir::separator() + tumorprofilusersdb);
     }
 
     return QDir::cleanPath(folderOrFile);
@@ -313,34 +289,12 @@ QString DatabaseParameters::getDatabaseNameOrDir() const
     return databaseName;
 }
 
-QString DatabaseParameters::getUsersDatabaseNameOrDir() const
-{
-    if (isSQLite())
-    {
-        return sqliteUserDatabaseName;
-    }
-
-    return databaseNameThumbnails;
-}
-
 QString DatabaseParameters::databaseDirectorySQLite(const QString& path)
 {
     if (path.endsWith(tumorprofildb))
     {
         QString chopped(path);
         chopped.chop(QString(tumorprofildb).length());
-        return chopped;
-    }
-
-    return path;
-}
-
-QString DatabaseParameters::thumbnailDatabaseDirectorySQLite(const QString& path)
-{
-    if (path.endsWith(tumorprofilusersdb))
-    {
-        QString chopped(path);
-        chopped.chop(QString(tumorprofilusersdb).length());
         return chopped;
     }
 
@@ -366,10 +320,10 @@ DatabaseParameters DatabaseParameters::defaultParameters(const QString databaseT
     return parameters;
 }
 
-DatabaseParameters DatabaseParameters::thumbnailParameters() const
+DatabaseParameters DatabaseParameters::userParameters() const
 {
     DatabaseParameters params = *this;
-    params.databaseName = databaseNameThumbnails;
+    params.databaseName = databaseNameUsers;
     return params;
 }
 
@@ -378,7 +332,7 @@ DatabaseParameters DatabaseParameters::parametersForSQLite(const QString& databa
     // only the database name is needed
     DatabaseParameters params("QSQLITE", databaseFile);
     params.setDatabasePath(databaseFile);
-    params.setThumbsDatabasePath(params.getDatabaseNameOrDir());
+   // params.setThumbsDatabasePath(params.getDatabaseNameOrDir());
     return params;
 }
 
@@ -449,8 +403,8 @@ QDebug operator<<(QDebug dbg, const DatabaseParameters& p)
                   << p.databaseType << ", ";
     dbg.nospace() << "Name "
                   << p.databaseName << " ";
-    dbg.nospace() << "(Thumbnails Name "
-                  << p.databaseNameThumbnails << "); ";
+    dbg.nospace() << "(Users Name "
+                  << p.databaseNameUsers << "); ";
 
     if (!p.connectOptions.isEmpty())
         dbg.nospace() << "ConnectOptions: "

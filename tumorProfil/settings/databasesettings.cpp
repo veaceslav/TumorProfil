@@ -72,7 +72,7 @@ void DatabaseSettings::loadSettings()
         d->databaseType->setCurrentIndex(1);
 
     d->databaseName->setText(dp.databaseName);
-    d->databaseNameUsers->setText(dp.databaseNameThumbnails);
+    d->databaseNameUsers->setText(dp.databaseNameUsers);
     d->hostName->setText(dp.hostName);
     d->connectionOptions->setText(dp.connectOptions);
     d->userName->setText(dp.userName);
@@ -305,7 +305,7 @@ DatabaseParameters DatabaseSettings::getDatabaseParameters()
     parameters.userName       = d->userName->text();
 
     parameters.sqliteDatabasePath = d->sqlitePath->text();
-    parameters.databaseNameThumbnails = d->databaseNameUsers->text();
+    parameters.databaseNameUsers = d->databaseNameUsers->text();
     parameters.databaseName = d->databaseName->text();
 
     return parameters;
