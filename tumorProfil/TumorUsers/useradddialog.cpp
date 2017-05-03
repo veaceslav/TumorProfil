@@ -35,7 +35,7 @@ public:
 
 };
 
-UserAddDialog::UserAddDialog(UserData &data, bool isAdmin, bool login) : QDialog(), d(new Private)
+UserAddDialog::UserAddDialog(UserData &data, bool isAdmin, bool login, bool exists) : QDialog(), d(new Private)
 {
 
     setModal(true);
@@ -46,7 +46,7 @@ UserAddDialog::UserAddDialog(UserData &data, bool isAdmin, bool login) : QDialog
 
     d->buttons->button(QDialogButtonBox::Ok)->setDefault(true);
 
-    setupUi(data, isAdmin,login);
+    setupUi(data, isAdmin, login, exists);
 
     populateKeyList(data);
     connect(d->buttons->button(QDialogButtonBox::Ok), SIGNAL(clicked()),
@@ -87,7 +87,7 @@ UserData UserAddDialog::editUser(bool isAdmin, UserData& data)
 
     UserData returnData;
 
-    if(result != -1)
+    if(result)
     {
         returnData.userName = dlg->username();
         returnData.password = dlg->password();
@@ -154,24 +154,23 @@ void UserAddDialog::accept()
     QDialog::accept();
 }
 
-QMap<QString, QString> UserAddDialog::getUserPermissions()
+QMap<QString, QString> UserAddDialog::getUserPermissions() const
 {
     QMap<QString, QString> privileges;
-    QMap<QString, QButtonGroup*>::iterator it;
-    for(it=d->permissions.begin(); it != d->permissions.end(); ++it)
+    QMap<QString, QButtonGroup*>::const_iterator it;
+    for(it = d->permissions.begin(); it != d->permissions.end(); ++it)
     {
         switch(it.value()->checkedId())
         {
-        case 0: // none, do not have any privileges for that table
+        case AbstractQueryUtils::PERMISSION_NONE: // none, do not have any privileges for that table
             break;
-        case 1:
-            privileges.insert(it.key(), QLatin1String("SELECT"));
+        case AbstractQueryUtils::PERMISSION_READ:
+            privileges[it.key()] = "SELECT";
             break;
-        case 2:
-            privileges.insert(it.key(), QLatin1String("ALL"));
+        case AbstractQueryUtils::PERMISSION_READWRITE:
+            privileges[it.key()] = "ALL";
             break;
         default:
-            qDebug() << "Error, we should not have anything except 0,1,2";
             break;
         }
     }
@@ -179,12 +178,14 @@ QMap<QString, QString> UserAddDialog::getUserPermissions()
     return privileges;
 }
 
-void UserAddDialog::setupUi(UserData &data, bool isAdmin, bool login)
+void UserAddDialog::setupUi(UserData &data, bool isAdmin, bool login, bool exists)
 {
     d->mainLabel = new QLabel(this);
     d->mainLabel->setWordWrap(true);
     if(login)
         d->mainLabel->setText(tr("Please provide the Username and Password"));
+    else if (exists)
+        d->mainLabel->setText(tr("Edit username and password of the user:"));
     else
         d->mainLabel->setText(tr("Choose username and password for the new user:"));
 
@@ -256,79 +257,41 @@ void UserAddDialog::setupUi(UserData &data, bool isAdmin, bool login)
     vbx->addWidget(d->buttons);
 }
 
-void UserAddDialog::setPermissions(QString userName)
+QVBoxLayout* UserAddDialog::makePermissionLayout(QString userName)
 {
-
-
-
-}
-
-
-QVBoxLayout* UserAddDialog::makePermissionLayout(QString userName){
-    QVBoxLayout* lay = new QVBoxLayout();
+    QVBoxLayout* vbox = new QVBoxLayout();
 
     QVector<QString> tableNames = UserQueryUtils::instance()->getTumorProfilTables(
                                     AdminUser::instance()->tumorProfilDatabaseName());
-
-    if((tableNames.size() != TUMORPROFIL_TABLES_SIZE) && !tableNames.empty()){
-        QMessageBox::critical(this, "Table name size mismatch",
-                                    "It seems that you have more tables in database than declared in tumoruserconstants.\n"
-                                    "If you added new tables, then add them to tumoruserconstants also\n"
-                                    "Please set TUMORPROFIL_TABLES and TUMORPROFIL_TABLES_SIZE with the correct data\n"
-                                    "The new tables will not appear in the layout");
-    }
-
-    std::string data[] = TUMORPROFIL_TABLES;
-
-    bool haveDefaults = !(userName.isEmpty());
-
-    QMap<QString, int> perm;
-    if(!userName.isEmpty()){
-        QString permString = QString("'%1'@'localhost'").arg(userName);
-        perm = UserQueryUtils::instance()->getPermissions(AdminUser::instance()->tumorProfilDatabaseName(),
-                                                          permString);
-    }
-
-    for(int iter = 0; iter < TUMORPROFIL_TABLES_SIZE; iter++)
+    QMap<QString, int> perms = UserQueryUtils::instance()->getPermissions(AdminUser::instance()->tumorProfilDatabaseName(), userName);
+    qDebug() << "makePermissionLayout" << perms;
+    int defaultPermission = AbstractQueryUtils::PERMISSION_NONE;
+    if (userName == ADMIN_NAME)
     {
-        QLatin1String tableName(data[iter].data());
-        QHBoxLayout* tmpLay = new QHBoxLayout();
-        tmpLay->addWidget(new QLabel(tableName));
-        QRadioButton* none = new QRadioButton("None");
-        QRadioButton* read = new QRadioButton("Read");
-        QRadioButton* readWrite = new QRadioButton("Read+Write");
-        readWrite->setChecked(true);
-        QButtonGroup* buttonGroup = new QButtonGroup(this);
-        buttonGroup->addButton(none, 0);
-        buttonGroup->addButton(read, 1);
-        buttonGroup->addButton(readWrite, 2);
-        tmpLay->addWidget(none);
-        tmpLay->addWidget(read);
-        tmpLay->addWidget(readWrite);
-
-        if(haveDefaults){
-            switch(perm[tableName]){
-            case 0:
-                none->setChecked(true);
-                break;
-            case 1:
-                read->setChecked(true);
-                break;
-            case 2:
-                readWrite->setChecked(true);
-                break;
-            default:
-                break;
-            }
-        }
-
-        d->permissions.insert(tableName,buttonGroup);
-
-
-        lay->addLayout(tmpLay);
+        defaultPermission = AbstractQueryUtils::PERMISSION_READWRITE;
     }
 
-    return lay;
+    foreach(const QString& tableName, tableNames)
+    {
+        QHBoxLayout* hbox = new QHBoxLayout();
+        hbox->addWidget(new QLabel(tableName));
+        QRadioButton* none = new QRadioButton(tr("Kein Zugriff"));
+        QRadioButton* read = new QRadioButton(tr("Lesen"));
+        QRadioButton* readWrite = new QRadioButton(tr("Lesen/Schreiben"));
+        QButtonGroup* buttonGroup = new QButtonGroup(this);
+        buttonGroup->addButton(none, AbstractQueryUtils::PERMISSION_NONE);
+        buttonGroup->addButton(read, AbstractQueryUtils::PERMISSION_READ);
+        buttonGroup->addButton(readWrite, AbstractQueryUtils::PERMISSION_READWRITE);
+        buttonGroup->button(perms.value(tableName, defaultPermission))->setChecked(true);
+        hbox->addWidget(none);
+        hbox->addWidget(read);
+        hbox->addWidget(readWrite);
+
+        vbox->addLayout(hbox);
+        d->permissions.insert(tableName,buttonGroup);
+    }
+
+    return vbox;
 }
 
 void UserAddDialog::populateKeyList(UserData &data)
