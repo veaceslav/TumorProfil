@@ -80,8 +80,21 @@ bool AdminUser::logIn()
 
     while(true)
     {
-        UserData data = UserAddDialog::login(true);
-        if(data.userName.isEmpty() || data.password.isEmpty())
+        UserData data;
+        if (DatabaseAccess::instance()->isOpen())
+        {
+            DatabaseParameters params = DatabaseAccess::instance()->databaseParams();
+            if (params.userName == ADMIN_NAME)
+            {
+                data.userName = params.userName;
+                data.password = params.password;
+            }
+        }
+        if (data.userName.isEmpty() || data.password.isEmpty())
+        {
+            UserData data = UserAddDialog::login(true);
+        }
+        if (data.userName.isEmpty() || data.password.isEmpty())
             return false;
 
         // Compute password

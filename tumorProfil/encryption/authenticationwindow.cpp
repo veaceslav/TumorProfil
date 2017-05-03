@@ -96,6 +96,7 @@ void AuthenticationWindow::setupUi()
     QLabel* passwordLabel = new QLabel(this);
     passwordLabel->setText(tr("Password:"));
     d->password = new QLineEdit(this);
+    d->password->setEchoMode(QLineEdit::Password);
 
     d->errMsg = new QLabel(this);
 

@@ -228,6 +228,7 @@ void DatabaseGuiOptions::setupUi()
     wg->setLayout(layout);
 
     this->setLayout(layout);
+    d->password->setFocus();
 }
 
 void DatabaseGuiOptions::setupParameters()
