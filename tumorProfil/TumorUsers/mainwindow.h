@@ -29,6 +29,7 @@ private Q_SLOTS:
 private:
     void setupUi();
     void setupToolBar();
+    void updateGrants(const class UserData& data, qlonglong userId);
 
     class Private;
     Private* d;

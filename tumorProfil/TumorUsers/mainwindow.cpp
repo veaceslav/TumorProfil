@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setupUi();
     setupToolBar();
 
-    connect(d->dbGui, SIGNAL(signalconnectedToDb()), this, SLOT(slotConnectedToDb()));
+    connect(d->dbGui, &DatabaseGuiOptions::signalconnectedToDb, this, &MainWindow::slotConnectedToDb);
     resize(QDesktopWidget().availableGeometry(this).size() * 0.7);
 }
 
@@ -141,17 +141,12 @@ void MainWindow::setupToolBar()
     action->setEnabled(false);
 }
 
-bool MainWindow::slotAddUser()
+void MainWindow::updateGrants(const UserData& data, qlonglong userId)
 {
-    UserData data = UserAddDialog::AddUser(false);
-    if(data.userName.isEmpty() || data.password.isEmpty())
-        return false;
+    UserQueryUtils::instance()->clearRecordedPermissions(userId);
 
-    UserDetails user = UserQueryUtils::instance()->addUser(data.userName, AbstractQueryUtils::USER, data.password);
-
-
-    QMap<QString, QString>::iterator iter;
-    for(iter=data.privileges.begin(); iter != data.privileges.end(); ++iter)
+    QMap<QString, QString>::const_iterator iter;
+    for (iter=data.privileges.begin(); iter != data.privileges.end(); ++iter)
     {
         UserQueryUtils::instance()->grantMySqlPermissions(data.userName,
                                                           AdminUser::instance()->tumorProfilDatabaseName(),
@@ -164,12 +159,26 @@ bool MainWindow::slotAddUser()
                                                           QLatin1String("localhost"),
                                                           iter.key(),
                                                           iter.value());
+
+        UserQueryUtils::instance()->recordPermission(userId, iter.key(), iter.value());
     }
 
     UserQueryUtils::instance()->grantMySqlPermissions(data.userName, AdminUser::instance()->userDatabaseName());
     UserQueryUtils::instance()->grantMySqlPermissions(data.userName,
                                                       AdminUser::instance()->userDatabaseName(),
                                                       QLatin1String("localhost"));
+
+}
+
+bool MainWindow::slotAddUser()
+{
+    UserData data = UserAddDialog::AddUser(false);
+    if(data.userName.isEmpty() || data.password.isEmpty())
+        return false;
+
+    UserDetails user = UserQueryUtils::instance()->addUser(data.userName, AbstractQueryUtils::USER, data.password);
+    updateGrants(data, user.id);
+
     if(user.id == -1)
         return false;
     else
@@ -212,9 +221,11 @@ void MainWindow::slotEditUser()
         return;
 
     UserData oldData;
-    oldData.userName = userData.at(1).toString();
+    qlonglong id;
+    oldData.userName = userData.at(UserWidget::USERNAME_COLUMN).toString();
+    id = userData.at(UserWidget::USERID_COLUMN).toLongLong();
 
-    QVector<QVector<QVariant> > userKeys = UserQueryUtils::instance()->retrieveMasterKeys(userData.first().toInt());
+    QVector<QVector<QVariant> > userKeys = UserQueryUtils::instance()->retrieveMasterKeys(id);
 
     foreach (QVector<QVariant> key, userKeys)
     {
@@ -222,48 +233,22 @@ void MainWindow::slotEditUser()
     }
 
     UserData data = UserAddDialog::editUser(false, oldData);
+    qDebug() << "From dialog:" << data.userName;
 
-    if(data.userName.isEmpty() || data.password.isEmpty()){
+    if (data.userName.isEmpty())
+    {
         return;
     }
 
-    UserDetails user = UserQueryUtils::instance()->editUser(data.userName, AbstractQueryUtils::USER,
-                                            data.password, userData.at(UserWidget::USERID_COLUMN).toInt());
-
-    if(user.id == -1)
-    {
-        qDebug() << "Returning....";
-        return;
-    }
-    else
-    {
-        d->userWidget->populateTable();
-    }
+    UserDetails user;
+    user = UserQueryUtils::instance()->editUser(data.userName, AbstractQueryUtils::USER,
+                                                data.password, id);
+    d->userWidget->populateTable();
 
     // Update Permissions---------------------------------------------------------------
 
     UserQueryUtils::instance()->revokeAllPrivileges(data.userName);
-
-    QMap<QString, QString>::iterator iter;
-    for(iter=data.privileges.begin(); iter != data.privileges.end(); ++iter)
-    {
-        UserQueryUtils::instance()->grantMySqlPermissions(data.userName,
-                                                          AdminUser::instance()->tumorProfilDatabaseName(),
-                                                          QLatin1String("%"),
-                                                          iter.key(),
-                                                          iter.value());
-
-        UserQueryUtils::instance()->grantMySqlPermissions(data.userName,
-                                                          AdminUser::instance()->tumorProfilDatabaseName(),
-                                                          QLatin1String("localhost"),
-                                                          iter.key(),
-                                                          iter.value());
-    }
-
-    UserQueryUtils::instance()->grantMySqlPermissions(data.userName, AdminUser::instance()->userDatabaseName());
-    UserQueryUtils::instance()->grantMySqlPermissions(data.userName,
-                                                      AdminUser::instance()->userDatabaseName(),
-                                                      QLatin1String("localhost"));
+    updateGrants(data, id);
 
     // Update Master Keys-------------------------------------------------------------------
     UserQueryUtils::instance()->removeAllMasterKeys(user.id);
