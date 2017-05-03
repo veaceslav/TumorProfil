@@ -13,7 +13,7 @@
 #include "patient.h"
 #include "databaseaccess.h"
 #include "patientdb.h"
-#include "encryption/userinformation.h"
+#include "authentication/userinformation.h"
 
 namespace
 {

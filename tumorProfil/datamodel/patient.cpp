@@ -22,7 +22,7 @@
 #include <QDebug>
 
 #include "patient.h"
-#include "encryption/userinformation.h"
+#include "authentication//userinformation.h"
 #include "TumorUsers/aesutils.h"
 #include "constants.h"
 

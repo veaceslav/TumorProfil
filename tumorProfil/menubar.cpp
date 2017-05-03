@@ -1,6 +1,6 @@
 #include "menubar.h"
 #include "settings/mainsettings.h"
-#include "encryption/userinformation.h"
+#include "authentication/userinformation.h"
 
 
 class MenuBar::Private

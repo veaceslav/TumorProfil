@@ -3,7 +3,7 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 
-#include "encryption/userinformation.h"
+#include "authentication/userinformation.h"
 
 
 QPointer<LoginInfoWidget> LoginInfoWidget::internalPtr = QPointer<LoginInfoWidget>();
