@@ -8,6 +8,7 @@
 #include <QMessageBox>
 
 
+#include "databaseaccess.h"
 #include "encryption/authenticationwindow.h"
 #include "encryption/queryutils.h"
 #include "settings/encryptionsettings.h"
@@ -56,33 +57,42 @@ bool UserInformation::logIn()
     d->userName = data.username;
     d->password = data.password;
 
+    // DatabaseParameters from config may be changed here and in the loop
+
     int result = checkDbConnection(d->userName, d->password);
 
     bool login = true;
 
     while(login)
-    switch(result){
+    {
+        switch(result){
         case UserInformation::ALL_OK: // everything is ok
             login = false;
             break;
-    case QDialog::Accepted:
-        result = checkDbConnection(d->userName, d->password);
-        break;
-    case QDialog::Rejected:
-        login = false;
-        break;
+        case QDialog::Accepted:
+            result = checkDbConnection(d->userName, d->password);
+            break;
+        case QDialog::Rejected:
+            login = false;
+            break;
+        }
     }
 
     if(result == UserInformation::ALL_OK)
     {
-
         if(d->encryptionEnabled)
         {
             loadKeys();
         }
 
+        // Create initial config
         DatabaseParameters params;
         params.readFromConfig();
+        params.userName = d->userName;
+        params.password = d->password;
+        DatabaseAccess::setParameters(params);
+        TumorQueryUtils::open(params.userParameters());
+
         d->permissions = TumorQueryUtils::instance()->getPermissions(params.databaseName, d->userName);
 
         LoginInfoWidget::instance()->logInUpdate(d->userName);
@@ -93,8 +103,8 @@ bool UserInformation::logIn()
     }
     else
     {
-        QMessageBox::critical(0, tr("Chould not connect to database"),
-                              tr("The username, password or connect options are not correct."));
+        QMessageBox::critical(0, tr("Datenbankverbindung nicht möglich"),
+                              tr("Die Zugangsdaten oder Verbindungseinstellungen zur Datenbank sind nicht korrekt."));
         return false;
     }
 }
@@ -156,7 +166,7 @@ UserInformation::LoginState UserInformation::toggleLogIn()
     }
 }
 
-bool UserInformation::hasKey(QString keyName)
+bool UserInformation::hasKey(const QString& keyName)
 {
     return !d->decryptionKey.value(keyName).isEmpty();
 }
@@ -172,32 +182,32 @@ bool UserInformation::loadKeys()
 }
 
 
-QString UserInformation::retrieveKey(QString keyName)
+QString UserInformation::retrieveKey(const QString& keyName)
 {
     return d->decryptionKey.value(keyName);
 }
 
-int UserInformation::retrievePermission(QString tableName)
+int UserInformation::retrievePermission(const QString& tableName)
 {
     return d->permissions.value(tableName,(int)AccessManagement::NONE);
 }
 
-void UserInformation::setUsername(QString username)
+void UserInformation::setUsername(const QString& username)
 {
     d->userName = username;
 }
 
-void UserInformation::setPassword(QString password)
+void UserInformation::setPassword(const QString& password)
 {
     d->password = password;
 }
 
-QString UserInformation::username()
+QString UserInformation::username() const
 {
     return d->userName;
 }
 
-QString UserInformation::password()
+QString UserInformation::password() const
 {
     return d->password;
 }
@@ -210,7 +220,7 @@ UserInformation::UserInformation()
     d->encryptionEnabled = EncryptionSettings::isEncryptionEnabled();
 }
 
-int UserInformation::checkDbConnection(QString username, QString password)
+int UserInformation::checkDbConnection(const QString& username, const QString& password)
 {
     DatabaseParameters params;
     params.readFromConfig();
@@ -225,7 +235,9 @@ int UserInformation::checkDbConnection(QString username, QString password)
         /** Db Options only **/
         MainSettings* settingsDialog = new MainSettings(true);
         return settingsDialog->exec();
-    } else {
+    }
+    else
+    {
         return UserInformation::ALL_OK;
     }
 }

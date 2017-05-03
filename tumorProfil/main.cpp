@@ -35,6 +35,7 @@
 
 // Local includes
 
+#include "databaseaccess.h"
 #include "analysisgenerator.h"
 #include "csvconverter.h"
 #include "databaseparameters.h"
@@ -51,7 +52,7 @@
 #include "settings/databasesettings.h"
 #include "settings/mainsettings.h"
 #include "encryption/authenticationwindow.h"
-#include "encryption/userinformation.h"
+#include "authentication//userinformation.h"
 
 /*
 void myMsgHandler(QtMsgType, const char * text)
@@ -59,23 +60,6 @@ void myMsgHandler(QtMsgType, const char * text)
     QMessageBox::information(0, QString(), text);
 }
 */
-
-void handleAuthentication()
-{
-    UserInformation::instance()->logIn();
-}
-
-void checkDbConnection()
-{
-    DatabaseParameters params;
-    params.readFromConfig();
-
-    if(params.isMySQL()){
-        handleAuthentication();
-    } else {
-        return;
-    }
-}
 
 int main(int argc, char *argv[])
 {
@@ -96,10 +80,19 @@ int main(int argc, char *argv[])
 
     DatabaseParameters params;
     params.readFromConfig();
+    if(params.isMySQL())
+    {
+        if (!UserInformation::instance()->logIn())
+        {
+            return 1;
+        }
+    }
+    else
+    {
+        DatabaseAccess::setParameters(params);
+    }
 
-    checkDbConnection();
-
-    if (!PatientManager::instance()->initialize(params))
+    if (!PatientManager::instance()->initialize())
     {
         return 1;
     }

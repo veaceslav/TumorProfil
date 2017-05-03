@@ -105,10 +105,8 @@ PatientManager* PatientManager::instance()
     return &creator()->object;
 }
 
-bool PatientManager::initialize(const DatabaseParameters& params)
+bool PatientManager::initialize()
 {
-    DatabaseAccess::setParameters(params);
-
     DefaultInitializationObserver observer;
     DatabaseAccess::checkReadyForUse(&observer);
     return observer.success;
@@ -423,6 +421,10 @@ void PatientManager::loadData(const Patient::Ptr& p)
     //NOTE: Keep in sync with mergeDatabase code below
     p->patientProperties = DatabaseAccess().db()->properties(PatientDB::PatientProperties, p->id);
     p->diseases = DatabaseAccess().db()->findDiseases(p->id);
+    if (p->diseases.isEmpty())
+    {
+        qWarning() << "Patient" << p->firstName << p->surname << "has no disease in Database";
+    }
     for (int i=0; i<p->diseases.size(); ++i)
     {
         Disease& disease = p->diseases[i];
@@ -621,7 +623,7 @@ static bool checkHistoryShouldBeReplaced(const Disease& currentD, const DiseaseH
 void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
 {
     DefaultInitializationObserver observer;
-    DatabaseAccess* access = DatabaseAccess::createExternalAccess(otherDb, &observer);
+    DatabaseAccess* access = DatabaseAccess::createExternalPatientDBAccess(otherDb, &observer);
     if (!access)
     {
         qWarning() << "Failed to access other database" << otherDb;

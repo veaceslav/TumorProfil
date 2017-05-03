@@ -57,7 +57,7 @@ public:
 
     static PatientManager* instance();
 
-    bool initialize(const DatabaseParameters& params);
+    bool initialize();
 
     void readDatabase();
 

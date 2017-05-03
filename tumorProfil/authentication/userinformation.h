@@ -35,7 +35,7 @@ public:
 
     void setEncryptionEnabled(bool value);
 
-    bool hasKey(QString keyName);
+    bool hasKey(const QString& keyName);
 
     bool loadKeys();
 
@@ -44,17 +44,17 @@ public:
      * @param keyName     - keyname correspond to database field name
      * @return            - Encrption key, or QString() if use does not have the key
      */
-    QString retrieveKey(QString keyName);
+    QString retrieveKey(const QString& keyName);
 
-    int retrievePermission(QString tableName);
+    int retrievePermission(const QString& tableName);
 
-    void setUsername(QString username);
+    void setUsername(const QString& username);
 
-    void setPassword(QString password);
+    void setPassword(const QString& password);
 
-    QString username();
+    QString username() const;
 
-    QString password();
+    QString password() const;
 
 public slots:
     LoginState toggleLogIn();
@@ -68,7 +68,7 @@ protected:
 
 private:
 
-    int checkDbConnection(QString username, QString password);
+    int checkDbConnection(const QString& username, const QString& password);
     class Private;
     Private * d;
 };
