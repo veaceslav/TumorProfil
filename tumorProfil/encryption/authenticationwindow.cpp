@@ -115,4 +115,6 @@ void AuthenticationWindow::setupUi()
 
     vbx->addLayout(hbx);
     vbx->addWidget(d->buttons);
+
+    d->username->setFocus();
 }
