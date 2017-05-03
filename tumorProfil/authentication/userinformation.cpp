@@ -83,7 +83,7 @@ bool UserInformation::logIn()
 
         DatabaseParameters params;
         params.readFromConfig();
-        d->permissions = TumorQueryUtils::instance()->getPermissions(params.databaseName);
+        d->permissions = TumorQueryUtils::instance()->getPermissions(params.databaseName, d->userName);
 
         LoginInfoWidget::instance()->logInUpdate(d->userName);
         emit signalLoginStateChanged();
@@ -123,7 +123,6 @@ bool UserInformation::isEncryptionEnabled()
 
 bool UserInformation::isLoggedIn()
 {
-    //qDebug() << "Is logged in" << d->isLoggedIn;
     return d->isLoggedIn;
 }
 
