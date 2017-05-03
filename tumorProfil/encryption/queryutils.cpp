@@ -49,13 +49,10 @@ TumorQueryUtils::TumorQueryUtils():
     }
 }
 
-AbstractQueryUtils::QueryState TumorQueryUtils::executeSql(QString queryString,
-                                                           QMap<QString, QVariant> bindValues, QVariant &lastId, QString databaseID)
+AbstractQueryUtils::QueryState TumorQueryUtils::executeSql(const QString& queryString,
+                                                           QMap<QString, QVariant> bindValues, QVariant &lastId, const QString& databaseID)
 {
-    if(databaseID.isEmpty())
-        databaseID = DATABASE_CONNECTION_NAME;
-
-    QSqlQuery* query = new QSqlQuery(QSqlDatabase::database(databaseID));
+    QSqlQuery* query = new QSqlQuery(QSqlDatabase::database(databaseID.isEmpty() ? QString(DATABASE_CONNECTION_NAME) : databaseID));
     query->prepare(queryString);
 
     for(QMap<QString, QVariant>::iterator it = bindValues.begin(); it !=bindValues.end(); ++it)
@@ -83,15 +80,11 @@ AbstractQueryUtils::QueryState TumorQueryUtils::executeSql(QString queryString,
     }
 }
 
-AbstractQueryUtils::QueryState TumorQueryUtils::executeDirectSql(QString queryString,
+AbstractQueryUtils::QueryState TumorQueryUtils::executeDirectSql(const QString& queryString,
                                                                  QMap<QString, QVariant> bindValues,
-                                                                 QVector<QVector<QVariant> > &results, QString databaseID)
+                                                                 QVector<QVector<QVariant> > &results, const QString& databaseID)
 {
-
-    if(databaseID.isEmpty())
-        databaseID = DATABASE_CONNECTION_NAME;
-
-    QSqlQuery* query = new QSqlQuery(QSqlDatabase::database(databaseID));
+    QSqlQuery* query = new QSqlQuery(QSqlDatabase::database(databaseID.isEmpty() ? QString(DATABASE_CONNECTION_NAME) : databaseID));
     query->prepare(queryString);
 
     for(QMap<QString, QVariant>::iterator it = bindValues.begin(); it !=bindValues.end(); ++it)
@@ -100,7 +93,6 @@ AbstractQueryUtils::QueryState TumorQueryUtils::executeDirectSql(QString querySt
     }
 
     int result = query->exec();
-
 
 
     if(result)
@@ -138,7 +130,7 @@ TumorQueryUtils* TumorQueryUtils::instance()
 }
 
 
-QVector<QVector<QVariant> > TumorQueryUtils::retrieveUserEntry(const QString &userName, QString databaseID)
+QVector<QVector<QVariant> > TumorQueryUtils::retrieveUserEntry(const QString &userName, const QString& databaseID)
 {
     QMap<QString, QVariant> bindValues;
     QVector<QVector<QVariant> > results;
@@ -151,7 +143,7 @@ QVector<QVector<QVariant> > TumorQueryUtils::retrieveUserEntry(const QString &us
     return results;
 }
 
-UserDetails TumorQueryUtils::retrieveUser(QString name, QString password)
+UserDetails TumorQueryUtils::retrieveUser(const QString& name, const QString& password)
 {
 
     UserDetails details;
@@ -172,7 +164,6 @@ UserDetails TumorQueryUtils::retrieveUser(QString name, QString password)
         details.userName = data.first().at(NAME_INDEX).toString();
         details.id = data.first().at(USERID_INDEX).toInt();
         QString salt = data.first().at(PASSWORD_SALT_INDEX).toString();
-        qDebug() << "Salt:" << salt;
         details.userSalt = salt;
         QVector<QVector<QVariant> > keys = retrieveMasterKeys(data.first().at(USERID_INDEX).toInt());
 
@@ -180,7 +171,6 @@ UserDetails TumorQueryUtils::retrieveUser(QString name, QString password)
         {
             QString decryptedKey = AesUtils::decryptMasterKey(password, salt, key.at(KEY_CONTENT_INDEX).toString());
             details.decryptionKeys.insert(key.at(KEY_NAME_INDEX).toString(), decryptedKey);
-            qDebug() << "Added key " << key.at(KEY_NAME_INDEX).toString() << " " << decryptedKey;
         }
     }
 
@@ -205,7 +195,7 @@ bool TumorQueryUtils::verifyPassword(const QString &password , const QVector<QVe
     }
 }
 
-bool TumorQueryUtils::openConnection(DatabaseParameters params, QString databaseID, DatabaseName databaseName)
+bool TumorQueryUtils::openConnection(const DatabaseParameters& params, const QString& databaseID, const DatabaseName& databaseName)
 {
     QSqlDatabase database;
 
@@ -275,7 +265,7 @@ bool TumorQueryUtils::openConnection(DatabaseParameters params, QString database
     return true;
 }
 
-bool TumorQueryUtils::closeConnection(QString databaseID)
+bool TumorQueryUtils::closeConnection(const QString& databaseID)
 {
     QSqlDatabase::removeDatabase(databaseID);
 

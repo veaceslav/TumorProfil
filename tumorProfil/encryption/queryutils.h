@@ -27,27 +27,27 @@ public:
 
     static TumorQueryUtils* instance();
 
-     QString encpryptMasterKey(QString password, QString salt, QString masterKey);
+     QString encpryptMasterKey(const QString& password, const QString& salt, const QString& masterKey);
 
-     QString decryptMasterKey(QString password, QString salt, QString masterHash);
+     QString decryptMasterKey(const QString& password, const QString& salt, const QString& masterHash);
 
-     //QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId, QString databaseID);
+     //QVector<QVector<QVariant> > retrieveMasterKeys(qlonglong userId, const QString& databaseID);
 
-     QVector<QVector<QVariant> > retrieveUserEntry(const QString& userName, QString databaseID);
+     QVector<QVector<QVariant> > retrieveUserEntry(const QString& userName, const QString& databaseID);
 
-     UserDetails retrieveUser(QString name, QString password);
+     UserDetails retrieveUser(const QString& name, const QString& password);
 
-     bool openConnection(DatabaseParameters params, QString databaseID, DatabaseName databaseName);
+     bool openConnection(const DatabaseParameters& params, const QString& databaseID, const DatabaseName& databaseName);
 
-     bool closeConnection(QString databaseID);
+     bool closeConnection(const QString& databaseID);
 
      bool verifyPassword(const QString& password , const QVector<QVector<QVariant> >& result);
 
-     virtual QueryState executeSql(QString queryString, QMap<QString,
-                                   QVariant> bindValues, QVariant& lastId, QString databaseID = QString());
-     virtual QueryState executeDirectSql(QString queryString, QMap<QString,
+     virtual QueryState executeSql(const QString& queryString, QMap<QString,
+                                   QVariant> bindValues, QVariant& lastId, const QString& databaseID = QString());
+     virtual QueryState executeDirectSql(const QString& queryString, QMap<QString,
                                          QVariant> bindValues, QVector<QVector<QVariant> >& results,
-                                         QString databaseID = QString());
+                                         const QString& databaseID = QString());
 protected:
      explicit TumorQueryUtils();
 
