@@ -145,7 +145,8 @@
                 CREATE TABLE UserAccess
                 (id INTEGER PRIMARY KEY AUTO_INCREMENT,
                  userid INTEGER,
-                 tableName  TEXT);
+                 tableName  TEXT,
+                 type TEXT);
                 </statement>
 
             </dbaction>
