@@ -213,7 +213,7 @@ void DatabaseAccess::performSetParameters(DatabaseAccessPriv* d, const DatabaseP
     {
         delete d->db;
         delete d->backend;
-        d->backend = new DatabaseCoreBackend("database-", &d->lock);
+        d->backend = new DatabaseCoreBackend(d->parameters.databaseName, &d->lock);
         d->db = new PatientDB(d->backend);
     }
 }
@@ -238,49 +238,57 @@ bool DatabaseAccess::checkReadyForUse(InitializationObserver* observer)
 
     // create an object with private shortcut constructor
     DatabaseAccess access(mainAccess);
-    return performReadyCheck(access, observer);
+    if (!access.performReadyCheck())
+    {
+        return false;
+    }
+    return access.performSchemaUpdate(observer);
 }
 
-bool DatabaseAccess::performReadyCheck(DatabaseAccess& access, InitializationObserver* observer)
+bool DatabaseAccess::performReadyCheck()
 {
-    if (!access.d->backend)
+    if (!d->backend)
     {
         qWarning() << "No database backend available in checkReadyForUse. "
                    "Did you call setParameters before?";
         return false;
     }
 
-    if (access.d->backend->isReady())
+    if (d->backend->isReady())
     {
         return true;
     }
 
-    if (!access.d->backend->isOpen())
+    if (!d->backend->isOpen())
     {
-        if (!access.d->backend->open(access.d->parameters))
+        if (!d->backend->open(d->parameters))
         {
-            access.setLastError(QObject::tr("Error opening database backend.\n ")
-                                + access.d->backend->lastError());
+            setLastError(QObject::tr("Error opening database backend.\n ")
+                                + d->backend->lastError());
             return false;
         }
     }
+    return d->backend->isOpen();
+}
 
+bool DatabaseAccess::performSchemaUpdate(InitializationObserver* observer)
+{
     // avoid endless loops (if called methods create new DatabaseAccess objects)
-    access.d->initializing = true;
+    d->initializing = true;
 
     // update schema
-    SchemaUpdater updater(&access);
+    SchemaUpdater updater(this);
     updater.setObserver(observer);
 
-    if (!access.d->backend->initSchema(&updater))
+    if (!d->backend->initSchema(&updater))
     {
-        access.d->initializing = false;
+        d->initializing = false;
         return false;
     }
 
-    access.d->initializing = false;
+    d->initializing = false;
 
-    return access.d->backend->isReady();
+    return d->backend->isReady();
 }
 
 void DatabaseAccess::cleanUpDatabase()
@@ -289,12 +297,23 @@ void DatabaseAccess::cleanUpDatabase()
     mainAccess = 0;
 }
 
-DatabaseAccess* DatabaseAccess::createExternalAccess(const DatabaseParameters& params, InitializationObserver* observer)
+DatabaseAccess* DatabaseAccess::createExternalAccess(const DatabaseParameters& params)
 {
     DatabaseAccessPriv* d = new DatabaseAccessPriv;
     DatabaseAccess* access = new DatabaseAccess(d);
     performSetParameters(d, params);
-    if (!performReadyCheck(*access, observer))
+    if (!access->performReadyCheck())
+    {
+        delete access;
+        return 0;
+    }
+    return access;
+}
+
+DatabaseAccess* DatabaseAccess::createExternalPatientDBAccess(const DatabaseParameters& params, InitializationObserver* observer)
+{
+    DatabaseAccess* access = createExternalAccess(params);
+    if (!access->performSchemaUpdate(observer))
     {
         delete access;
         return 0;

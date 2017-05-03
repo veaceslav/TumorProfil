@@ -67,17 +67,20 @@ public:
 
     /**
      * Create a DatabaseAccess for a database which is not the main database.
-     * The db file will, if necessary, be schema-updated.
+     * The makes no assumption on the underlying db schema. The backend will be open.
+     * The second assumes a PatientDB-supported schema and schema-updates, if necessary. The backend will be ready.
      * You must delete the DatabaseAccess object which you receive.
      */
-    static DatabaseAccess* createExternalAccess(const DatabaseParameters& params, InitializationObserver* observer);
+    static DatabaseAccess* createExternalAccess(const DatabaseParameters& params);
+    static DatabaseAccess* createExternalPatientDBAccess(const DatabaseParameters& params, InitializationObserver* observer);
 
 private:
 
     DatabaseAccess(DatabaseAccessPriv* d);
     friend class DatabaseAccessUnlock;
-    static bool performReadyCheck(DatabaseAccess& access, InitializationObserver* observer);
     static void performSetParameters(DatabaseAccessPriv* d, const DatabaseParameters& parameters);
+    bool performReadyCheck();
+    bool performSchemaUpdate(InitializationObserver* observer);
 
     DatabaseAccessPriv* d;
     static DatabaseAccessPriv* mainAccess;
