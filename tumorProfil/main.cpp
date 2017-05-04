@@ -54,28 +54,14 @@
 #include "encryption/authenticationwindow.h"
 #include "authentication//userinformation.h"
 
-/*
-void myMsgHandler(QtMsgType, const char * text)
-{
-    QMessageBox::information(0, QString(), text);
-}
-*/
-
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    //qInstallMsgHandler(myMsgHandler);
 
     QCoreApplication::setOrganizationName("Innere Klinik (Tumorforschung)");
     QCoreApplication::setApplicationName("Tumorprofil");
 
-    //if (!QIcon::hasThemeIcon("document-open")) {
-        //If there is no default working icon theme then we should
-        //use an icon theme that we provide via a .qrc file
-        //This case happens under Windows and Mac OS X
-        //This does not happen under GNOME or KDE
-        QIcon::setThemeName("silk");
-    //}
+    QIcon::setThemeName("silk");
     a.setWindowIcon(QIcon::fromTheme("folder_table"));
 
     DatabaseParameters params;
