@@ -24,6 +24,7 @@
 // Qt includes
 
 #include <QDebug>
+#include <QVector>
 
 // Local includes
 
@@ -348,5 +349,82 @@ void PatientDB::removeProperties(PropertyType e, int id, const QString& property
                        d->idName(e) + "=? AND property=? AND value=?;",
                        id, property, value);
     }
+}
+
+void PatientDB::updateEvents(int diseaseId, const QList<HistoryEvent> events)
+{
+    d->db->execSql("DELETE FROM EventInfos WHERE eventid IN (SELECT id FROM Events WHERE diseaseid=?);", diseaseId);
+    d->db->execSql("DELETE FROM Events WHERE diseaseid=?;", diseaseId);
+
+    SqlQuery eventInsertQuery = d->db->prepareQuery("INSERT INTO Events (diseaseid, class, date, type) VALUES (?, ?, ?, ?);");
+    SqlQuery infoInsertQuery  = d->db->prepareQuery("INSERT INTO EventInfos (eventid, type, info) VALUES (?, ?, ?);");
+    QVariant id;
+
+    foreach (const HistoryEvent& event, events)
+    {
+        d->db->execSql(eventInsertQuery, diseaseId, event.eventClass, event.date.toString(Qt::ISODate), event.type, 0, &id);
+        foreach (const HistoryEventInfo& info, event.infos)
+        {
+            d->db->execSql(infoInsertQuery, id.toInt(), info.type, info.info);
+        }
+    }
+}
+
+QList<HistoryEvent> PatientDB::findEvents(int diseaseId)
+{
+    QList<QVariant> values;
+
+    d->db->execSql( "SELECT id, class, date, type FROM Events WHERE diseaseid=?;",
+                    diseaseId, &values );
+
+    int numberOfEvents = values.size() / 4;
+    QList<HistoryEvent> events;
+    QVector<int> ids;
+    events.reserve(numberOfEvents);
+    ids.reserve(numberOfEvents);
+
+    if (values.isEmpty())
+    {
+        return events;
+    }
+
+    for (QList<QVariant>::const_iterator it = values.constBegin(); it != values.constEnd();)
+    {
+        HistoryEvent event;
+
+        ids              << (*it).toInt();
+        ++it;
+        event.eventClass  = (*it).toString();
+        ++it;
+        event.date        = QDate::fromString(it->toString(), Qt::ISODate);
+        ++it;
+        event.type        = (*it).toString();
+        ++it;
+
+        events << event;
+    }
+
+    SqlQuery query = d->db->prepareQuery("SELECT id, type, info FROM EventInfos WHERE eventid=?;");
+    for (int i=0; i<events.size(); i++)
+    {
+        HistoryEvent& event = events[i];
+
+        d->db->execSql(query, ids[i], &values);
+
+        for (QList<QVariant>::const_iterator it = values.constBegin(); it != values.constEnd();)
+        {
+            HistoryEventInfo info;
+
+            info.type        = (*it).toString();
+            ++it;
+            info.info        = (*it).toString();
+            ++it;
+
+            event.infos << info;
+        }
+
+    }
+
+    return events;
 }
 

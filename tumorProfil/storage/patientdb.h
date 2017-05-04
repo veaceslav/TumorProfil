@@ -77,6 +77,9 @@ public:
                           const QString& property = QString(),
                           const QString& value = QString());
 
+    void updateEvents(int diseaseId, const QList<HistoryEvent> events);
+    QList<HistoryEvent> findEvents(int diseaseId);
+
 private:
 
 

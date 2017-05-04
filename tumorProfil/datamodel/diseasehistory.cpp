@@ -345,7 +345,7 @@ TEXT_INT_MAPPER(Finding, AdditionalInfo)
 {
     Pair("infoLocalRecurrence", Finding::LocalRecurrence),
     Pair("infoMetastasis", Finding::Metastasis),
-    Pair("infoCentralNervös", Finding::CentralNervous),
+    Pair("  ", Finding::CentralNervous),
 };
 
 TEXT_INT_MAPPER(DiseaseState, State)

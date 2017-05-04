@@ -13,99 +13,6 @@
     <dbservercmd></dbservercmd>
     <dbinitcmd></dbinitcmd>
 
-    <database name="QSQLITE">
-        <dbactions>
-            <dbaction name="CreateDB">
-                <statement mode="plain">
-                 CREATE TABLE Patients
-                 (id INTEGER PRIMARY KEY,
-                  firstName TEXT,
-                  surname TEXT,
-                  dateOfBirth TEXT,
-                  gender INTEGER);
-                </statement>
-                <statement mode="plain">
-                 CREATE TABLE PatientProperties
-                 (patientid INTEGER,
-                  property TEXT,
-                  value TEXT,
-                  detail TEXT);
-                </statement>
-
-                <statement mode="plain">
-                 CREATE TABLE Diseases
-                 (id INTEGER PRIMARY KEY,
-                  patientid INTEGER,
-                  initialDiagnosis DATETIME,
-                  cTNM TEXT,
-                  pTNM TEXT);
-                </statement>
-                <statement mode="plain">
-                 CREATE TABLE DiseaseProperties
-                 (diseaseid INTEGER,
-                  property TEXT,
-                  value TEXT,
-                  detail TEXT);
-                </statement>
-
-                <statement mode="plain">
-                 CREATE TABLE Pathologies
-                 (id INTEGER PRIMARY KEY,
-                  diseaseid INTEGER,
-                  entity INTEGER,
-                  sampleOrigin INTEGER,
-                  context TEXT,
-                  date DATETIME);
-                </statement>
-                <statement mode="plain">
-                 CREATE TABLE PathologyProperties
-                 (pathologyid,
-                  property TEXT,
-                  value TEXT,
-                  detail TEXT);
-                </statement>
-                <statement mode="plain">
-                 CREATE TABLE Settings
-                 (keyword TEXT NOT NULL UNIQUE,
-                  value TEXT)
-                </statement>
-            </dbaction>
-
-            <dbaction name="CreateDBIndices">
-                <statement mode="plain">
-                CREATE INDEX nameIndex ON Patients (surname);
-                </statement>
-                <statement mode="plain">
-                CREATE INDEX dateOfBirthIndex ON Patients (dateOfBirth);
-                </statement>
-                <statement mode="plain">
-                CREATE INDEX pathologyPropertiesIndex ON PathologyProperties (property);
-                </statement>
-            </dbaction>
-            <dbaction name="CreateDBTrigger">
-                <statement mode="plain">
-                CREATE TRIGGER delete_patient DELETE ON Patients
-                BEGIN
-                    DELETE FROM Diseases          WHERE patientid=OLD.id;
-                    DELETE FROM PatientProperties WHERE patientid=OLD.id;
-                END;
-                </statement>
-                <statement mode="plain">
-                CREATE TRIGGER delete_disease DELETE ON Diseases
-                BEGIN
-                    DELETE FROM Pathologies       WHERE diseaseid=OLD.id;
-                END;
-                </statement>
-                <statement mode="plain">
-                CREATE TRIGGER delete_pathology DELETE ON Pathologies
-                BEGIN
-                    DELETE FROM PathologyProperties WHERE pathologyid=OLD.id;
-                END;
-                </statement>
-            </dbaction>
-        </dbactions>
-    </database>
-
     <database name="QMYSQL">
 
         <dbactions>
@@ -162,6 +69,21 @@
                  CREATE TABLE Settings
                  (keyword varchar(150) NOT NULL UNIQUE,
                   value TEXT)
+                </statement>
+                <statement mode="plain">
+                 CREATE TABLE Events
+                 (id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                  diseaseid INTEGER,
+                  class TEXT,
+                  date  DATETIME,
+                  type  TEXT);
+                </statement>
+                <statement mode="plain">
+                 CREATE TABLE EventInfos
+                 (id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                  eventid INTEGER,
+                  type  TEXT,
+                  info  TEXT);
                 </statement>
             </dbaction>
 
