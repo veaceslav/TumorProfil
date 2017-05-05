@@ -193,7 +193,8 @@ HEADERS  += mainwindow.h \
     authentication/userinformation.h \
     settings/changepassword.h \
     TumorUsers/abstractqueryutils.h \
-    authentication/accessmanagement.h
+    authentication/accessmanagement.h \
+    datamodel/event.h
 
 
 INCLUDEPATH += datamodel/ \
