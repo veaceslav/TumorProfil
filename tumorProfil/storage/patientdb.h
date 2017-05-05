@@ -29,7 +29,7 @@
 
 // Local includes
 
-#include "disease.h"
+#include "event.h"
 #include "patient.h"
 #include "property.h"
 
@@ -77,8 +77,8 @@ public:
                           const QString& property = QString(),
                           const QString& value = QString());
 
-    void updateEvents(int diseaseId, const QList<HistoryEvent> events);
-    QList<HistoryEvent> findEvents(int diseaseId);
+    void updateEvents(int diseaseId, const QList<Event> events);
+    QList<Event> findEvents(int diseaseId);
 
 private:
 
