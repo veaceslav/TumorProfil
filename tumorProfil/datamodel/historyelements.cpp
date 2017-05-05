@@ -42,7 +42,7 @@ void HistoryElement::setParent(HistoryElement* parent)
 }
 
 Chemotherapy::Chemotherapy()
-    : dose(0), absdose(0)
+    : dose(0), absdose(0), cycles(0)
 {
 }
 
@@ -137,7 +137,7 @@ TherapyElementList& TherapyElementList::operator<<(TherapyElement* elem)
 
 
 Therapy::Therapy()
-    : elements(this)
+    : outcome(Finding::UndefinedResult), bestResponse(Finding::UndefinedResult), elements(this)
 {
 }
 
@@ -165,7 +165,7 @@ QString Therapy::uiLabel(Type type)
 }
 
 Finding::Finding()
-    : type(UndefinedType), result(UndefinedResult), context(UndefinedContext)
+    : type(UndefinedType), result(UndefinedResult), context(UndefinedContext), modality(UndefinedModality)
 {
 }
 

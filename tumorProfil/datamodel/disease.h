@@ -35,23 +35,6 @@
 
 class DiseaseHistory;
 
-class HistoryEventInfo
-{
-public:
-    QString type;
-    QString info;
-};
-
-class HistoryEvent
-{
-public:
-    QString eventClass;
-    QDate   date;
-    QString type;
-
-    QList<HistoryEventInfo> infos;
-};
-
 class Disease
 {
 public:

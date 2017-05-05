@@ -201,6 +201,8 @@ public:
     int absdose;
     /// schedule (days of administration, repeat)
     QString schedule;
+    /// (optional) number of cycles
+    int cycles;
 
     static QStringList substances();
 };
@@ -236,40 +238,6 @@ public:
     TherapyElementList& operator<<(TherapyElement* elem);
 };
 
-class Therapy : public HistoryElement
-{
-public:
-    Therapy();
-    ~Therapy();
-
-    enum Type
-    {
-        CTx,
-        RTx,
-        RCTx,
-        Surgery,
-        Intervention
-    };
-
-    enum AdditionalInfo
-    {
-        NoAdditionalInfo    = 0,
-        BeginsTherapyBlock  = 1 << 0,
-        EndsTherapyBlock    = 1 << 1
-    };
-    Q_DECLARE_FLAGS(AdditionalInfos, AdditionalInfo)
-
-    QDate begin() const { return date; }
-    QDate end;
-
-    Type type;
-    QString description;
-    TherapyElementList elements;
-    AdditionalInfos additionalInfos;
-
-    static QString uiLabel(Type type);
-};
-
 // ---------------------------
 
 class Finding : public HistoryElement
@@ -281,14 +249,9 @@ public:
     enum Type
     {
         UndefinedType,
+        Imaging,
         Clinical,
         Histopathological,
-        CT,
-        MRI,
-        XRay,
-        Sono,
-        PETCT,
-        Scintigraphy,
         Death
     };
 
@@ -322,6 +285,17 @@ public:
         FollowUp
     };
 
+    enum Modality
+    {
+        UndefinedModality,
+        CT,
+        MRI,
+        XRay,
+        Sono,
+        PETCT,
+        Scintigraphy
+    };
+
     enum AdditionalInfo
     {
         NoAdditionalInfo = 0,
@@ -331,13 +305,51 @@ public:
     };
     Q_DECLARE_FLAGS(AdditionalInfos, AdditionalInfo)
 
-    Type    type;
-    Result  result;
-    Context context;
+    Type     type;
+    Result   result;
+    Context  context;
+    Modality modality;
     AdditionalInfos additionalInfos;
-    QString description;
+    QString  description;
 };
 
+// ---------------------------
+
+class Therapy : public HistoryElement
+{
+public:
+    Therapy();
+    ~Therapy();
+
+    enum Type
+    {
+        CTx,
+        RTx,
+        RCTx,
+        Surgery,
+        Intervention
+    };
+
+    enum AdditionalInfo
+    {
+        NoAdditionalInfo    = 0,
+        BeginsTherapyBlock  = 1 << 0,
+        EndsTherapyBlock    = 1 << 1
+    };
+    Q_DECLARE_FLAGS(AdditionalInfos, AdditionalInfo)
+
+    QDate begin() const { return date; }
+    QDate end;
+
+    Type type;
+    QString description;
+    Finding::Result outcome;
+    Finding::Result bestResponse;
+    TherapyElementList elements;
+    AdditionalInfos additionalInfos;
+
+    static QString uiLabel(Type type);
+};
 
 // ---------------------------
 
