@@ -45,7 +45,6 @@ public:
     QDate end() const;
     DiseaseState state() const;
 
-    HistoryElementList& entries();
     const HistoryElementList& entries() const;
 
     HistoryElement* operator[](int i);
@@ -68,6 +67,7 @@ public:
     static DiseaseHistory fromXml(const QString& xml);
     QString toXml() const;
 
+    void insert(int place, HistoryElement* e);
     /// Removes an element from this history. Supports removal of child entries.
     /// Note: Does not delete the object.
     void remove(HistoryElement* e);
@@ -80,7 +80,7 @@ public:
 
     // Debug / Testing
     static void test();
-    bool testXmlEvent();
+    bool testXmlEvent() const;
 
 private:
 

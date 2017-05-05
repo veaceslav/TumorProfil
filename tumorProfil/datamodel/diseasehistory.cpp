@@ -29,6 +29,7 @@
 
 #include <QDebug>
 #include <QMap>
+#include <QMultiHash>
 #include <QPair>
 #include <QRegularExpression>
 
@@ -52,15 +53,28 @@ public:
     }
 
     HistoryElementList history;
-    PropertyList properties;
+    PropertyList       properties;
+    QList<Event>                                  unknownEvents;
+    QMultiHash<const  HistoryElement*, EventInfo> unknownEventInfos;
+
 
     static QLatin1String lastDocumentationPropertyName()
     {
         return QLatin1String("lastDocumentation");
     }
+
     static QLatin1String lastValidationPropertyName()
     {
         return QLatin1String("lastValidation");
+    }
+
+    void addUnknownEventInfos(const HistoryElement* e, Event& event) const
+    {
+        QHash<const HistoryElement*, EventInfo>::const_iterator it = unknownEventInfos.find(e);
+        while (it != unknownEventInfos.end() && it.key() == e)
+        {
+            event.infos << it.value();
+        }
     }
 };
 
@@ -146,11 +160,6 @@ DiseaseState DiseaseHistory::state() const
     return DiseaseState();
 }
 
-HistoryElementList& DiseaseHistory::entries()
-{
-    return d->history;
-}
-
 const HistoryElementList& DiseaseHistory::entries() const
 {
     return d->history;
@@ -186,6 +195,15 @@ QDate DiseaseHistory::latestDate() const
     return d->history.latestByDate()->date;
 }
 
+void DiseaseHistory::insert(int place, HistoryElement *e)
+{
+    if (!e)
+    {
+        return;
+    }
+    d->history.insert(place, e);
+}
+
 void DiseaseHistory::remove(HistoryElement* e)
 {
     if (!e)
@@ -205,6 +223,7 @@ void DiseaseHistory::remove(HistoryElement* e)
     else
     {
         d->history.removeAll(e);
+        d->unknownEventInfos.remove(e);
     }
 }
 
@@ -867,6 +886,7 @@ DiseaseHistory DiseaseHistory::fromEvents(const QList<Event>& events)
                 else
                 {
                     qDebug() << "Unhandled event info with from event class therapy, type" << event.type << ", unknown info type" << info.type;
+                    h.d->unknownEventInfos.insert(t, info);
                 }
             }
 
@@ -920,6 +940,7 @@ DiseaseHistory DiseaseHistory::fromEvents(const QList<Event>& events)
                 else
                 {
                     qDebug() << "Unhandled event info with from event class finding, type" << event.type << ", unknown info type" << info.type;
+                    h.d->unknownEventInfos.insert(f, info);
                 }
             }
 
@@ -934,6 +955,7 @@ DiseaseHistory DiseaseHistory::fromEvents(const QList<Event>& events)
             foreach (const EventInfo& info, event.infos)
             {
                 qDebug() << "Unhandled event info with from event class diseasestate, type" << event.type << "unknown info type" << info.type;
+                h.d->unknownEventInfos.insert(s, info);
             }
 
             h << s;
@@ -951,11 +973,13 @@ DiseaseHistory DiseaseHistory::fromEvents(const QList<Event>& events)
             else
             {
                 qDebug() << "Unhandled event with class metadata, unknown type" << event.type;
+                h.d->unknownEvents << event;
             }
         }
         else
         {
             qDebug() << "Unhandled event with unknown class" << event.eventClass << ", type" << event.type;
+            h.d->unknownEvents << event;
         }
 
     }
@@ -1065,6 +1089,7 @@ QList<Event> DiseaseHistory::toEvents() const
                     event.infos << EventInfo("therapy:toxicity", mergeWithColonFields(map));
                 }
             }
+            d->addUnknownEventInfos(t, event);
 
             events << event;
         }
@@ -1100,15 +1125,21 @@ QList<Event> DiseaseHistory::toEvents() const
             {
                 event.infos << EventInfo("finding:imaging:modality", EventFindingModalityTextIntMapper::toString(f->modality));
             }
+            d->addUnknownEventInfos(f, event);
 
             events << event;
         }
         else if (e->is<DiseaseState>())
         {
             const DiseaseState* s = static_cast<const DiseaseState*>(e);
-            events << Event("diseasestate", EventDiseaseStateStateTextIntMapper::toString(s->state), s->date);
+            Event event("diseasestate", EventDiseaseStateStateTextIntMapper::toString(s->state), s->date);
+            d->addUnknownEventInfos(s, event);
+            events << event;
         }
     }
+
+    events += d->unknownEvents;
+
     return events;
 }
 
@@ -1204,7 +1235,7 @@ void DiseaseHistory::test()
     */
 }
 
-bool DiseaseHistory::testXmlEvent()
+bool DiseaseHistory::testXmlEvent() const
 {
     QList<Event> events = toEvents();
     DiseaseHistory h2 = DiseaseHistory::fromEvents(events);
