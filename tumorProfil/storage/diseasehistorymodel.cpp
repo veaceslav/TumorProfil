@@ -267,30 +267,41 @@ QVariant DiseaseHistoryModel::data(const QModelIndex& index, int role) const
         case Finding::Histopathological:
             modality = tr("Histologie");
             break;
-        case Finding::CT:
-            modality = tr("CT");
-            wantAnswer = true;
+        case Finding::Imaging:
+        {
+            switch (f->modality)
+            {
+            case Finding::CT:
+                modality = tr("CT");
+                wantAnswer = true;
+                break;
+            case Finding::MRI:
+                modality = tr("MRT");
+                wantAnswer = true;
+                break;
+            case Finding::XRay:
+                modality = tr("Röntgen");
+                wantAnswer = true;
+                break;
+            case Finding::Sono:
+                modality = tr("Sonographie");
+                wantAnswer = true;
+                break;
+            case Finding::PETCT:
+                modality = tr("PET-CT");
+                wantAnswer = true;
+                break;
+            case Finding::Scintigraphy:
+                modality = tr("Szintigraphie");
+                wantAnswer = true;
+                break;
+            case Finding::UndefinedModality:
+                modality = tr("Bildgebung");
+                wantAnswer = true;
+                break;
+            }
             break;
-        case Finding::MRI:
-            modality = tr("MRT");
-            wantAnswer = true;
-            break;
-        case Finding::XRay:
-            modality = tr("Röntgen");
-            wantAnswer = true;
-            break;
-        case Finding::Sono:
-            modality = tr("Sonographie");
-            wantAnswer = true;
-            break;
-        case Finding::PETCT:
-            modality = tr("PET-CT");
-            wantAnswer = true;
-            break;
-        case Finding::Scintigraphy:
-            modality = tr("Szintigraphie");
-            wantAnswer = true;
-            break;
+        }
         case Finding::Death:
             modality = tr("Verstorben");
             break;

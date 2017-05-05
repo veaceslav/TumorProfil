@@ -42,6 +42,8 @@
 #include "datevalidator.h"
 #include "therapyelementeditwidget.h"
 
+#define DifferentEnumsSpacer 100
+
 
 static void addButton(int type, const QString& text, QButtonGroup* group,
                       QGridLayout* layout, int r, int c)
@@ -443,13 +445,13 @@ FindingEditWidget::FindingEditWidget()
     modalityGroup   = new QButtonGroup;
     QGridLayout* modalityLayout = new QGridLayout;
 
-    addButton(Finding::CT, tr("CT"), modalityGroup, modalityLayout, 0, 0);
-    addButton(Finding::MRI, tr("MRT"), modalityGroup, modalityLayout, 0, 1);
-    addButton(Finding::Sono, tr("Sono"), modalityGroup, modalityLayout, 0, 2);
+    addButton(DifferentEnumsSpacer + Finding::CT, tr("CT"), modalityGroup, modalityLayout, 0, 0);
+    addButton(DifferentEnumsSpacer + Finding::MRI, tr("MRT"), modalityGroup, modalityLayout, 0, 1);
+    addButton(DifferentEnumsSpacer + Finding::Sono, tr("Sono"), modalityGroup, modalityLayout, 0, 2);
     addButton(Finding::Clinical, tr("Klinisch"), modalityGroup, modalityLayout, 1, 0);
-    addButton(Finding::XRay, tr("Röntgen"), modalityGroup, modalityLayout, 1, 1);
-    addButton(Finding::PETCT, tr("PET-CT"), modalityGroup, modalityLayout, 1, 2);
-    addButton(Finding::Scintigraphy, tr("Szinti"), modalityGroup, modalityLayout, 2, 0);
+    addButton(DifferentEnumsSpacer + Finding::XRay, tr("Röntgen"), modalityGroup, modalityLayout, 1, 1);
+    addButton(DifferentEnumsSpacer + Finding::PETCT, tr("PET-CT"), modalityGroup, modalityLayout, 1, 2);
+    addButton(DifferentEnumsSpacer + Finding::Scintigraphy, tr("Szinti"), modalityGroup, modalityLayout, 2, 0);
     addButton(Finding::Histopathological, tr("Histo"), modalityGroup, modalityLayout, 2, 1);
     addButton(Finding::Death, tr("Tod"), modalityGroup, modalityLayout, 2, 2);
     modalityBox->setLayout(modalityLayout);
@@ -503,7 +505,16 @@ HistoryElement* FindingEditWidget::applyToElement() const
     Finding* f = m_element->as<Finding>();
     f->date        = dateCommentWidget->beginDate();
     f->description = dateCommentWidget->comment();
-    f->type = checkedValue<Finding::Type>(modalityGroup, Finding::UndefinedType);
+    if (modalityGroup->checkedId() >= DifferentEnumsSpacer)
+    {
+        f->type     = Finding::Imaging;
+        f->modality = Finding::Modality(modalityGroup->checkedId() - DifferentEnumsSpacer );
+    }
+    else
+    {
+        f->type     = checkedValue<Finding::Type>(modalityGroup, Finding::UndefinedType);
+        f->modality = Finding::UndefinedModality;
+    }
     f->context = checkedValue<Finding::Context>(contextGroup, Finding::UndefinedContext);
     f->result = checkedValue<Finding::Result>(resultGroup, Finding::UndefinedResult);
     f->additionalInfos = checkedFlags<Finding::AdditionalInfo>(infoGroup);
@@ -519,7 +530,14 @@ void FindingEditWidget::setElement(HistoryElement* element)
     dateCommentWidget->setDate(f->date);
     dateCommentWidget->setComment(f->description);
 
-    setCheckedSafe(modalityGroup, f->type);
+    if (f->type == Finding::Imaging)
+    {
+        setCheckedSafe(modalityGroup, f->modality + DifferentEnumsSpacer);
+    }
+    else
+    {
+        setCheckedSafe(modalityGroup, f->type);
+    }
     setCheckedSafe(contextGroup, f->context);
     setCheckedSafe(resultGroup, f->result);
     setCheckedFlags(infoGroup, f->additionalInfos);

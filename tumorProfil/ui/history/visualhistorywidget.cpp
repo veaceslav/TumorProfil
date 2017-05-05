@@ -563,12 +563,7 @@ void VisualHistoryWidget::render(QPainter &p, bool widgetOutput)
         case Finding::Death:
             continue;
         case Finding::Clinical:
-        case Finding::CT:
-        case Finding::MRI:
-        case Finding::XRay:
-        case Finding::Sono:
-        case Finding::PETCT:
-        case Finding::Scintigraphy:
+        case Finding::Imaging:
         case Finding::Histopathological:
             break;
         }
