@@ -24,6 +24,7 @@
 
 #include <QSharedDataPointer>
 
+#include "event.h"
 #include "historyelements.h"
 #include "property.h"
 
@@ -61,6 +62,9 @@ public:
     bool isSorted() const;
     int sortPlace(HistoryElement* element) const;
 
+    static DiseaseHistory fromEvents(const QList<Event>& events);
+    QList<Event> toEvents() const;
+
     static DiseaseHistory fromXml(const QString& xml);
     QString toXml() const;
 
@@ -73,7 +77,10 @@ public:
     QDate latestDate() const;
 
     class Private;
+
+    // Debug / Testing
     static void test();
+    bool testXmlEvent();
 
 private:
 
