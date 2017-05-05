@@ -51,6 +51,18 @@ class TextIntMapper
 {
 public:
 
+    TextIntMapper(Enum enu)
+        : enu(enu), text(toString(enu))
+    {}
+    TextIntMapper(const QString& s)
+        : enu(toEnum(s)), text(s)
+    {}
+    operator QStringRef() const { return text; }
+    operator Enum() const { return enu; }
+
+    Enum       enu;
+    QString    text;
+
     static QPair<QLatin1String,Enum> Pair(const char* s, Enum i)
     { return qMakePair(QLatin1String(s), i); }
 
@@ -66,9 +78,10 @@ public:
         return QString();
     }
 
-    static Enum toEnum(const QStringRef& s)
+    template <class S> // with S = QString or QStringRef
+    static Enum toEnum(const S& s)
     {
-        for (uint i=0; i<sizeof(Child::map); i++)
+        for (uint i=0; i<sizeof(Child::map)/sizeof(QPair<QLatin1String,Enum>); i++)
         {
             if (Child::map[i].first == s)
             {
@@ -85,6 +98,15 @@ public:
 static const QPair<QLatin1String,Class::Enum> map[]; \
 }; \
 const QPair<QLatin1String,Class::Enum> Class##Enum##TextIntMapper::map[] =
+
+#define EVENT_TEXT_INT_MAPPER(Class, Enum) \
+    class Event##Class##Enum##TextIntMapper : public TextIntMapper<Class::Enum, Event##Class##Enum##TextIntMapper> \
+{ public: \
+Event##Class##Enum##TextIntMapper(Class::Enum e) : TextIntMapper<Class::Enum, Event##Class##Enum##TextIntMapper>(e) {} \
+Event##Class##Enum##TextIntMapper(const QString& s) : TextIntMapper<Class::Enum, Event##Class##Enum##TextIntMapper>(s) {} \
+static const QPair<QLatin1String,Class::Enum> map[]; \
+}; \
+const QPair<QLatin1String,Class::Enum> Event##Class##Enum##TextIntMapper::map[] =
 
 
 
