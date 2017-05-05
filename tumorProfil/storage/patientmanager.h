@@ -47,11 +47,10 @@ public:
         ChangedDiseaseMetadata   = 1 << 2,
         ChangedPatientProperties = 1 << 3,
         ChangedPatientMetadata   = 1 << 4,
-
-        ChangedDiseaseHistory    = ChangedDiseaseProperties,
+        ChangedDiseaseHistory    = 1 << 5,
         ChangedAll               = ChangedPathologyData | ChangedDiseaseProperties
                                   | ChangedDiseaseMetadata | ChangedPatientProperties
-                                  | ChangedPatientMetadata
+                                  | ChangedPatientMetadata | ChangedDiseaseHistory
     };
     Q_DECLARE_FLAGS(ChangeFlags, ChangeFlag)
 

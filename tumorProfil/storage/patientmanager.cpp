@@ -341,7 +341,7 @@ void PatientManager::storeData(const Patient::Ptr& patient, ChangeFlags flags)
         DatabaseAccess().db()->updatePatient(*patient);
     }
 
-    if (flags & ChangedDiseaseProperties)
+    if (flags & ChangedPatientProperties)
     {
         DatabaseAccess().db()->removeProperties(PatientDB::PatientProperties, patient->id);
         foreach (const Property& property, patient->patientProperties)
@@ -370,16 +370,19 @@ void PatientManager::storeData(const Patient::Ptr& patient, ChangeFlags flags)
 
         if (flags & ChangedDiseaseProperties)
         {
-            //qDebug() << "Storing disease properties";
             DatabaseAccess().db()->removeProperties(PatientDB::DiseaseProperties, disease.id);
             foreach (const Property& property, disease.diseaseProperties)
             {
-                //qDebug() << "Adding property" << property.property << property.value;
                 DatabaseAccess().db()->addProperty(PatientDB::DiseaseProperties, disease.id,
                                                    property.property, property.value, property.detail);
             }
         }
 
+        if (flags & ChangedDiseaseHistory)
+        {
+            QList<Event> events = disease.history.toEvents();
+            DatabaseAccess().db()->replaceEvents(disease.id, events);
+        }
 
         if (flags & ChangedPathologyData)
         {
@@ -429,6 +432,13 @@ void PatientManager::loadData(const Patient::Ptr& p)
     {
         Disease& disease = p->diseases[i];
         disease.diseaseProperties = DatabaseAccess().db()->properties(PatientDB::DiseaseProperties, disease.id);
+        QList<Event> events = DatabaseAccess().db()->findEvents(disease.id);
+        disease.history = DiseaseHistory::fromEvents(events);
+        // MIGRATION: Load XML alternatively
+        if (disease.history.isEmpty())
+        {
+            disease.history = disease.historyFromProperties();
+        }
         disease.pathologies = DatabaseAccess().db()->findPathologies(disease.id);
         for (int u=0; u<disease.pathologies.size(); ++u)
         {
@@ -697,7 +707,7 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
                 else
                 {
                     mergeActions << "Adding new disease for " + patientIdentifierString;
-                    changed |= ChangedDiseaseMetadata | ChangedDiseaseProperties | ChangedPathologyData;
+                    changed |= ChangedDiseaseMetadata | ChangedDiseaseProperties | ChangedDiseaseHistory | ChangedPathologyData;
                     continue;
                 }
             }
@@ -709,8 +719,8 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
                 // ! diseaseProperties: Handle history
                 if (d.diseaseProperties != otherD.diseaseProperties)
                 {
-                    DiseaseHistory h = d.history();
-                    DiseaseHistory otherH = otherD.history();
+                    DiseaseHistory h = d.history;
+                    DiseaseHistory otherH = otherD.history;
                     if (checkHistoryShouldBeReplaced(d, otherH, h, patientIdentifierString, &mergeHints))
                     {
                         QString entityString; if (d.entity() == Pathology::ColorectalAdeno) entityString="CRC"; if (d.entity() == Pathology::PulmonaryAdeno) entityString="ADC";
@@ -840,7 +850,7 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
                     {
                         d.pathologies[o].id = 0;
                     }
-                    changed |= ChangedDiseaseMetadata | ChangedDiseaseProperties | ChangedPathologyData;
+                    changed |= ChangedDiseaseMetadata | ChangedDiseaseProperties | ChangedDiseaseHistory | ChangedPathologyData;
                 }
             }
             else
@@ -851,11 +861,11 @@ void PatientManager::mergeDatabase(const DatabaseParameters& otherDb)
                 // ! diseaseProperties: Handle history
                 if (d.diseaseProperties != otherD.diseaseProperties)
                 {
-                    DiseaseHistory h = d.history();
-                    DiseaseHistory otherH = otherD.history();
+                    DiseaseHistory h = d.history;
+                    DiseaseHistory otherH = otherD.history;
                     if (checkHistoryShouldBeReplaced(d, otherH, h, patientIdentifierString))
                     {
-                        d.setHistory(otherH);
+                        d.history = otherH;
                         if (otherD.initialDiagnosis.isValid())
                         {
                             d.initialDiagnosis = otherD.initialDiagnosis;
