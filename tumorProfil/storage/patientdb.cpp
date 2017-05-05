@@ -351,7 +351,7 @@ void PatientDB::removeProperties(PropertyType e, int id, const QString& property
     }
 }
 
-void PatientDB::updateEvents(int diseaseId, const QList<Event> events)
+void PatientDB::replaceEvents(int diseaseId, const QList<Event> events)
 {
     d->db->execSql("DELETE FROM EventInfos WHERE eventid IN (SELECT id FROM Events WHERE diseaseid=?);", diseaseId);
     d->db->execSql("DELETE FROM Events WHERE diseaseid=?;", diseaseId);
