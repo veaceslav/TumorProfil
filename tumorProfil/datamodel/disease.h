@@ -30,10 +30,9 @@
 
 // Local includes
 
+#include "diseasehistory.h"
 #include "pathology.h"
 #include "tnm.h"
-
-class DiseaseHistory;
 
 class Disease
 {
@@ -49,6 +48,7 @@ public:
     TNM   initialTNM;
     QList<Pathology> pathologies;
     PropertyList     diseaseProperties;
+    DiseaseHistory   history;
 
     int   id;
 
@@ -96,8 +96,8 @@ public:
     */
     PropertyList allPathologyProperties() const;
 
-    DiseaseHistory history() const;
-    void setHistory(const DiseaseHistory& history);
+    DiseaseHistory historyFromProperties() const;
+    void setHistoryToProperties(const DiseaseHistory& history);
 };
 
 #endif // DISEASE_H

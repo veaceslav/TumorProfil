@@ -176,13 +176,13 @@ PropertyList Disease::allPathologyProperties() const
     return props;
 }
 
-DiseaseHistory Disease::history() const
+DiseaseHistory Disease::historyFromProperties() const
 {
     Property prop = diseaseProperties.property(DiseasePropertyName::diseaseHistory());
     return DiseaseHistory::fromXml(prop.value);
 }
 
-void Disease::setHistory(const DiseaseHistory& history)
+void Disease::setHistoryToProperties(const DiseaseHistory& history)
 {
     diseaseProperties.setProperty(DiseasePropertyName::diseaseHistory(), history.toXml());
 }
