@@ -97,7 +97,7 @@ void DiseaseHistoryModel::addElement(HistoryElement* e)
 {
     int place = m_history.sortPlace(e);
     beginInsertRows(QModelIndex(), place, place);
-    m_history.entries().insert(place, e);
+    m_history.insert(place, e);
     endInsertRows();
 }
 

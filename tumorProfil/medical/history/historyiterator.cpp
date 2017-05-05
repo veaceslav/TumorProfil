@@ -250,7 +250,7 @@ OSIterator::OSIterator(const Disease& disease)
       lastElement(0),
       endpointElement(0)
 {
-    set(disease.history());
+    set(disease.history);
     start();
 }
 

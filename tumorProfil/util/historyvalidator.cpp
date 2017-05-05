@@ -45,7 +45,7 @@ void HistoryValidator::validatePAC()
     {
         p = PatientModel::retrievePatient(models.filterModel()->index(i, 0));
         const Disease& disease = p->firstDisease();
-        const DiseaseHistory& history = disease.history();
+        const DiseaseHistory& history = disease.history;
 
         if (p->surname.contains("Dktk"))
         {

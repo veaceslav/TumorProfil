@@ -162,7 +162,7 @@ public:
             return QVariant();
         }
         const Disease& disease = p->firstDisease();
-        CurrentStateIterator cs(disease.history());
+        CurrentStateIterator cs(disease.history);
         QColor c = VisualHistoryWidget::colorForState(cs.effectiveState());
         if (c.isValid())
         {
@@ -296,7 +296,7 @@ void HistoryWindow::applyData()
 
         Disease& disease = d->currentPatient->firstDisease();
         DiseaseHistory history = d->historyModel->history();
-        DiseaseHistory previousHistory = disease.history();
+        DiseaseHistory previousHistory = disease.history;
         history.sort();
 
         // update history properties
@@ -342,7 +342,7 @@ void HistoryWindow::applyData()
             qDebug() << previousHistory.toXml();
             qDebug() << "to new history";
             qDebug() << history.toXml();*/
-            disease.setHistory(history);
+            disease.history = history;
             changed = true;
         }
         //qDebug() << "History of patient" << d->currentPatient->surname;
@@ -363,7 +363,7 @@ void HistoryWindow::applyData()
             PatientManager::instance()->updateData(d->currentPatient,
                                                    PatientManager::ChangedDiseaseHistory |
                                                    PatientManager::ChangedDiseaseMetadata);
-            PatientManager::instance()->historySecurityCopy(d->currentPatient, "history", d->currentPatient->firstDisease().history().toXml());
+            //PatientManager::instance()->historySecurityCopy(d->currentPatient, "history", d->currentPatient->firstDisease().history.toXml());
 
             d->colorProvider->hash.remove(d->currentPatient->id);
         }
@@ -385,7 +385,7 @@ void HistoryWindow::setCurrentPatient(Patient::Ptr p)
     if (d->currentPatient)
     {
         const Disease& disease = d->currentPatient->firstDisease();
-        DiseaseHistory history = disease.history();
+        DiseaseHistory history = disease.history;
         d->historyModel->setHistory(history);
         d->initialDiagnosisEdit->setDate(disease.initialDiagnosis);
         d->tnmEdit->setText(disease.initialTNM.toText());

@@ -199,7 +199,7 @@ void AnalysisGenerator::her2()
         Patient::Ptr p = PatientModel::retrievePatient(models.filterModel()->index(i, 0));
         m_currentPatient = p;
         const Disease& disease = p->firstDisease();
-        const DiseaseHistory& history = disease.history();
+        const DiseaseHistory& history = disease.history;
 
         // FOR HER2: Require history
         if (history.isEmpty())
@@ -425,7 +425,7 @@ void AnalysisGenerator::findPikBrafTherapy()
     foreach (Patient::Ptr p, patients)
     {
         const Disease& disease = p->firstDisease();
-        const DiseaseHistory& history = disease.history();
+        const DiseaseHistory& history = disease.history;
         NewTreatmentLineIterator treatmentLinesIterator;
         treatmentLinesIterator.setProofreader(this);
         treatmentLinesIterator.set(history);
@@ -466,7 +466,7 @@ void AnalysisGenerator::her2therapy()
         m_file << p->dateOfBirth;
 
         const Disease& disease = p->firstDisease();
-        const DiseaseHistory& history = disease.history();
+        const DiseaseHistory& history = disease.history;
         TNM::MStatus m = disease.initialTNM.mstatus();
 
         QDate firstProgress;
@@ -892,7 +892,7 @@ void AnalysisGenerator::crc2015()
         Patient::Ptr p = PatientModel::retrievePatient(models.filterModel()->index(i, 0));
         m_currentPatient = p;
         const Disease& disease = p->firstDisease();
-        const DiseaseHistory& history = disease.history();
+        const DiseaseHistory& history = disease.history;
 
         // Require history
         if (history.isEmpty())
@@ -1194,7 +1194,7 @@ void AnalysisGenerator::nsclcSCNE21ListFromCSV()
         m_file << p->dateOfBirth;
 
         const Disease& disease = p->firstDisease();
-        const DiseaseHistory& history = disease.history();
+        const DiseaseHistory& history = disease.history;
 
         if (disease.entity() == Pathology::PulmonaryAdeno || disease.entity() == Pathology::PulmonaryAdenosquamous || disease.entity() == Pathology::PulmonaryBronchoalveloar)
         {
@@ -1429,7 +1429,7 @@ void AnalysisGenerator::ros1Project()
     {
         m_currentPatient = p;
         const Disease& disease = p->firstDisease();
-        const DiseaseHistory& history = disease.history();
+        const DiseaseHistory& history = disease.history;
 
         if (p->surname.contains("Dktk"))
         {
@@ -1803,7 +1803,7 @@ void AnalysisGenerator::cmetListFromCSV()
         m_file << p->dateOfBirth;
 
         const Disease& disease = p->firstDisease();
-        const DiseaseHistory& history = disease.history();
+        const DiseaseHistory& history = disease.history;
 
         if (!history.isEmpty())
         {
