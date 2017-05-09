@@ -85,6 +85,30 @@
                   type  TEXT,
                   info  TEXT);
                 </statement>
+                <statement mode="plain">
+                CREATE TABLE LabSeries
+                 (id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                  date DATETIME,
+                  type TEXT);
+                </statement>
+                <statement mode="plain">
+                CREATE TABLE LabValue
+                (seriesid INTEGER,
+                 name TEXT,
+                 value FLOAT);
+                </statement>
+                <statement mode="plain">
+                CREATE TABLE LabTextValue
+                (seriesid INTEGER,
+                 name TEXT,
+                 value TEXT);
+                </statement>
+                <statement mode="plain">
+                CREATE TABLE LabBinaryValue
+                (seriesid INTEGER,
+                 name TEXT,
+                 value BLOB);
+                </statement>
             </dbaction>
 
             <dbaction name="CreateDBIndices">
