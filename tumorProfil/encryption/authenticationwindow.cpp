@@ -8,6 +8,8 @@
 #include <QPushButton>
 #include <QSettings>
 
+#include "constants.h"
+
 class AuthenticationWindow::Private
 {
 public:
@@ -23,7 +25,14 @@ public:
     bool            login;
     QPushButton*    skipButton;
 };
-AuthenticationWindow::AuthenticationWindow(QString username, QWidget *parent)
+
+namespace
+{
+    const char* configGroupLogin   = "Login";
+    const char* configLastUsername = "Last user name";
+}
+
+AuthenticationWindow::AuthenticationWindow(const QString& username, QWidget *parent)
     :QDialog(parent), d(new Private())
 {
     setModal(true);
@@ -38,7 +47,16 @@ AuthenticationWindow::AuthenticationWindow(QString username, QWidget *parent)
 
     setupUi();
 
-    d->username->setText(username);
+    if (username.isEmpty())
+    {
+        d->username->setFocus();
+    }
+    else
+    {
+        d->username->setText(username);
+        d->password->setFocus();
+    }
+
 
     connect(d->buttons->button(QDialogButtonBox::Ok), SIGNAL(clicked()),
             this, SLOT(accept()));
@@ -50,8 +68,15 @@ AuthenticationWindow::AuthenticationWindow(QString username, QWidget *parent)
             this, SLOT(reject()));
 }
 
-UserData AuthenticationWindow::logIn(QString username)
+UserData AuthenticationWindow::logIn(const QString& givenUsername)
 {
+    QString username(givenUsername);
+    if (username.isEmpty())
+    {
+        QSettings qs(ORGANIZATION, APPLICATION);
+        qs.beginGroup(configGroupLogin);
+        username = qs.value(configLastUsername).toString();
+    }
     AuthenticationWindow* auth = new AuthenticationWindow(username);
 
     int result = auth->exec();
@@ -62,6 +87,10 @@ UserData AuthenticationWindow::logIn(QString username)
         data.username = auth->username();
         data.password = auth->password();
         data.success  = true;
+
+        QSettings qs(ORGANIZATION, APPLICATION);
+        qs.beginGroup(configGroupLogin);
+        qs.setValue(configLastUsername, data.username);
     }
 
     return data;

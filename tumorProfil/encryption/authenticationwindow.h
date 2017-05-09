@@ -16,9 +16,9 @@ class AuthenticationWindow : public QDialog
 {
     Q_OBJECT
 public:
-    AuthenticationWindow(QString username = QString(), QWidget* parent = 0);
+    AuthenticationWindow(const QString& username, QWidget* parent = 0);
 
-    static UserData logIn(QString username = QString());
+    static UserData logIn(const QString& username = QString());
 
     QString username();
     QString password();
