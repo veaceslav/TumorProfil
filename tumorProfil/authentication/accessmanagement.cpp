@@ -3,11 +3,7 @@
 #include <QStringList>
 
 #include "userinformation.h"
-
-AccessManagement::AccessManagement(QObject *parent) : QObject(parent)
-{
-
-}
+#include "TumorUsers/abstractqueryutils.h"
 
 AccessManagement::AccessType AccessManagement::accessToPathologyData()
 {
@@ -33,13 +29,23 @@ AccessManagement::AccessType AccessManagement::accessToDiseaseHistory()
 
 AccessManagement::AccessType AccessManagement::check(const QStringList& requiredTables)
 {
-    AccessType type = AccessManagement::WRITE;
-    for(QString table : requiredTables)
+    AccessType type = ReadWrite;
+    for(const QString& table : requiredTables)
     {
-        int permission = UserInformation::instance()->retrievePermission(table);
-        if((int)type > permission){
-            type =(AccessType)permission;
+        AccessType tableRights;
+        switch (UserInformation::instance()->retrievePermission(table))
+        {
+        case AbstractQueryUtils::PERMISSION_NONE:
+            tableRights = None;
+            break;
+        case AbstractQueryUtils::PERMISSION_READ:
+            tableRights = Read;
+            break;
+        case AbstractQueryUtils::PERMISSION_READWRITE:
+            tableRights = ReadWrite;
         }
+
+        type = AccessType(type & tableRights);
     }
 
     return type;

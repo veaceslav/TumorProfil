@@ -1,31 +1,23 @@
 #ifndef ACCESSMANAGEMENT_H
 #define ACCESSMANAGEMENT_H
 
-#include <QObject>
 #include <QStringList>
 
-class AccessManagement : public QObject
+namespace AccessManagement
 {
-    Q_OBJECT
-public:
-
     enum AccessType{
-        NONE = 0,
-        READ = 1,
-        WRITE = 2
+        None  = 0,
+        Read  = 1 << 0,
+        Write = 1 << 1,
+
+        ReadWrite = Read | Write
     };
-    explicit AccessManagement(QObject *parent = 0);
 
-    static AccessType accessToPathologyData();
+    AccessType accessToPathologyData();
 
-    static AccessType accessToDiseaseHistory();
+    AccessType accessToDiseaseHistory();
 
-signals:
-
-public slots:
-
-private:
-    static AccessType check(const QStringList &requiredTables);
+    AccessType check(const QStringList &requiredTables);
 };
 
 #endif // ACCESSMANAGEMENT_H
