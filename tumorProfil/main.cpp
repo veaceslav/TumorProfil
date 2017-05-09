@@ -190,6 +190,7 @@ int main(int argc, char *argv[])
     else
     {
         mainEntryDialog = new MainEntryDialog;
+        mainEntryDialog->setEnabledFromAccessRights();
         mainEntryDialog->show();
     }
 

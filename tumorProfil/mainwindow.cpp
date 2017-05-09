@@ -163,11 +163,7 @@ void MainWindow::setupToolbar()
         QAction* action = d->toolBar->addAction(QIcon::fromTheme("calendar"),
                               tr("Krankheitsverlauf"),
                               this, SLOT(showHistory()));
-
-        if(AccessManagement::accessToDiseaseHistory() == AccessManagement::NONE)
-        {
-            action->setEnabled(false);
-        }
+        action->setEnabled(AccessManagement::accessToDiseaseHistory() == AccessManagement::ReadWrite);
     }
 
     d->toolBar->addSeparator();

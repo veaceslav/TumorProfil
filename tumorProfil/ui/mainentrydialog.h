@@ -50,6 +50,7 @@ public:
     explicit MainEntryDialog(QWidget* const parent = 0);
     ~MainEntryDialog();
     void setEnabled(Action action, bool enabled);
+    void setEnabledFromAccessRights();
 
     Action action() const;
 

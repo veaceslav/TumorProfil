@@ -189,7 +189,7 @@ QString UserInformation::retrieveKey(const QString& keyName)
 
 int UserInformation::retrievePermission(const QString& tableName)
 {
-    return d->permissions.value(tableName,(int)AccessManagement::NONE);
+    return d->permissions.value(tableName, AbstractQueryUtils::PERMISSION_NONE);
 }
 
 void UserInformation::setUsername(const QString& username)

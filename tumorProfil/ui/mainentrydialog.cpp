@@ -38,6 +38,7 @@
 
 // Local includes
 
+#include "authentication/accessmanagement.h"
 #include "mainwindow.h"
 
 class MainEntryDialog::Private
@@ -121,6 +122,16 @@ void MainEntryDialog::setEnabled(Action action, bool enabled)
     {
         button->setEnabled(enabled);
     }
+}
+
+void MainEntryDialog::setEnabledFromAccessRights()
+{
+    AccessManagement::AccessType pathoAccess = AccessManagement::accessToPathologyData();
+    AccessManagement::AccessType histoAccess = AccessManagement::accessToDiseaseHistory();
+    d->buttonGroup->button(EditWindow)->setEnabled(pathoAccess == AccessManagement::ReadWrite);
+    d->buttonGroup->button(HistoryWindow)->setEnabled(histoAccess == AccessManagement::ReadWrite);
+    d->buttonGroup->button(HistoryWindowReadOnly)->setEnabled(histoAccess & AccessManagement::Read);
+    d->buttonGroup->button(ReportWindow)->setEnabled(pathoAccess & AccessManagement::Read);
 }
 
 void MainEntryDialog::slotButtonClicked(int id)
