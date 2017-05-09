@@ -325,26 +325,47 @@ void MainWindow::closeEvent(QCloseEvent *e)
 
 void MainWindow::showReport()
 {
-    ReportWindow* report = new ReportWindow;
-    report->setAttribute(Qt::WA_DeleteOnClose);
+    ReportWindow* report = showReportWindow();
     report->setAttribute(Qt::WA_QuitOnClose, false);
 
     connect(report->view(), SIGNAL(activated(Patient::Ptr)),
             this, SLOT(setPatient(Patient::Ptr)));
     connect(report->view(), SIGNAL(activated(Patient::Ptr)),
             this, SLOT(raise()));
+}
 
+ReportWindow* MainWindow::showReportWindow()
+{
+    ReportWindow* report = new ReportWindow;
+    report->setAttribute(Qt::WA_DeleteOnClose);
     report->showMaximized();
+    return report;
 }
 
 void MainWindow::showHistory()
 {
-    HistoryWindow* h = new HistoryWindow;
-    h->setAttribute(Qt::WA_DeleteOnClose);
+    HistoryWindow* h = showHistoryWindow(true);
     h->setAttribute(Qt::WA_QuitOnClose, false);
     /*connect(h, SIGNAL(activated(Patient::Ptr)),
             this, SLOT(setPatient(Patient::Ptr)));*/
+}
+
+HistoryWindow* MainWindow::showHistoryWindow(bool allowEdit)
+{
+    HistoryWindow* h = new HistoryWindow;
+    h->setReadOnly(!allowEdit);
+    h->setAttribute(Qt::WA_DeleteOnClose);
     h->showMaximized();
+    return h;
+}
+
+MainWindow* MainWindow::showMainWindow()
+{
+    MainWindow* w = new MainWindow;
+    w->setAttribute(Qt::WA_DeleteOnClose);
+    w->setWindowIcon(QIcon::fromTheme("folder_table"));
+    w->show();
+    return w;
 }
 
 void MainWindow::patientNameEdited(const Patient &p)

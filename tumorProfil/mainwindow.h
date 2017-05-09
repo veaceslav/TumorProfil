@@ -28,6 +28,9 @@
 
 #include "patient.h"
 
+class HistoryWindow;
+class ReportWindow;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -35,6 +38,10 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+    static HistoryWindow* showHistoryWindow(bool allowEdit);
+    static ReportWindow*  showReportWindow();
+    static MainWindow*    showMainWindow();
 
 public slots:
 
