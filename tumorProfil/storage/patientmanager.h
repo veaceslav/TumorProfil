@@ -87,6 +87,9 @@ signals:
     void patientAboutToBeRemoved(int index, const Patient::Ptr& patient);
     void patientRemoved(const Patient::Ptr& patient);
 
+    void progressStarted(int max);
+    void progressValue(int value);
+
 public slots:
 
 protected:

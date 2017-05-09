@@ -115,6 +115,7 @@ bool PatientManager::initialize()
 void PatientManager::readDatabase()
 {
     QList<Patient> patients = DatabaseAccess().db()->findPatients();
+    emit progressStarted(patients.size());
     QHash<int, int> oldIds = d->patientIdHash;
     QList<Patient::Ptr> newPatientList;
     foreach (Patient data, patients)
@@ -131,6 +132,7 @@ void PatientManager::readDatabase()
         {
             loadData(d->patients[index]);
         }
+        emit progressValue(d->patients.size());
     }
     foreach (int index, oldIds)
     {
