@@ -5,8 +5,8 @@
  * Used to save settings
  */
 
-#define ORGANIZATION "TumorClinic"
-#define APPLICATION "TumorProfil"
+#define ORGANIZATION "Innere Klinik (Tumorforschung)"
+#define APPLICATION "Tumorprofil"
 
 
 /**
