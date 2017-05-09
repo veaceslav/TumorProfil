@@ -22,13 +22,18 @@
 // Qt includes
 
 #include <QApplication>
+#include <QCommandLineParser>
 #include <QDir>
 #include <QDebug>
 #include <QFile>
 #include <QFileInfo>
+#include <QFuture>
+#include <QFutureWatcher>
 #include <QIcon>
 #include <QMessageBox>
+#include <QProgressDialog>
 #include <QRegExp>
+#include <QtConcurrent/QtConcurrent>
 #include <QTextStream>
 #include <QVariant>
 #include <QUrl>
@@ -41,6 +46,7 @@
 #include "databaseparameters.h"
 #include "ihcscore.h"
 #include <iostream>
+#include "mainentrydialog.h"
 #include "mainwindow.h"
 #include "patientmanager.h"
 #include "diseasehistory.h"
@@ -54,15 +60,30 @@
 #include "encryption/authenticationwindow.h"
 #include "authentication//userinformation.h"
 
+
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+    QApplication app(argc, argv);
 
     QCoreApplication::setOrganizationName("Innere Klinik (Tumorforschung)");
     QCoreApplication::setApplicationName("Tumorprofil");
 
     QIcon::setThemeName("silk");
-    a.setWindowIcon(QIcon::fromTheme("folder_table"));
+    app.setWindowIcon(QIcon::fromTheme("folder_table"));
+
+    QCommandLineParser parser;
+    parser.setApplicationDescription(QObject::tr("Tumorprofil - Datenbankanwendung"));
+    parser.addHelpOption();
+    QCommandLineOption editOption("edit", QObject::tr("Öffne Fenster zur Befundeingabe"));
+    parser.addOption(editOption);
+    QCommandLineOption historyOption("history-edit", QObject::tr("Öffne Fenster zum Bearbeiten des Krankheitsverlaufs"));
+    parser.addOption(historyOption);
+    QCommandLineOption historyReadOption("history", QObject::tr("Öffne Fenster zum Einsehen des Krankheitsverlaufs"));
+    parser.addOption(historyReadOption);
+    QCommandLineOption reportOption("report", QObject::tr("Öffne Fenster zur Datenabfrage"));
+    parser.addOption(reportOption);
+
+    parser.process(app);
 
     DatabaseParameters params;
     params.readFromConfig();
@@ -83,8 +104,17 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    PatientManager::instance()->readDatabase();
-
+    {
+        QFutureWatcher<void> watcher;
+        QProgressDialog progressDialog;
+        progressDialog.setLabelText(QObject::tr("Lade Datenbank"));
+        QObject::connect(PatientManager::instance(), &PatientManager::progressStarted, &progressDialog, &QProgressDialog::setMaximum);
+        QObject::connect(PatientManager::instance(), &PatientManager::progressValue, &progressDialog, &QProgressDialog::setValue);
+        QObject::connect(&watcher, SIGNAL(finished()), &progressDialog, SLOT(accept()));
+        QFuture<void> future = QtConcurrent::run(PatientManager::instance(), &PatientManager::readDatabase);
+        watcher.setFuture(future);
+        progressDialog.exec();
+    }
 
     /*
     AnalysisGenerator generator;
@@ -118,11 +148,50 @@ int main(int argc, char *argv[])
     view.show();
     return a.exec();
     */
+    /*foreach (const Patient::Ptr& p, PatientManager::instance()->patients())
+    {
+        if (!p->hasDisease())
+        {
+            continue;
+        }
+        Disease& d = p->firstDisease();
+        if (d.history.isEmpty())
+        {
+            continue;
+        }
+        if (d.history.testXmlEvent())
+        {
+            qDebug() << "Success" << p->id;
+        }
+        else
+        {
+            qDebug() << p->id << " " << p->firstName << " " << p->surname << " " << p->dateOfBirth;
+            return 0;
+        }
+    }*/
 
-    MainWindow w;
-    w.setWindowIcon(QIcon::fromTheme("folder_table"));
-    w.show();
+    QPointer<MainEntryDialog> mainEntryDialog;
+    if (parser.isSet(editOption))
+    {
+        MainEntryDialog::executeAction(MainEntryDialog::EditWindow);
+    }
+    else if (parser.isSet(reportOption))
+    {
+        MainEntryDialog::executeAction(MainEntryDialog::ReportWindow);
+    }
+    else if (parser.isSet(historyOption))
+    {
+        MainEntryDialog::executeAction(MainEntryDialog::HistoryWindow);
+    }
+    else if (parser.isSet(historyReadOption))
+    {
+        MainEntryDialog::executeAction(MainEntryDialog::HistoryWindowReadOnly);
+    }
+    else
+    {
+        mainEntryDialog = new MainEntryDialog;
+        mainEntryDialog->show();
+    }
 
-    //DiseaseHistory::test();
-    return a.exec();
+    return app.exec();
 }

@@ -99,7 +99,8 @@ SOURCES += main.cpp\
     authentication/userinformation.cpp \
     settings/changepassword.cpp \
     TumorUsers/abstractqueryutils.cpp \
-    authentication/accessmanagement.cpp
+    authentication/accessmanagement.cpp \
+    ui/mainentrydialog.cpp
 
 HEADERS  += mainwindow.h \
     datamodel/patient.h \
@@ -194,7 +195,8 @@ HEADERS  += mainwindow.h \
     settings/changepassword.h \
     TumorUsers/abstractqueryutils.h \
     authentication/accessmanagement.h \
-    datamodel/event.h
+    datamodel/event.h \
+    ui/mainentrydialog.h
 
 
 INCLUDEPATH += datamodel/ \
