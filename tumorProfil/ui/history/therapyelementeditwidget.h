@@ -48,6 +48,8 @@ public:
     virtual TherapyElement* applyToElement() const;
     TherapyElement* element() const;
 
+    virtual void setReadOnly(bool readOnly);
+
 Q_SIGNALS:
 
     void changed();
@@ -77,6 +79,7 @@ public:
     CTxEditWidget(QWidget* parent = 0);
 
     virtual TherapyElement* applyToElement() const;
+    virtual void setReadOnly(bool readOnly);
 
 public slots:
 
@@ -99,6 +102,7 @@ public:
     RTxEditWidget(QWidget* parent = 0);
 
     virtual TherapyElement* applyToElement() const;
+    virtual void setReadOnly(bool readOnly);
 
 public slots:
 
@@ -119,6 +123,7 @@ public:
     ToxicityEditWidget(QWidget* parent = 0);
 
     virtual TherapyElement* applyToElement() const;
+    virtual void setReadOnly(bool readOnly);
 
 public slots:
 

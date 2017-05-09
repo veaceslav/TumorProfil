@@ -209,7 +209,8 @@ public:
           colorProvider(0),
           proofReader(0),
           currentElement(0),
-          currentWidget(0)
+          currentWidget(0),
+          readOnly(false)
     {
     }
 
@@ -238,6 +239,7 @@ public:
     Patient::Ptr              currentPatient;
     HistoryElement           *currentElement;
     HistoryElementEditWidget *currentWidget;
+    bool                      readOnly;
 };
 
 HistoryWindow::HistoryWindow(QWidget *parent)
@@ -284,8 +286,23 @@ DiseaseHistory HistoryWindow::currentHistory() const
     return d->historyModel->history();
 }
 
+bool HistoryWindow::readOnly() const
+{
+    return d->readOnly;
+}
+
+void HistoryWindow::setReadOnly(bool readOnly)
+{
+    d->readOnly = readOnly;
+    applyReadOnlyStatus();
+}
+
 void HistoryWindow::applyData()
 {
+    if (d->readOnly)
+    {
+        return;
+    }
     if (d->currentPatient)
     {
         if (d->currentWidget)
@@ -398,7 +415,23 @@ void HistoryWindow::setCurrentPatient(Patient::Ptr p)
         d->lastValidationDate->setDate(lastValid.isValid() ? lastValid : (lastDoc.isValid() ? lastDoc : (history.end().isValid() ? history.end() : QDate::currentDate())));
     }
     d->patientDisplay->setPatient(d->currentPatient);
-    d->addBar->setEnabled(d->currentPatient);
+    d->addBar->setEnabled(d->currentPatient && !d->readOnly);
+}
+
+void HistoryWindow::applyReadOnlyStatus()
+{
+    if (d->currentWidget)
+    {
+        d->currentWidget->setReadOnly(d->readOnly);
+    }
+    d->initialDiagnosisEdit->setReadOnly(d->readOnly);
+    d->tnmEdit->setReadOnly(d->readOnly);
+    d->addBar->setEnabled(d->currentPatient && !d->readOnly);
+    d->lastDocumentation->setEnabled(!d->readOnly);
+    d->lastValidation->setEnabled(!d->readOnly);
+    d->lastDocumentationDate->setReadOnly(d->readOnly);
+    d->lastValidationDate->setReadOnly(d->readOnly);
+    d->clearButton->setEnabled(d->currentElement && !d->readOnly);
 }
 
 void HistoryWindow::historyElementActivated(const QModelIndex& index)
@@ -439,9 +472,10 @@ void HistoryWindow::setCurrentElement(HistoryElement* e)
                         this, SLOT(currentElementTherapyElementRemove(TherapyElement*)));
             }
             d->currentWidget->setFocus();
+            d->currentWidget->setReadOnly(d->readOnly);
         }
     }
-    d->clearButton->setEnabled(d->currentElement);
+    d->clearButton->setEnabled(d->currentElement && !d->readOnly);
     d->heading->setText(d->currentWidget ? d->currentWidget->heading() : QString());
     if (d->currentElement)
     {

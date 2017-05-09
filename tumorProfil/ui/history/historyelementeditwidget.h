@@ -53,6 +53,7 @@ public:
 
     void setMode(Mode mode);
     void setCommentEditVisible(bool visible);
+    void setReadOnly(bool readOnly);
 
     QDate date() const;
     QDate beginDate() const { return date(); }
@@ -91,6 +92,8 @@ public:
     HistoryElement* element() const;
     virtual QString heading() const = 0;
 
+    virtual void setReadOnly(bool readOnly);
+
 Q_SIGNALS:
 
     void changed();
@@ -122,6 +125,8 @@ public:
     virtual QString heading() const;
     void removeElementUI(TherapyElement* te);
 
+    virtual void setReadOnly(bool readOnly);
+
 Q_SIGNALS:
 
     void addTherapyElement(TherapyElement* te);
@@ -133,6 +138,7 @@ protected:
     QList<TherapyElementEditWidget*> elementWidgets;
     void addElement(TherapyElement* te);
     void addElementUI(TherapyElement* te);
+    void adjustMoreButtons();
 
 protected Q_SLOTS:
 
@@ -153,6 +159,7 @@ private:
     QPushButton* moreRTxButton;
     QPushButton* moreToxButton;
     QButtonGroup*infoGroup;
+    bool         isReadOnly;
 };
 
 class FindingEditWidget : public HistoryElementEditWidget
@@ -165,13 +172,14 @@ public:
     virtual void setElement(HistoryElement* element);
     virtual QString heading() const { return tr("Befund"); }
 
+    virtual void setReadOnly(bool readOnly);
+
 private:
 
     QButtonGroup*       modalityGroup;
     QButtonGroup*       contextGroup;
     QButtonGroup*       resultGroup;
     QButtonGroup*       infoGroup;
-    QLineEdit*          commentLineEdit;
 };
 
 class DiseaseStateEditWidget : public HistoryElementEditWidget
@@ -183,6 +191,8 @@ public:
 
     virtual HistoryElement* applyToElement() const;
     virtual void setElement(HistoryElement* element);
+
+    virtual void setReadOnly(bool readOnly);
 
 protected:
 

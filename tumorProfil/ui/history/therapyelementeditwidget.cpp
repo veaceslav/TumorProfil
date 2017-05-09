@@ -79,6 +79,11 @@ TherapyElementEditWidget* TherapyElementEditWidget::create(TherapyElement* te)
     return tee;
 }
 
+void TherapyElementEditWidget::setReadOnly(bool readOnly)
+{
+    clearButton->setVisible(!readOnly);
+}
+
 TherapyElement* TherapyElementEditWidget::element() const
 {
     return m_element;
@@ -138,6 +143,18 @@ CTxEditWidget::CTxEditWidget(QWidget* parent)
     connect(substanceBox, SIGNAL(currentIndexChanged(int)), this, SIGNAL(changed()));
     connect(substanceBox, SIGNAL(editTextChanged(QString)), this, SIGNAL(changed()));
     connect(doseNumber, SIGNAL(editingFinished()), this, SIGNAL(changed()));
+}
+
+void CTxEditWidget::setReadOnly(bool readOnly)
+{
+    TherapyElementEditWidget::setReadOnly(readOnly);
+    substanceBox->setEnabled(!readOnly);
+    doseNumber->setReadOnly(readOnly);
+    foreach (QAbstractButton* button, relAbsGroup->buttons())
+    {
+        button->setEnabled(!readOnly);
+    }
+    scheduleLineEdit->setReadOnly(readOnly);
 }
 
 TherapyElement* CTxEditWidget::applyToElement() const
@@ -213,6 +230,13 @@ RTxEditWidget::RTxEditWidget(QWidget* parent)
     connect(regionLineEdit, SIGNAL(textEdited(QString)), this, SIGNAL(changed()));
 }
 
+void RTxEditWidget::setReadOnly(bool readOnly)
+{
+    TherapyElementEditWidget::setReadOnly(readOnly);
+    doseNumberEdit->setReadOnly(readOnly);
+    regionLineEdit->setReadOnly(readOnly);
+}
+
 TherapyElement* RTxEditWidget::applyToElement() const
 {
     Radiotherapy* rtx = m_element->as<Radiotherapy>();
@@ -247,6 +271,13 @@ ToxicityEditWidget::ToxicityEditWidget(QWidget* parent)
 
     connect(typeLineEdit, SIGNAL(textEdited(QString)), this, SIGNAL(changed()));
     connect(gradeNumberEdit, SIGNAL(textEdited(QString)), this, SIGNAL(changed()));
+}
+
+void ToxicityEditWidget::setReadOnly(bool readOnly)
+{
+    TherapyElementEditWidget::setReadOnly(readOnly);
+    gradeNumberEdit->setReadOnly(readOnly);
+    typeLineEdit->setReadOnly(readOnly);
 }
 
 TherapyElement* ToxicityEditWidget::applyToElement() const

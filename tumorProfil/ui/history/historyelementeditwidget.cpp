@@ -190,6 +190,13 @@ void DateCommentWidget::setCommentEditVisible(bool visible)
     formLayout->labelForField(commentLineEdit)->setVisible(visible);
 }
 
+void DateCommentWidget::setReadOnly(bool readOnly)
+{
+    firstDateEdit->setReadOnly(readOnly);
+    endDateEdit->setReadOnly(readOnly);
+    commentLineEdit->setReadOnly(readOnly);
+}
+
 QDate DateCommentWidget::date() const
 {
     return DateValidator::TextToDate(firstDateEdit->text());
@@ -253,6 +260,11 @@ void HistoryElementEditWidget::setElement(HistoryElement* e)
     m_element = e;
 }
 
+void HistoryElementEditWidget::setReadOnly(bool readOnly)
+{
+    dateCommentWidget->setReadOnly(readOnly);
+}
+
 HistoryElementEditWidget* HistoryElementEditWidget::create(HistoryElement* e)
 {
     if (e->is<Therapy>())
@@ -280,6 +292,7 @@ HistoryElementEditWidget* HistoryElementEditWidget::create(HistoryElement* e)
 
 TherapyEditWidget::TherapyEditWidget()
 {
+    isReadOnly = false;
     dateCommentWidget->setMode(DateCommentWidget::DateRangeMode);
     dateCommentWidget->setCommentEditVisible(true);
     elementWidgetLayout = new QVBoxLayout;
@@ -309,6 +322,21 @@ TherapyEditWidget::TherapyEditWidget()
     mainLayout->addWidget(infoBox);
 }
 
+void TherapyEditWidget::setReadOnly(bool readOnly)
+{
+    HistoryElementEditWidget::setReadOnly(readOnly);
+    isReadOnly = readOnly;
+    foreach (TherapyElementEditWidget* editWidget, elementWidgets)
+    {
+        editWidget->setReadOnly(readOnly);
+    }
+    foreach (QAbstractButton* button, infoGroup->buttons())
+    {
+        button->setEnabled(!readOnly);
+    }
+    adjustMoreButtons();
+}
+
 HistoryElement* TherapyEditWidget::applyToElement() const
 {
     Therapy* t     = m_element->as<Therapy>();
@@ -333,7 +361,25 @@ void TherapyEditWidget::setElement(HistoryElement* element)
     dateCommentWidget->setEndDate(t->end);
     dateCommentWidget->setComment(t->description);
     setCheckedFlags(infoGroup, t->additionalInfos);
+    adjustMoreButtons();
 
+    foreach (TherapyElement* elem, t->elements)
+    {
+        addElementUI(elem);
+    }
+}
+
+void TherapyEditWidget::adjustMoreButtons()
+{
+    if (isReadOnly)
+    {
+        moreCTxButton->setVisible(false);
+        moreRTxButton->setVisible(false);
+        moreToxButton->setVisible(true);
+        return;
+    }
+
+    Therapy* t = m_element->as<Therapy>();
     switch (t->type)
     {
     case Therapy::CTx:
@@ -353,11 +399,7 @@ void TherapyEditWidget::setElement(HistoryElement* element)
         moreRTxButton->setVisible(false);
         break;
     }
-
-    foreach (TherapyElement* elem, t->elements)
-    {
-        addElementUI(elem);
-    }
+    moreToxButton->setVisible(true);
 }
 
 void TherapyEditWidget::addElement(TherapyElement* te)
@@ -374,6 +416,7 @@ void TherapyEditWidget::addElementUI(TherapyElement* te)
         qDebug() << "No TherapyElementEditWidget implemented for TherapyElement" << te;
         return;
     }
+    widget->setReadOnly(isReadOnly);
     elementWidgets << widget;
     elementWidgetLayout->addWidget(widget);
     connect(widget, SIGNAL(changed()), this, SLOT(slotTherapyElementChanged()));
@@ -500,6 +543,27 @@ FindingEditWidget::FindingEditWidget()
     connect(resultGroup, SIGNAL(buttonClicked(int)), this, SIGNAL(changed()));
 }
 
+void FindingEditWidget::setReadOnly(bool readOnly)
+{
+    HistoryElementEditWidget::setReadOnly(readOnly);
+    foreach (QAbstractButton* button, modalityGroup->buttons())
+    {
+        button->setEnabled(!readOnly);
+    }
+    foreach (QAbstractButton* button, contextGroup->buttons())
+    {
+        button->setEnabled(!readOnly);
+    }
+    foreach (QAbstractButton* button, resultGroup->buttons())
+    {
+        button->setEnabled(!readOnly);
+    }
+    foreach (QAbstractButton* button, infoGroup->buttons())
+    {
+        button->setEnabled(!readOnly);
+    }
+}
+
 HistoryElement* FindingEditWidget::applyToElement() const
 {
     Finding* f = m_element->as<Finding>();
@@ -567,6 +631,15 @@ DiseaseStateEditWidget::DiseaseStateEditWidget()
     mainLayout->addWidget(statusBox);
 
     connect(statusGroup, SIGNAL(buttonClicked(int)), this, SIGNAL(changed()));
+}
+
+void DiseaseStateEditWidget::setReadOnly(bool readOnly)
+{
+    HistoryElementEditWidget::setReadOnly(readOnly);
+    foreach (QAbstractButton* button, statusGroup->buttons())
+    {
+        button->setEnabled(!readOnly);
+    }
 }
 
 HistoryElement* DiseaseStateEditWidget::applyToElement() const

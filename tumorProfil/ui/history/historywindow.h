@@ -45,6 +45,12 @@ public:
     HistoryElement* currentElement() const;
     DiseaseHistory currentHistory() const;
 
+    bool readOnly() const;
+
+public slots:
+
+    void setReadOnly(bool readOnly);
+
 Q_SIGNALS:
 
     void activated(Patient::Ptr);
@@ -76,6 +82,7 @@ protected:
     virtual void closeEvent(QCloseEvent *);
     virtual void keyPressEvent(QKeyEvent *);
     QDate dateForNewElement() const;
+    void applyReadOnlyStatus();
 
 private:
 
